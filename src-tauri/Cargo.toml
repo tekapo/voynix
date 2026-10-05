@@ -1,0 +1,88 @@
+[package]
+name = "voynix"
+version = "0.22.0"
+description = "Music player for Mac and Android with Wi-Fi library sync"
+authors = ["JOTAKI, Taisuke"]
+license = "MIT"
+repository = "https://github.com/tekapo/voynix"
+homepage = "https://github.com/tekapo/voynix"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+# Binary is "Voynix" (capitalised) so `tauri dev` shows the right name in the
+# macOS Dock — a bare dev binary has no Info.plist, so the Dock falls back to
+# the file name. The package/crate name stays "voynix" (lowercase) because it
+# feeds identifiers that must not change.
+name = "Voynix"
+path = "src/main.rs"
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "voynix_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+# Also a runtime dependency, not just dev: `write_atomic` (metadata.rs) and
+# `transcode`'s cache writes use `NamedTempFile::persist` for atomic writes.
+tempfile = "3"
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+walkdir = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+plist = "1"
+# Turns an iTunes Library.xml `Location` (a `file://` URL) into a path — see
+# `import_itunes_xml`. Handles `file://localhost/`, percent-encoding and
+# non-UTF-8 paths correctly, which a hand-rolled `trim_start_matches` +
+# `urlencoding::decode` doesn't.
+url = "2"
+lofty = "0.21"
+axum = { version = "0.7", features = ["multipart"] }
+tokio = { version = "1", features = ["full"] }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.5", features = ["cors", "fs"] }
+local-ip-address = "0.6"
+image = "0.25"
+base64 = "0.22"
+sha2 = "0.10"
+once_cell = "1.19"
+subtle = "2.6"
+# Track ids are SipHash-1-3 of the file path, persisted in the DB (see
+# `calculate_hash` in lib.rs). `std::hash::DefaultHasher` isn't guaranteed
+# stable across Rust releases, so ids are hashed with this crate directly
+# instead, pinned to the same algorithm and zero key `DefaultHasher` used —
+# verified byte-for-byte identical to it (see the regression test).
+siphasher = "1.0"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+tauri-plugin-sql = { version = "2.3.2", features = ["sqlite"] }
+mdns-sd = "0.21"
+# default-features off + explicit "ring": reqwest's `rustls-tls` already pulls
+# in rustls with the `ring` crypto backend, so this avoids also compiling the
+# (heavier) `aws-lc-rs` backend that rustls otherwise defaults to.
+rcgen = "0.13"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+tokio-rustls = "0.26"
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["server", "server-auto", "tokio", "service"] }
+# Native gapless playback engine (music only — see src/player.rs). rodio only
+# for output/mixing/queueing (`default-features = false` to skip its own
+# bundled symphonia decoders, which don't cover ALAC); decoding goes through
+# symphonia directly so ALAC (the format an Apple Music library rips as) is
+# available via its "alac" feature, which rodio doesn't expose.
+rodio = { version = "0.22", default-features = false, features = ["playback"] }
+symphonia = { version = "0.6", default-features = false, features = ["isomp4", "alac", "aac", "flac", "mp3", "wav", "pcm"] }
+
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", features = ["NSMenu", "NSMenuItem", "NSResponder"] }
+objc2-foundation = { version = "0.3", features = ["NSString"] }

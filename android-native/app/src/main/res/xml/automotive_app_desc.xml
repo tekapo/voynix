@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Declares this app as a media app for Android Auto — without this, Auto
+     never binds PlaybackService's browser interface (see AndroidManifest.xml). -->
+<automotiveApp>
+    <uses name="media" />
+</automotiveApp>

@@ -1,0 +1,14 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Debug-only: hosts NowPlayingWidget directly (bypassing the
+             launcher's own AppWidgetHost) so it can be added/inspected via
+             `adb shell am start` without dragging it onto a home screen —
+             useful for reproducing rendering bugs (e.g. large embedded
+             artwork) under a debugger/logcat. Never shipped in release
+             (this whole source set is debug-only). -->
+        <activity
+            android:name=".debug.WidgetTestHostActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Voynix" />
+    </application>
+</manifest>

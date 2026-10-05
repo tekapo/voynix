@@ -1,0 +1,26 @@
+{
+  "$comment": "Shared contract test for the pairing QR payload: pairingQrPayload (src/syncPairing.ts, Mac) and parsePairingQr (android-native/.../logic/Sync.kt). Format: voynix://pair?u=<encodeURIComponent(url)>&t=<encodeURIComponent(token)>&fp=<SHA-256 hex>. `invalid` payloads must be rejected by the Android parser.",
+  "vectors": [
+    {
+      "url": "https://192.168.1.10:60905",
+      "token": "abc123",
+      "fingerprint": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "payload": "voynix://pair?u=https%3A%2F%2F192.168.1.10%3A60905&t=abc123&fp=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    },
+    {
+      "url": "https://10.0.0.5:5599",
+      "token": "a+b/c=d e",
+      "fingerprint": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "payload": "voynix://pair?u=https%3A%2F%2F10.0.0.5%3A5599&t=a%2Bb%2Fc%3Dd%20e&fp=fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+    }
+  ],
+  "invalid": [
+    "",
+    "https://192.168.1.10:60905",
+    "voynix://other?u=https%3A%2F%2Fx&t=a&fp=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "voynix://pair?u=https%3A%2F%2Fx&t=a",
+    "voynix://pair?u=https%3A%2F%2Fx&t=&fp=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "voynix://pair?u=https%3A%2F%2Fx&t=a&fp=ZZZZ",
+    "voynix://pair?u=http%3A%2F%2Fx&t=a&fp=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  ]
+}

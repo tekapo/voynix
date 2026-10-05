@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Voynix (Dev)",
+  "identifier": "com.tekapo.voynix.dev",
+  "app": {
+    "windows": [
+      {
+        "title": "Voynix (Dev)",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 960,
+        "minHeight": 600,
+        "center": true,
+        "resizable": true,
+        "dragDropEnabled": false
+      }
+    ]
+  }
+}

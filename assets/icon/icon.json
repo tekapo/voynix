@@ -1,0 +1,8 @@
+{
+  "default": "voynix.png",
+  "bg_color": "#0b0b0d",
+  "android_bg": "voynix-android-bg.png",
+  "android_fg": "voynix-android-fg.png",
+  "android_fg_scale": 100,
+  "android_monochrome": "voynix-android-mono.png"
+}

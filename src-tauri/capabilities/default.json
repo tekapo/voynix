@@ -1,0 +1,35 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Main window. fs:scope is '**' by design: the user picks arbitrary music folders anywhere on disk to scan. Tightening to $HOME/** would need Tauri runtime scope additions per picked folder.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "fs:allow-read-dir",
+    "fs:allow-read-file",
+    "fs:allow-write-file",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    "fs:allow-mkdir",
+    "fs:allow-exists",
+    "fs:allow-applocaldata-write",
+    "fs:allow-applocaldata-read",
+    "core:path:default",
+    "dialog:allow-open",
+    "dialog:allow-ask",
+    "dialog:allow-save",
+    "sql:default",
+    "sql:allow-load",
+    "sql:allow-execute",
+    "sql:allow-select",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        "**"
+      ]
+    }
+  ]
+}

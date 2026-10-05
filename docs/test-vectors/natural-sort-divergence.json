@@ -1,0 +1,11 @@
+{
+  "$comment": "Documents a known, NOT YET FIXED divergence in 'natural order' sorting across the three places it's implemented: SQL (COLLATE NOCASE, db/playlists.ts NATURAL_ORDER), JS (trackSort.ts compareNatural, uses Intl/localeCompare with numeric:true), and Kotlin (TrackSort.kt compareNatural, uses java.text.Collator at SECONDARY strength, not numeric). Given three same-artist/same-album tracks whose titles differ only in a track number, JS orders them numerically while SQL and Kotlin order them as plain text. See docs/CHANGELOG.md and the plan this came from for the fix (unifying on the numeric-aware order requires either a custom SQLite collation or moving playlistOrderBy's natural-order case to a post-fetch JS/Kotlin sort — not done yet, tracked here so the gap doesn't silently regress further, and so a future fix can verify against these exact titles).",
+  "titles": ["Track 1", "Track 2", "Track 10"],
+  "numeric_aware_order": ["Track 1", "Track 2", "Track 10"],
+  "numeric_aware_order_used_by": ["src/trackSort.ts compareNatural (JS)"],
+  "plain_text_order": ["Track 1", "Track 10", "Track 2"],
+  "plain_text_order_used_by": [
+    "src/db/playlists.ts NATURAL_ORDER (SQLite COLLATE NOCASE)",
+    "android-native TrackSort.kt compareNatural (java.text.Collator)"
+  ]
+}

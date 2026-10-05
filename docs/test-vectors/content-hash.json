@@ -1,0 +1,12 @@
+{
+  "$comment": "Shared contract test for compute_content_hash (src-tauri/src/lib.rs) and computeContentHash (android-native/.../sync/ContentHash.kt): SHA-256 of the little-endian u64 file size, followed by the first 64KiB, followed by the last 64KiB (only for files > 64KiB). File content for size N is byte[i] = i % 251, generated deterministically so both sides can build the same file from `size` alone.",
+  "vectors": [
+    { "size": 0, "hash": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc" },
+    { "size": 1, "hash": "a536aa3cede6ea3c1f3e0357c3c60e0f216a8c89b853df13b29daa8f85065dfb" },
+    { "size": 65535, "hash": "217f7bb0098b0fc0de2b6df22238adac46718c1b9a887a9d9aa135ec792e1461" },
+    { "size": 65536, "hash": "3192f0200afc272bf234494004343e428a932e979a8b840cd14da25465b442a7" },
+    { "size": 65537, "hash": "a2f58847ebf24db2db6dc611edb36c116ba334cba9d3ab30c1405795d4a2d2c0" },
+    { "size": 131072, "hash": "316145b76fc25a90874a7d8d32948df2bbac7fb27295ff6e8ada20d663622ed2" },
+    { "size": 200000, "hash": "1919be216570e34e7131d85385b20211fca7dd046dae3513c2d6fb9f0f56fcdd" }
+  ]
+}

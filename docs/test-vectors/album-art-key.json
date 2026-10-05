@@ -1,0 +1,12 @@
+{
+  "$comment": "Shared contract test for cache_key (src-tauri/src/metadata.rs) and albumArtCacheKey (android-native/.../sync/ContentHash.kt): trim + lowercase each field, join with U+001F, SHA-256 hex. Internal whitespace is NOT collapsed (unlike track_key's normalize_field) — see the 'Foo  Bar' vs 'Foo Bar' pair below.",
+  "vectors": [
+    { "artist": "The Beatles", "album": "Abbey Road", "key": "8c0f512e5bf1fbf35ec290592d60eef825b6f64a7fc44ba80f1793c6d046575d" },
+    { "artist": "  the beatles ", "album": "ABBEY ROAD", "key": "8c0f512e5bf1fbf35ec290592d60eef825b6f64a7fc44ba80f1793c6d046575d" },
+    { "artist": "Foo  Bar", "album": "Album", "key": "ad8d77aec46b137c3cad6729870ecba3affc2f8c70344e83eb295f0fa2d8bb7f" },
+    { "artist": "Foo Bar", "album": "Album", "key": "b4c3c96fbd4110e084e44dda85bef95cff75367a0d8fe5e2aa2d5975f47b0584" },
+    { "artist": "ÉCOLE", "album": "Résumé", "key": "159179450c6033937e5a3a542f3f8397e66d755a475388f041f09cb4ba56c3fe" },
+    { "artist": "坂本龍一", "album": "async", "key": "f143607f64ef0406ebd58e0ea7d6d6190cb02ddd7ad56c55db936e5b8d42989c" },
+    { "artist": "　Spaced　", "album": "Out　", "key": "80de9457a9ec124a7f2f393424ae06cc1d18b67215aa13e665628bf8f9bd4754" }
+  ]
+}

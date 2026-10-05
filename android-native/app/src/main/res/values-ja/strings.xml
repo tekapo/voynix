@@ -1,0 +1,184 @@
+<resources>
+    <string name="app_name">Voynix</string>
+
+    <!-- Home -->
+    <string name="home_search">検索</string>
+    <string name="home_sync_now">今すぐ同期</string>
+    <string name="home_settings">設定</string>
+    <string name="home_library">ライブラリ</string>
+    <string name="home_songs">曲</string>
+    <string name="home_artists">アーティスト</string>
+    <string name="home_albums">アルバム</string>
+    <string name="home_favorites">お気に入り</string>
+    <string name="home_most_played">よく再生する曲</string>
+    <string name="home_recently_added">最近追加した項目</string>
+    <string name="home_recently_played">最近再生した項目</string>
+    <string name="home_playlists">プレイリスト</string>
+    <string name="home_no_playlists_title">プレイリストはまだありません</string>
+    <string name="home_no_playlists_detail">設定 → Wi-Fi同期 でMacと同期すると表示されます</string>
+    <string name="home_podcast">ポッドキャスト</string>
+    <string name="home_collapse">折りたたむ</string>
+    <string name="home_expand">展開する</string>
+    <string name="home_sync_complete">同期が完了しました: %1$d件追加、%2$d件更新、%3$d件削除</string>
+    <string name="home_songs_all">すべての曲</string>
+    <string name="collection_meta">%1$d曲 · %2$d分</string>
+
+    <!-- Name list (Artists / Albums index) -->
+    <string name="name_list_back">戻る</string>
+    <string name="name_list_search">検索</string>
+    <string name="name_list_no_results">見つかりません</string>
+
+    <!-- Track list -->
+    <string name="track_list_back">戻る</string>
+    <string name="track_list_search">検索</string>
+    <string name="track_list_no_songs_match">「%1$s」に一致する曲がありません</string>
+    <string name="track_list_no_songs">曲がありません</string>
+    <string name="track_list_now_playing">再生中の曲</string>
+
+    <!-- Track row -->
+    <string name="track_row_played_times">%1$d回再生済み</string>
+    <string name="track_row_unplayed">未再生</string>
+    <string name="track_row_now_playing">再生中</string>
+    <string name="track_row_favorites">お気に入り</string>
+    <string name="podcast_status_unplayed">未再生</string>
+    <string name="podcast_status_in_progress">再生中</string>
+    <string name="podcast_status_played">再生済み</string>
+    <string name="podcast_dot_description">ポッドキャスト、%1$s</string>
+
+    <!-- Track actions sheet -->
+    <string name="track_actions_remove_favorite">お気に入りから削除</string>
+    <string name="track_actions_add_favorite">お気に入りに追加</string>
+    <string name="track_actions_add_to_queue">キューに追加</string>
+    <string name="track_actions_mark_unplayed">未再生に戻す</string>
+    <string name="track_actions_mark_played">再生済みにする</string>
+
+    <!-- Collection header -->
+    <string name="collection_header_play">再生</string>
+    <string name="collection_header_shuffle">シャッフル</string>
+    <string name="collection_header_shuffle_on">シャッフル: オン</string>
+
+    <!-- Mini player / transport -->
+    <string name="player_pause">一時停止</string>
+    <string name="player_play">再生</string>
+
+    <!-- Now Playing -->
+    <string name="now_playing_close">閉じる</string>
+    <string name="now_playing_sleep_timer">スリープタイマー</string>
+    <string name="now_playing_off">オフ</string>
+    <string name="now_playing_minutes">%1$d分</string>
+    <string name="now_playing_end_of_episode">エピソードの終わりまで</string>
+    <string name="now_playing_end_of_track">曲の終わりまで</string>
+    <string name="now_playing_nothing_playing">再生していません</string>
+    <string name="now_playing_favorites">お気に入り</string>
+    <string name="now_playing_back_10">10秒戻る</string>
+    <string name="now_playing_forward_10">10秒進む</string>
+    <string name="now_playing_shuffle_on_ordered">シャッフルON（順番に再生中）</string>
+    <string name="now_playing_shuffle_on">シャッフル: オン</string>
+    <string name="now_playing_shuffle_off">シャッフル: オフ</string>
+    <string name="now_playing_previous">前へ</string>
+    <string name="now_playing_next">次へ</string>
+    <string name="now_playing_repeat">リピート: %1$s</string>
+    <string name="now_playing_repeat_off">オフ</string>
+    <string name="now_playing_repeat_all">すべて</string>
+    <string name="now_playing_repeat_one">1曲</string>
+    <string name="now_playing_lyrics">歌詞</string>
+
+    <!-- Lyrics screen -->
+    <string name="lyrics_back">戻る</string>
+    <string name="lyrics_no_lyrics_found">歌詞が見つかりません</string>
+
+    <!-- Search screen -->
+    <string name="search_placeholder">曲、アーティスト、アルバム、プレイリストを検索</string>
+    <string name="search_back">戻る</string>
+    <string name="search_your_library">ライブラリを検索</string>
+    <string name="search_your_library_detail">曲、アーティスト、アルバム、プレイリスト</string>
+    <string name="search_no_results">「%1$s」に一致する結果がありません</string>
+    <string name="search_section_playlists">プレイリスト</string>
+    <string name="search_section_artists">アーティスト</string>
+    <string name="search_section_albums">アルバム</string>
+    <string name="search_section_songs">曲</string>
+    <string name="search_podcast">ポッドキャスト</string>
+
+    <!-- Settings screen -->
+    <string name="settings_title">設定</string>
+    <string name="settings_back">戻る</string>
+    <string name="settings_wifi_sync">Wi-Fi同期</string>
+    <string name="settings_wifi_sync_detail">Macとのペアリング・同期状況</string>
+    <string name="settings_dont_shuffle_podcasts">ポッドキャストをシャッフルしない</string>
+    <string name="settings_dont_shuffle_podcasts_detail">シャッフルがオンでもポッドキャストプレイリストは順番に再生されます</string>
+    <string name="settings_clear_album_art_cache">アルバムアートのキャッシュを削除</string>
+    <string name="settings_clear_album_art_cache_detail">次回の同期時に再取得されます</string>
+    <string name="settings_album_art_cache_cleared">アルバムアートのキャッシュを削除しました</string>
+    <string name="settings_device_id">デバイスID</string>
+    <string name="settings_device_id_placeholder">-</string>
+    <string name="settings_licenses">オープンソースライセンス</string>
+    <string name="licenses_title">オープンソースライセンス</string>
+    <string name="licenses_load_failed">ライセンス一覧を読み込めませんでした。</string>
+    <string name="settings_version">バージョン %1$s</string>
+    <string name="settings_language">言語</string>
+    <string name="settings_language_system">システムに従う</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_japanese">日本語</string>
+
+    <!-- Sync screen -->
+    <string name="sync_title">Wi-Fi同期</string>
+    <string name="sync_back">戻る</string>
+    <string name="sync_is_this_right_mac">このMacで間違いありませんか？</string>
+    <string name="sync_check_security_code">セキュリティコードがMacに表示されているものと一致することを確認してください。</string>
+    <string name="sync_matches_pair">一致 — ペアリング</string>
+    <string name="sync_cancel">キャンセル</string>
+    <string name="sync_repair_required">アプリ更新後は再ペアリングが必要です（暗号化接続のため）。</string>
+    <string name="sync_pair_with_mac">同じWi-Fiネットワーク上のMacとペアリングします。</string>
+    <string name="sync_searching">検索中...</string>
+    <string name="sync_scan_qr">QRコードで読み取る</string>
+    <string name="sync_scan_qr_hint">Macの「Wi-Fi同期」画面に表示されるQRコードをスキャンします。</string>
+    <string name="sync_qr_scan_failed">QRスキャナーを開けませんでした。手動で入力してください。</string>
+    <string name="sync_find_mac">Macを検索</string>
+    <string name="sync_enter_manually">見つからない場合は手動で入力</string>
+    <string name="sync_url_label">URL（例: https://192.168.1.10:5599）</string>
+    <string name="sync_token_label">トークン</string>
+    <string name="sync_pair_manually">手動でペアリング</string>
+    <string name="sync_status_checking">接続を確認中…</string>
+    <string name="sync_status_connected">接続済み</string>
+    <string name="sync_status_unreachable">Macに接続できません</string>
+    <string name="sync_status_unreachable_hint">MacのIPアドレスが変わった可能性があります。Macで同期サーバーが動いているか確認し、それでも見つからない場合はペアリングし直してください。</string>
+    <string name="sync_status_unauthorized">再ペアリングが必要です</string>
+    <string name="sync_last_sync">前回の同期: %1$s</string>
+    <string name="sync_not_synced_yet">まだ同期していません</string>
+    <string name="sync_syncing">同期中...</string>
+    <string name="sync_now">今すぐ同期</string>
+    <string name="sync_auto_sync">自動同期</string>
+    <string name="sync_auto_sync_detail">このWi-FiにMacが接続されているとき、約6時間ごとに自動的に同期します</string>
+    <string name="sync_charging_only">充電中のみ</string>
+    <string name="sync_summary">追加 %1$d / 更新 %2$d / 削除 %3$d / プレイリスト %4$d</string>
+    <string name="sync_errors">エラー:</string>
+    <string name="sync_error_bullet">• %1$s</string>
+    <string name="sync_unpair">ペアリング解除</string>
+    <string name="sync_progress_counts"> (%1$d/%2$d)</string>
+
+    <!-- Now Playing widget (Glance) and its manifest description -->
+    <string name="widget_now_playing_description">再生中の曲を表示し、再生/一時停止・前へ・次へを操作できます</string>
+    <string name="widget_previous">前へ</string>
+    <string name="widget_play">再生</string>
+    <string name="widget_pause">一時停止</string>
+    <string name="widget_next">次へ</string>
+    <string name="widget_nothing_playing">再生していません</string>
+
+    <!-- Android Auto / media browse tree (PlaybackService) -->
+    <string name="auto_home">ホーム</string>
+    <string name="auto_library">ライブラリ</string>
+    <string name="auto_playlists">プレイリスト</string>
+    <string name="auto_songs">曲</string>
+    <string name="auto_artists">アーティスト</string>
+    <string name="auto_albums">アルバム</string>
+    <string name="auto_favorites">お気に入り</string>
+    <string name="auto_most_played">よく再生する曲</string>
+    <string name="auto_recently_added">最近追加した項目</string>
+    <string name="auto_recently_played">最近再生した項目</string>
+    <string name="auto_track_count">%1$d曲</string>
+    <string name="auto_podcast_subtitle">未再生 %1$d / 全 %2$d</string>
+    <string name="auto_shuffle">シャッフル</string>
+    <string name="auto_repeat">リピート</string>
+    <string name="auto_back_10">10秒戻る</string>
+    <string name="auto_forward_10">10秒進む</string>
+</resources>
