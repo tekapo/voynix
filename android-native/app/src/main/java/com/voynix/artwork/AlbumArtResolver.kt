@@ -2,7 +2,6 @@ package com.voynix.artwork
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Base64
@@ -59,7 +58,7 @@ class AlbumArtResolver(private val context: Context, private val db: VoynixDatab
                 retriever.setDataSource(filePath)
             }
             val art = retriever.embeddedPicture ?: return null
-            BitmapFactory.decodeByteArray(art, 0, art.size)
+            decodeSampled(art)
         } catch (e: Exception) {
             Log.w("AlbumArtResolver", "embedded art read failed for $filePath", e)
             null
@@ -72,7 +71,7 @@ class AlbumArtResolver(private val context: Context, private val db: VoynixDatab
         val key = albumArtCacheKey(artist, album)
         val file = File(albumArtDir, "$key.jpg")
         if (!file.isFile) return null
-        return BitmapFactory.decodeFile(file.absolutePath)
+        return decodeSampledFile(file.absolutePath)
     }
 
     private fun decodeDataUri(dataUri: String): Bitmap? {
@@ -80,7 +79,7 @@ class AlbumArtResolver(private val context: Context, private val db: VoynixDatab
         if (!dataUri.startsWith("data:") || comma < 0) return null
         return try {
             val bytes = Base64.decode(dataUri.substring(comma + 1), Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            decodeSampled(bytes)
         } catch (e: Exception) {
             Log.w("AlbumArtResolver", "override data URI decode failed", e)
             null

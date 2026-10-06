@@ -2,7 +2,6 @@ package com.voynix.artwork
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.util.Base64
 import android.util.Log
 import com.voynix.data.db.VoynixDatabase
@@ -35,7 +34,7 @@ class ArtistArtResolver(private val db: VoynixDatabase) {
         if (!dataUri.startsWith("data:") || comma < 0) return null
         return try {
             val bytes = Base64.decode(dataUri.substring(comma + 1), Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            decodeSampled(bytes)
         } catch (e: Exception) {
             Log.w("ArtistArtResolver", "override data URI decode failed", e)
             null

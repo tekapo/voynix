@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.8 — 2026-10-06
+- Android decodes album and artist art downsampled to about 1024 px on the long edge (bounds pass + `inSampleSize`) instead of at full size, cutting memory use and list-scroll jank with large embedded images (#22).
+
 ## 0.22.7 — 2026-10-06
 - Android sync now checks free space before downloading (tracks to fetch minus bytes already in `.part` files, plus a 50 MB margin) and stops early with a clear message; a full disk is refused instead of treated as unknown (#18).
 - Make parallel track downloads safe: one download per track key (no shared `.part` file) and thread-safe progress counters and error list (#19).
