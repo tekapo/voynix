@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.1 — 2026-10-06
+- Upgrade the test toolchain to vitest 5 (resolves the open Dependabot alerts for vitest, @vitest/mocker and tinypool)
+- Run CI on Node 26, which the `node:sqlite`-based tests need under vitest 5
+
 ## 0.22.0 — 2026-10-05
 - First public release. A local-first music player for Mac (Tauri) and Android (Kotlin + Jetpack Compose). Supports gapless playback, smart playlists, podcasts, Wi-Fi sync (pairing via QR code), Android Auto, and a home-screen widget
 - License notices for dependencies are now generated automatically and viewable in the apps (Mac: Settings → About, Android: Settings)
