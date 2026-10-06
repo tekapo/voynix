@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.10 — 2026-10-06
+- macOS: the app bundle is now ad-hoc signed as a whole (`signingIdentity: "-"`), so a downloaded DMG no longer shows "Voynix.app is damaged" (previously only a linker signature with no sealed resources). README and the manual mention `xattr -cr` as a fallback.
+
 ## 0.22.9 — 2026-10-06
 - `npm run release` now also waits for the Build macOS workflow and attaches the locally built, signed Android APK to the Release (`-- --no-android` pushes the tag only).
 
