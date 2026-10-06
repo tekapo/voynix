@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.6 — 2026-10-06
+- Write cached album art, lyrics and the `.miss` markers atomically (temp file + rename), so a concurrent request or an app exit mid-write can no longer leave a truncated file that counts as a permanent cache hit (#20).
+
 ## 0.22.5 — 2026-10-06
 - Fix the Android Wi-Fi Sync screen hiding the pairing progress and error when they fell below the screen edge (it now scrolls, and the status is shown at the top). The "can't connect" message now names the host and the same-Wi-Fi requirement, in English and Japanese (#17).
 - Add a hard call timeout to the pairing probes so an unreachable Mac can't leave the spinner running.

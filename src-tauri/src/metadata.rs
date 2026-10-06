@@ -97,7 +97,7 @@ fn fresh_miss(p: &Path) -> bool {
 }
 
 fn touch_miss(p: &Path) {
-    let _ = std::fs::write(p, b"");
+    let _ = write_atomic(p, b"");
 }
 
 // ---- album art -------------------------------------------------------------
@@ -162,7 +162,7 @@ pub async fn fetch_album_art(
 
     match itunes_lookup_art(&artist, &album).await {
         Ok(Some(bytes)) => {
-            std::fs::write(&hit, &bytes).map_err(|e| e.to_string())?;
+            write_atomic(&hit, &bytes).map_err(|e| e.to_string())?;
             let _ = std::fs::remove_file(&miss);
             Ok(Some(bytes_to_data_uri("image/jpeg", &bytes)))
         }
@@ -226,7 +226,7 @@ pub async fn ensure_album_art(
         .ok()
         .flatten();
         if let Some(resized) = embedded {
-            std::fs::write(&hit, &resized).map_err(|e| e.to_string())?;
+            write_atomic(&hit, &resized).map_err(|e| e.to_string())?;
             let _ = std::fs::remove_file(&miss);
             return Ok(true);
         }
@@ -238,7 +238,7 @@ pub async fn ensure_album_art(
 
     match itunes_lookup_art(&artist, &album).await {
         Ok(Some(bytes)) => {
-            std::fs::write(&hit, &bytes).map_err(|e| e.to_string())?;
+            write_atomic(&hit, &bytes).map_err(|e| e.to_string())?;
             let _ = std::fs::remove_file(&miss);
             Ok(true)
         }
@@ -795,7 +795,7 @@ pub async fn fetch_lyrics(
 
     match lrclib_lookup(&artist, &title, &album, duration).await {
         Ok(Some(text)) => {
-            std::fs::write(&hit, &text).map_err(|e| e.to_string())?;
+            write_atomic(&hit, text.as_bytes()).map_err(|e| e.to_string())?;
             let _ = std::fs::remove_file(&miss);
             Ok(Some(text))
         }
