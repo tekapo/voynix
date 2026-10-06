@@ -24,6 +24,7 @@
   <a href="#install">Installation</a>
   <a href="#start">Getting started</a>
   <a href="#sync">Wi-Fi sync</a>
+  <a href="#android">Using the Android app</a>
   <a href="#auto">Android Auto</a>
   <a href="#shortcuts">Keyboard shortcuts</a>
   <a href="#backup">Backup and restore</a>
@@ -65,21 +66,34 @@
 <h3>Adding music (Mac)</h3>
 <p>In the sidebar, choose <strong>＋ New → Add Music Folder…</strong> and pick a folder; scanning starts right away. In <strong>Settings → Music Folders</strong> you can rescan (Rescan All) and import an iTunes library (Import iTunes Library…).</p>
 <h3>Library, playlists and podcasts</h3>
-<p>Browse by artist, album or playlist. Create playlists from the sidebar; smart playlists are created and edited on the Mac only and reach Android as regular playlists. Podcasts offer speed control and ±10-second skip.</p>
+<p>Browse by artist, album or playlist. Create playlists from the sidebar; smart playlists are created and edited on the Mac only and reach Android as regular playlists.</p>
+<h3>Podcasts</h3>
+<p>To treat tracks as podcasts, right-click a playlist or music folder in the sidebar and choose <strong>Kind → Podcast</strong> (other choices: Music, Other). Podcasts offer speed control (0.8–2.0x) and ±10-second skip, and are left out of shuffle. On Android, the "Don't shuffle podcasts" setting does the same for podcast playlists.</p>
 <figure><img src="../img/en-albums-dark.png" alt="Browsing albums on Mac" loading="lazy"><figcaption>Browsing albums on Mac</figcaption></figure>
 <p> Android is a client that mirrors the Mac library, so add and manage music on the Mac.</p>
 <figure class="phone"><img src="../img/en-android-songs.png" alt="All songs on Android, synced from the Mac" loading="lazy"><figcaption>All songs on Android, synced from the Mac</figcaption></figure>
 
 <h2 id="sync">Wi-Fi sync between Mac and Android</h2>
 <div class="note">Both devices must be on the same Wi-Fi network.</div>
+<h3>What gets synced</h3>
+<p>Only what you mark for sync is sent. In the Mac sidebar, <strong>right-click a playlist (or a Library item: All Songs, Favorites, Most Played, Recently Added or Recently Played) and choose "Sync to Device"</strong>; a sync mark appears next to it. Playlists are created on Android as they are on the Mac, and the tracks they contain are copied. If nothing is marked, Android receives no songs. Play history and favorites sync both ways.</p>
+<h3>Pairing</h3>
 <ol>
-  <li>On the Mac, open the Sync screen and click <strong>Start Server</strong>. A QR code is shown.</li>
-  <li>On Android, open Settings → <strong>Wi-Fi Sync</strong> and scan the QR code (Google's code scanner is used, so no camera permission is needed). The QR code contains the server certificate's fingerprint, so you don't need to verify the security code. Alternatively, use automatic discovery of the Mac, or enter the URL and pairing code manually.</li>
+  <li>On the Mac, click the sync button at the bottom left of the sidebar. The sync server starts automatically when Voynix launches (you can turn this off in <strong>Settings → Sync → "Start sync server automatically"</strong>; then start it from this window). A QR code is shown.</li>
+  <li>On Android, open Settings → <strong>Wi-Fi Sync</strong> and scan the QR code (Google's code scanner is used, so no camera permission is needed). The QR code contains the server certificate's fingerprint, so you don't need to verify the security code. Alternatively, use automatic discovery of the Mac, or enter the URL and pairing code (the "Token" field on Android) manually.</li>
   <li>Approve the prompt that appears on the Mac.</li>
-  <li>Tracks, playlists, play history and favorites are imported to Android. After that you can re-sync manually, and within Wi-Fi range it syncs automatically about every 6 hours. Auto sync can be turned off or limited to charging in the Android settings.</li>
+  <li>The marked tracks, playlists, play history and favorites are imported to Android. After that you can re-sync manually, and within Wi-Fi range it syncs automatically about every 6 hours. Auto sync can be turned off or limited to charging in the Android settings.</li>
 </ol>
-<p>Tracks in formats Android can't play, such as ALAC, are converted on the Mac before being sent.</p>
+<p>Tracks in formats Android can't play, such as ALAC, are converted on the Mac before being sent. Under <strong>Settings → Sync</strong> you can choose the target format (AAC, smaller but lossy, or FLAC, lossless but larger) and the AAC bitrate; changing it re-converts those files on the next sync.</p>
 <p>With manual entry, make sure the security code shown matches on both devices.</p>
+
+<h2 id="android">Using the Android app</h2>
+<p>The Android app is a client that mirrors the Mac library. The home screen lists <strong>Library</strong> (Songs, Artists, Albums, Favorites, Most Played, Recently Added, Recently Played) and your synced <strong>Playlists</strong>; the top bar has search, a sync button and Settings.</p>
+<ul>
+  <li><strong>Settings → Wi-Fi Sync</strong>: pair or unpair, see the connection status, run <strong>Sync now</strong>, and set <strong>Auto-sync</strong> (about every 6 hours on the Mac's Wi-Fi) and <strong>Only while charging</strong>.</li>
+  <li><strong>Settings → Language</strong>: System, English or 日本語. Also here: "Don't shuffle podcasts", "Clear album art cache" (re-fetched on the next sync), the device ID and the version.</li>
+  <li><strong>User manual</strong> and <strong>Open source licenses</strong> are at the bottom of Settings.</li>
+</ul>
 
 <h2 id="auto">Android Auto</h2>
 <p>Connected to a head unit, you can browse and play tracks, playlists and podcasts from the home screen, with shuffle/repeat and ±10-second podcast skip.</p>
@@ -99,7 +113,8 @@
   <tr><td>Space</td><td>Play / pause</td></tr>
   <tr><td>← / →</td><td>Previous / next track (±10 seconds while playing a podcast)</td></tr>
   <tr><td>⌘F</td><td>Focus the search field</td></tr>
-  <tr><td>Escape</td><td>Clear focus</td></tr>
+  <tr><td>Escape</td><td>Clear focus; close a dialog</td></tr>
+  <tr><td>⌘S</td><td>Save, in dialogs that edit track, album or smart-playlist details</td></tr>
 </table>
 <p>The Dock right-click menu is also supported.</p>
 
@@ -112,6 +127,14 @@
 <h2 id="faq">FAQ and known limitations</h2>
 <h3>Sync can't find my Mac.</h3>
 <p>Check that both devices are on the same Wi-Fi network (guest networks and some routers isolate devices from each other) and that the server is started on the Mac. If automatic discovery fails, scan the QR code or enter the URL and pairing code manually.</p>
+<h3>I synced, but no songs appeared on Android.</h3>
+<p>Only playlists and library items marked "Sync to Device" are sent. Right-click one in the Mac sidebar, choose "Sync to Device", then tap <strong>Sync now</strong> on Android.</p>
+<h3>My Mac's IP address changed and Android says it can't reach the Mac.</h3>
+<p>Automatic recovery can fail on some networks. Open the Wi-Fi sync window on the Mac and pair again by scanning the QR code.</p>
+<h3>How do I update the app?</h3>
+<p>Mac: download the new <code>.dmg</code> and replace the app in Applications. Android: Obtainium updates it for you; otherwise install the new <code>.apk</code> over the old one. Your data is kept.</p>
+<h3>Where is my data stored?</h3>
+<p>On the Mac, in <code>~/Library/Application Support/com.tekapo.voynix</code> (library database and caches). Your music files stay where they are; Voynix only changes them when you save edited tags with "Get Info…". Deleting the app does not remove this folder.</p>
 <h3>macOS refuses to open the app.</h3>
 <p>Right-click the app in Finder and choose "Open" (see Installation).</p>
 <h3>Voynix doesn't show up in Android Auto.</h3>
@@ -125,7 +148,7 @@
 </ul>
 
 <h2 id="security">Security and privacy</h2>
-<p>Voynix is local-first: your library stays on your devices, and the app has no accounts and no analytics. The sync server runs on your Mac only while you start it, is reachable on your local network, and requires pairing that you approve on the Mac. Traffic is protected by a certificate whose fingerprint is carried in the QR code. To report a vulnerability, see <a href="https://github.com/tekapo/voynix/blob/main/SECURITY.md">SECURITY.md</a>.</p>
+<p>Voynix is local-first: your library stays on your devices, and the app has no accounts and no analytics. The sync server runs on your Mac only while Voynix is open (it starts automatically unless you turn that off in Settings → Sync), is reachable on your local network, and requires pairing that you approve on the Mac. Traffic is protected by a certificate whose fingerprint is carried in the QR code. To report a vulnerability, see <a href="https://github.com/tekapo/voynix/blob/main/SECURITY.md">SECURITY.md</a>.</p>
 
 <h2 id="links">More</h2>
 <ul>
