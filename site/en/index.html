@@ -79,13 +79,18 @@
 <p>Only what you mark for sync is sent. In the Mac sidebar, <strong>right-click a playlist (or a Library item: All Songs, Favorites, Most Played, Recently Added or Recently Played) and choose "Sync to Device"</strong>; a sync mark appears next to it. Playlists are created on Android as they are on the Mac, and the tracks they contain are copied. If nothing is marked, Android receives no songs. Play history and favorites sync both ways.</p>
 <h3>Pairing</h3>
 <ol>
-  <li>On the Mac, click the sync button at the bottom left of the sidebar. The sync server starts automatically when Voynix launches (you can turn this off in <strong>Settings → Sync → "Start sync server automatically"</strong>; then start it from this window). A QR code is shown.</li>
-  <li>On Android, open Settings → <strong>Wi-Fi Sync</strong> and scan the QR code (Google's code scanner is used, so no camera permission is needed). The QR code contains the server certificate's fingerprint, so you don't need to verify the security code. Alternatively, use automatic discovery of the Mac, or enter the URL and pairing code (the "Token" field on Android) manually.</li>
-  <li>Approve the prompt that appears on the Mac.</li>
+  <li>On the Mac, click the sync button at the bottom left of the sidebar. The sync server starts automatically when Voynix launches (you can turn this off in <strong>Settings → Sync → "Start sync server automatically"</strong>; then start it from this window). A QR code, the server URL, the pairing code and a security code are shown.</li>
+  <li>On Android, open Settings → <strong>Wi-Fi Sync</strong> and pair using one of the three methods below (QR code is the easiest).</li>
   <li>The marked tracks, playlists, play history and favorites are imported to Android. After that you can re-sync manually, and within Wi-Fi range it syncs automatically about every 6 hours. Auto sync can be turned off or limited to charging in the Android settings.</li>
 </ol>
 <p>Tracks in formats Android can't play, such as ALAC, are converted on the Mac before being sent. Under <strong>Settings → Sync</strong> you can choose the target format (AAC, smaller but lossy, or FLAC, lossless but larger) and the AAC bitrate; changing it re-converts those files on the next sync.</p>
-<p>With manual entry, make sure the security code shown matches on both devices.</p>
+<table>
+  <tr><th>Method (on Android)</th><th>What you confirm</th></tr>
+  <tr><td><strong>Scan QR code</strong></td><td>Nothing. The QR code carries the server certificate's fingerprint, so the connection is pinned to your Mac right away. (Google's code scanner is used, so no camera permission is needed.) Anyone who can see the QR code can pair, so don't show the sync window to others.</td></tr>
+  <tr><td><strong>Find Mac</strong> (automatic discovery)</td><td>A prompt appears on the Mac: check that its security code matches the one on the phone, then click Allow. Android then asks "Is this the right Mac?"; check the code again and tap "Matches — Pair".</td></tr>
+  <tr><td><strong>Enter manually</strong></td><td>Type the URL and the pairing code (the "Token" field on Android). Android then shows "Is this the right Mac?"; compare its security code with the one in the Mac's sync window and tap "Matches — Pair". There is no prompt on the Mac.</td></tr>
+</table>
+<p>Pairing again after "Unpair" works the same way; there is no shortcut for devices that were paired before.</p>
 
 <h2 id="android">Using the Android app</h2>
 <p>The Android app is a client that mirrors the Mac library. The home screen lists <strong>Library</strong> (Songs, Artists, Albums, Favorites, Most Played, Recently Added, Recently Played) and your synced <strong>Playlists</strong>; the top bar has search, a sync button and Settings.</p>
@@ -148,7 +153,7 @@
 </ul>
 
 <h2 id="security">Security and privacy</h2>
-<p>Voynix is local-first: your library stays on your devices, and the app has no accounts and no analytics. The sync server runs on your Mac only while Voynix is open (it starts automatically unless you turn that off in Settings → Sync), is reachable on your local network, and requires pairing that you approve on the Mac. Traffic is protected by a certificate whose fingerprint is carried in the QR code. To report a vulnerability, see <a href="https://github.com/tekapo/voynix/blob/main/SECURITY.md">SECURITY.md</a>.</p>
+<p>Voynix is local-first: your library stays on your devices, and the app has no accounts and no analytics. The sync server runs on your Mac only while Voynix is open (it starts automatically unless you turn that off in Settings → Sync), is reachable on your local network, and requires pairing: a QR code shown on your Mac's screen, a security-code check, or an approval you give on the Mac. Traffic is protected by a certificate whose fingerprint is pinned at pairing time. To report a vulnerability, see <a href="https://github.com/tekapo/voynix/blob/main/SECURITY.md">SECURITY.md</a>.</p>
 
 <h2 id="links">More</h2>
 <ul>
