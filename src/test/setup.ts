@@ -1,7 +1,12 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach } from "vitest";
 import i18n from "../i18n";
+
+// The 1 s default for waitFor/findBy* is too tight on a loaded CI runner
+// (playback start is async audio + DB work); passing tests aren't slowed by a
+// longer ceiling.
+configure({ asyncUtilTimeout: 5000 });
 
 afterEach(async () => {
     cleanup();

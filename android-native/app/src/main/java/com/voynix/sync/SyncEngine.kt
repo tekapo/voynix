@@ -13,10 +13,13 @@ import com.voynix.logic.SyncProgress
 import com.voynix.logic.SyncSummary
 import com.voynix.logic.diffPlaylists
 import com.voynix.logic.diffTracks
+import com.voynix.logic.hasEnoughSpace
 import com.voynix.logic.pool
 import com.voynix.logic.resolvedTrackIds
 import java.io.File
+import java.util.Collections
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Orchestrates one phone->Mac sync, mirroring syncEngine.ts's runSync order:
@@ -66,23 +69,27 @@ class SyncEngine(
             deleted++
         }
 
-        val toDownload = plan.toAdd + plan.toRefetch
-        var doneDownloads = 0
-        var added = 0
-        var refetched = 0
+        // One download per track key: two workers on the same key would share one `.part` file.
+        val toDownload = (plan.toAdd + plan.toRefetch).distinctBy { it.trackKey }
+        checkFreeSpace(toDownload)
+        // Workers run concurrently (pool), so the counters and the error list must be thread-safe.
+        val doneDownloads = AtomicInteger(0)
+        val added = AtomicInteger(0)
+        val refetched = AtomicInteger(0)
+        val downloadErrors = Collections.synchronizedList(mutableListOf<String>())
         val addKeys = plan.toAdd.mapTo(HashSet()) { it.trackKey }
         onProgress(SyncProgress("download", "Downloading", 0, toDownload.size))
         pool(toDownload, limit = 4) { track, _ ->
             try {
                 val path = api.downloadFile(syncedDir, peer.url, peer.token, peer.pin, track.trackKey, track.fileName, track.contentHash)
                 upsertDownloadedTrack(track, path)
-                if (track.trackKey in addKeys) added++ else refetched++
+                if (track.trackKey in addKeys) added.incrementAndGet() else refetched.incrementAndGet()
             } catch (e: Exception) {
-                errors.add("${track.title}: ${e.message}")
+                downloadErrors.add("${track.title}: ${e.message}")
             }
-            doneDownloads++
-            onProgress(SyncProgress("download", track.title, doneDownloads, toDownload.size))
+            onProgress(SyncProgress("download", track.title, doneDownloads.incrementAndGet(), toDownload.size))
         }
+        errors.addAll(downloadErrors)
 
         onProgress(SyncProgress("reconcile", "Updating metadata"))
         for (t in plan.toUpdateMeta) {
@@ -105,12 +112,26 @@ class SyncEngine(
 
         onProgress(SyncProgress("done", "Done"))
         return SyncSummary(
-            added = added,
-            refetched = refetched,
+            added = added.get(),
+            refetched = refetched.get(),
             deleted = deleted,
             playlists = manifestPlaylists.size,
             errors = errors,
         )
+    }
+
+    /**
+     * Stops the sync before the first byte when the tracks to download (minus
+     * what interrupted `.part` files already hold) can't fit with a safety
+     * margin. An unreadable free-space value proceeds; a full disk does not.
+     */
+    private fun checkFreeSpace(toDownload: List<ManifestTrack>) {
+        if (toDownload.isEmpty()) return
+        val needed = toDownload.sumOf { (it.size - api.partialBytes(syncedDir, it.trackKey, it.fileName)).coerceAtLeast(0L) }
+        val free = api.freeSpaceBytes(syncedDir)
+        if (!hasEnoughSpace(needed, free, FREE_SPACE_CUSHION_BYTES)) {
+            throw InsufficientSpaceException(needed, free ?: 0L)
+        }
     }
 
     /** Also used by StatsPusher for the lightweight push at podcast settle points. */
@@ -267,5 +288,12 @@ class SyncEngine(
         const val LAST_STATS_FULL_PUSH_KEY = "last_stats_full_push_at"
         const val FULL_PUSH_INTERVAL_MS = 24L * 60 * 60 * 1000
         const val EVENTS_PER_REQUEST = 5000
+        const val FREE_SPACE_CUSHION_BYTES = 50L * 1024 * 1024
     }
 }
+
+/** The tracks to download need more room than the phone has free; nothing was downloaded. */
+class InsufficientSpaceException(val neededBytes: Long, val freeBytes: Long) : Exception(
+    "Not enough storage to sync: need about ${neededBytes / (1024 * 1024)} MB, " +
+        "${freeBytes / (1024 * 1024)} MB free. Free up space and try again."
+)

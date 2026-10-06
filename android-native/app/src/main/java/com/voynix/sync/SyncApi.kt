@@ -176,12 +176,19 @@ class SyncApi {
             }
         }
 
-    /** Bytes free where [dir] lives, or null if unreadable — mirrors sync_free_space. */
+    /**
+     * Bytes free where [dir] lives, or null if the directory can't be created.
+     * A full disk reports 0 (not null) so the caller refuses to download
+     * instead of treating "no space" as "unknown".
+     */
     fun freeSpaceBytes(dir: File): Long? {
         dir.mkdirs()
-        val usable = dir.usableSpace
-        return if (usable > 0) usable else null
+        return if (dir.isDirectory) dir.usableSpace else null
     }
+
+    /** Bytes of an interrupted download of this track already on disk (its `.part`), 0 if none. */
+    fun partialBytes(dir: File, trackKey: String, fileName: String): Long =
+        withExtension(destFile(dir, trackKey, fileName), "part").let { if (it.isFile) it.length() else 0L }
 
     /**
      * Downloads one track into [dir], resuming a `.part` left by an interrupted
@@ -198,9 +205,7 @@ class SyncApi {
         expectedHash: String,
     ): String = withContext(Dispatchers.IO) {
         dir.mkdirs()
-        val keyPrefix = trackKey.take(16)
-        val safeName = fileName.replace('/', '_').replace('\\', '_')
-        val dest = File(dir, "${keyPrefix}_$safeName")
+        val dest = destFile(dir, trackKey, fileName)
         val part = withExtension(dest, "part")
 
         val have = if (part.isFile) part.length() else 0L
@@ -275,6 +280,11 @@ class SyncApi {
                 true
             }
         }
+}
+
+private fun destFile(dir: File, trackKey: String, fileName: String): File {
+    val safeName = fileName.replace('/', '_').replace('\\', '_')
+    return File(dir, "${trackKey.take(16)}_$safeName")
 }
 
 private fun withExtension(file: File, ext: String): File {

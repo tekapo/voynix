@@ -10,6 +10,11 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.7 — 2026-10-06
+- Android sync now checks free space before downloading (tracks to fetch minus bytes already in `.part` files, plus a 50 MB margin) and stops early with a clear message; a full disk is refused instead of treated as unknown (#18).
+- Make parallel track downloads safe: one download per track key (no shared `.part` file) and thread-safe progress counters and error list (#19).
+- Raise the web tests' `waitFor` timeout from 1 s to 5 s so playback-state assertions stop flaking on loaded CI runners (#32).
+
 ## 0.22.6 — 2026-10-06
 - Write cached album art, lyrics and the `.miss` markers atomically (temp file + rename), so a concurrent request or an app exit mid-write can no longer leave a truncated file that counts as a permanent cache hit (#20).
 
