@@ -38,6 +38,9 @@ th, td { text-align: left; padding: 6px 10px; border: 1px solid var(--border); }
 th { background: var(--code); }
 .note { background: var(--note); border-left: 3px solid var(--accent); padding: 8px 14px; border-radius: 4px; margin: 14px 0; }
 footer { border-top: 1px solid var(--border); padding: 20px 16px; text-align: center; color: var(--muted); font-size: 14px; }
+figure { margin: 16px 0; }
+figure img { width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border); }
+figcaption { color: var(--muted); font-size: 13px; text-align: center; margin-top: 6px; }
 @media (max-width: 760px) {
   aside.toc { display: none; }
   header.top nav a:not(.lang) { display: none; }
