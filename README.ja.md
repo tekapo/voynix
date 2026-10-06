@@ -2,8 +2,13 @@
 
 [English](./README.md) | 日本語
 
-Mac 上のローカル音楽ライブラリを管理・再生し、Wi-Fi 経由で Android（Android Auto 対応）へ
-同期して持ち出せる音楽プレーヤーです。
+## TL;DR
+
+Voynix は、Mac と Android 向けのローカルファーストな音楽プレーヤーです。
+
+- Mac のライブラリを Wi-Fi 経由で Android に同期します。再生履歴やお気に入りも、Android から Mac に反映されます
+- Android Auto に対応しています
+- macOS 標準の「ミュージック」アプリの代わりになることを目指しています
 
 ## 主な機能
 
