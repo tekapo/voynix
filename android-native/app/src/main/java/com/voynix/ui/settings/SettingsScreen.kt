@@ -2,12 +2,16 @@ package com.voynix.ui.settings
 
 import android.app.LocaleManager
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.LocaleList
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CleaningServices
@@ -15,6 +19,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.DropdownMenu
@@ -90,7 +95,7 @@ fun SettingsScreen(
             }
         },
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Column(modifier = Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState())) {
             ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_wifi_sync)) },
                 supportingContent = { Text(stringResource(R.string.settings_wifi_sync_detail)) },
@@ -136,6 +141,14 @@ fun SettingsScreen(
                 colors = ListItemDefaults.colors(
                     supportingColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
+            )
+            val manualUrl = stringResource(R.string.settings_user_manual_url)
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_user_manual)) },
+                leadingContent = { Icon(Icons.Filled.MenuBook, contentDescription = null) },
+                modifier = Modifier.clickable {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(manualUrl)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                },
             )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_licenses)) },

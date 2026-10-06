@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getVersion } from '@tauri-apps/api/app';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { useTranslation } from 'react-i18next';
 import { ScanFolder, ServerActivity, ServerStatus, TrackKind } from '../types';
 import type { TranscodeFormat } from '../db';
@@ -552,6 +553,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="settings-section">
                     <p><strong>{t('settings.appName')}</strong>{version && t('settings.versionLabel', { version })}</p>
                     <p className="settings-hint">{t('settings.aboutTagline')}</p>
+                    <button type="button" className="modal-btn cancel" onClick={() => { openUrl(t('settings.websiteUrl')).catch(() => {}); }}>
+                        {t('settings.userManual')}
+                    </button>
+                    {' '}
                     <button type="button" className="modal-btn cancel" onClick={toggleLicenses}>
                         {t('settings.openSourceLicenses')}
                     </button>
