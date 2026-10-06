@@ -131,7 +131,7 @@ mDNS（`adb mdns services`）で自動検出します。ペアリング用のポ
 
 `./gradlew installDebug` や APK の sideload で入れたビルドは、Android Auto 側で
 「提供元不明のアプリ」を有効にしないとアプリ一覧に出てきません。
-有効化の手順は [README.ja.md](../README.ja.md#android-auto-を使う) を参照してください。それでも一覧に「Voynix」が出てこない場合、
+有効化の手順は [ユーザーマニュアル](https://tekapo.github.io/voynix/ja/#auto) を参照してください。それでも一覧に「Voynix」が出てこない場合、
 確認用に:
 
 ```sh
@@ -162,7 +162,7 @@ npm run auto:dhu
 `npm run auto:dhu`（`scripts/dhu.mjs`）が `adb devices` の確認・`adb forward tcp:5277
 tcp:5277`・DHU 起動をまとめてやります。事前に端末の Android Auto アプリ側でも
 「デベロッパー向け設定」→「ヘッドユニットサーバーを起動」をタップしておくこと
-（デベロッパー向け設定の出し方は [README.ja.md](../README.ja.md#android-auto-を使う) 参照）。
+（デベロッパー向け設定の出し方は [ユーザーマニュアル](https://tekapo.github.io/voynix/ja/#auto) 参照）。
 
 DHU は beta チャンネルの **2.1** を使います（stable の 2.0 は実機の Android Auto とのハンドシェイクが
 成立しません）。ブラウズツリー、タップ再生、カバーアート／曲名表示、Auto 側からの一時停止操作まで

@@ -128,7 +128,7 @@ the network and macOS's "Local Network" permission, mDNS or `adb connect` may no
 
 A debug build installed with `./gradlew installDebug` or a sideloaded APK won't appear in Android Auto's
 app list unless "Unknown sources" is enabled there. For how to enable it, see
-[Using Android Auto](../README.md#using-android-auto) in the root README. If "Voynix" still doesn't
+[Android Auto](https://tekapo.github.io/voynix/en/#auto) in the user manual. If "Voynix" still doesn't
 appear, these help:
 
 ```sh
@@ -158,7 +158,7 @@ npm run auto:dhu
 
 `npm run auto:dhu` (`scripts/dhu.mjs`) checks `adb devices`, runs `adb forward tcp:5277 tcp:5277`, and
 starts the DHU. Beforehand, in the Android Auto app on the device, open Developer settings and tap
-"Start head unit server" (see [Using Android Auto](../README.md#using-android-auto) for how to reveal
+"Start head unit server" (see [Android Auto](https://tekapo.github.io/voynix/en/#auto) for how to reveal
 Developer settings).
 
 Use **DHU 2.1** from the beta channel: stable 2.0 doesn't complete the handshake with the Android Auto
