@@ -7,6 +7,7 @@ import com.voynix.logic.SyncPeer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -29,6 +30,7 @@ class SyncEngineRunSyncTest {
     private lateinit var context: Context
     private lateinit var db: VoynixDatabase
     private lateinit var engine: SyncEngine
+    private lateinit var api: SyncApi
     private val peer = SyncPeer("https://mac.local:1234", "tok", null, "pin")
 
     private var manifest = SyncSnapshotDto(deviceId = "mac", generatedAt = 1L)
@@ -47,7 +49,9 @@ class SyncEngineRunSyncTest {
         runBlocking(Dispatchers.IO) { db.clearAllTables() }
         File(context.filesDir, "synced").deleteRecursively()
 
-        val api = mock<SyncApi>()
+        api = mock()
+        // Mockito defaults a boxed Long to 0 ("disk full"); the real API returns null when unknown.
+        wheneverBlocking { api.freeSpaceBytes(any()) }.doAnswer { null }
         wheneverBlocking { api.fetchManifest(any(), any(), anyOrNull()) }.doAnswer { manifest }
         wheneverBlocking {
             api.downloadFile(any(), any(), any(), anyOrNull(), any(), any(), any())
@@ -67,8 +71,56 @@ class SyncEngineRunSyncTest {
         context.deleteDatabase("voynix.db")
     }
 
-    private fun track(key: String, hash: String = "h-$key", title: String = "Song $key") =
-        SnapshotTrackDto(trackKey = key, title = title, fileName = "$key.mp3", filePath = "/Music/$key.mp3", contentHash = hash)
+    private fun track(key: String, hash: String = "h-$key", title: String = "Song $key", size: Long = 0) =
+        SnapshotTrackDto(trackKey = key, title = title, fileName = "$key.mp3", filePath = "/Music/$key.mp3", contentHash = hash, size = size)
+
+    @Test
+    fun `a sync stops before downloading when the tracks do not fit in the free space`() = runTest {
+        wheneverBlocking { api.freeSpaceBytes(any()) }.doAnswer { 10L * 1024 * 1024 }
+        manifest = manifest.copy(tracks = listOf(track("a", size = 100L * 1024 * 1024)))
+
+        val e = runCatching { engine.runSync(peer) }.exceptionOrNull()
+
+        assertTrue(e is InsufficientSpaceException)
+        assertTrue(downloaded.isEmpty())
+    }
+
+    @Test
+    fun `a full disk is refused rather than treated as unknown`() = runTest {
+        wheneverBlocking { api.freeSpaceBytes(any()) }.doAnswer { 0L }
+        manifest = manifest.copy(tracks = listOf(track("a", size = 1L)))
+
+        assertTrue(runCatching { engine.runSync(peer) }.exceptionOrNull() is InsufficientSpaceException)
+        assertTrue(downloaded.isEmpty())
+    }
+
+    @Test
+    fun `bytes already in a partial download are not counted as needed`() = runTest {
+        wheneverBlocking { api.freeSpaceBytes(any()) }.doAnswer { 60L * 1024 * 1024 }
+        wheneverBlocking { api.partialBytes(any(), any(), any()) }.doAnswer { 90L * 1024 * 1024 }
+        manifest = manifest.copy(tracks = listOf(track("a", size = 100L * 1024 * 1024)))
+
+        assertEquals(1, engine.runSync(peer).added)
+    }
+
+    @Test
+    fun `a duplicated track key is downloaded once`() = runTest {
+        manifest = manifest.copy(tracks = listOf(track("a"), track("a")))
+
+        engine.runSync(peer)
+
+        assertEquals(listOf("a"), downloaded)
+    }
+
+    @Test
+    fun `many parallel downloads keep the summary counts exact`() = runTest {
+        manifest = manifest.copy(tracks = (1..40).map { track("k$it") })
+
+        val summary = withContext(Dispatchers.Default) { engine.runSync(peer) }
+
+        assertEquals(40, summary.added)
+        assertEquals(40, downloaded.size)
+    }
 
     @Test
     fun `a first sync stores the tracks in the DB and the files on disk`() = runTest {
