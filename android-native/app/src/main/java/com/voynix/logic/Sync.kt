@@ -306,6 +306,10 @@ suspend fun <T> pool(items: List<T>, limit: Int, worker: suspend (T, Int) -> Uni
     }
 }
 
+/** The host part of a pairing URL for display (falls back to the raw text if it can't be parsed). */
+fun hostOfUrl(url: String): String =
+    runCatching { java.net.URI(url.trim()).host }.getOrNull()?.takeIf { it.isNotEmpty() } ?: url.trim()
+
 /**
  * Cleans up hand-typed pairing input: trims whitespace and folds full-width
  * ASCII (U+FF01..U+FF5E, e.g. from a Japanese keyboard) and the ideographic

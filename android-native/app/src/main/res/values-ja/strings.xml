@@ -134,6 +134,7 @@
     <string name="sync_searching">検索中...</string>
     <string name="sync_scan_qr">QRコードで読み取る</string>
     <string name="sync_scan_qr_hint">Macの「Wi-Fi同期」画面に表示されるQRコードをスキャンします。</string>
+    <string name="sync_error_cant_reach_mac">Mac（%1$s）に接続できません。両方の端末が同じ Wi-Fi にあり、Mac で同期サーバーが起動しているか確認してください。</string>
     <string name="sync_qr_scan_failed">QRスキャナーを開けませんでした。手動で入力してください。</string>
     <string name="sync_find_mac">Macを検索</string>
     <string name="sync_enter_manually">見つからない場合は手動で入力</string>

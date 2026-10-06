@@ -134,6 +134,7 @@
     <string name="sync_searching">Searching...</string>
     <string name="sync_scan_qr">Scan QR code</string>
     <string name="sync_scan_qr_hint">Scan the QR code shown on your Mac (Wi-Fi sync window).</string>
+    <string name="sync_error_cant_reach_mac">Can\'t connect to the Mac (%1$s). Check that both devices are on the same Wi-Fi and that the sync server is running.</string>
     <string name="sync_qr_scan_failed">Couldn\'t open the QR scanner. Try entering the details manually.</string>
     <string name="sync_find_mac">Find Mac</string>
     <string name="sync_enter_manually">Enter manually if it isn\'t found</string>

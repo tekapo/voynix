@@ -57,6 +57,9 @@ class SyncApi {
                     .newBuilder()
                     .connectTimeout(timeoutMs, TimeUnit.MILLISECONDS)
                     .readTimeout(timeoutMs, TimeUnit.MILLISECONDS)
+                    // Hard cap on the whole call (connect + TLS + response): the
+                    // per-phase timeouts alone don't bound a half-open connection.
+                    .callTimeout(timeoutMs * 3, TimeUnit.MILLISECONDS)
                     .build()
                 val req = Request.Builder()
                     .url("${base(url)}/api/ping")
@@ -91,6 +94,7 @@ class SyncApi {
                     .newBuilder()
                     .connectTimeout(timeoutMs, TimeUnit.MILLISECONDS)
                     .readTimeout(timeoutMs, TimeUnit.MILLISECONDS)
+                    .callTimeout(timeoutMs * 2, TimeUnit.MILLISECONDS)
                     .build()
                 // Any HTTP status will do — the handshake is what we're after.
                 shortClient.newCall(Request.Builder().url("${base(url)}/").build()).execute().use { }
