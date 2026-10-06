@@ -50,6 +50,8 @@
 </ul>
 <p><strong>動作環境:</strong> macOS（配布している DMG は Apple Silicon 専用）、Android 8.0（API 26）以上。Android Auto は任意です。同期には Mac と Android が同じ Wi-Fi ネットワーク上にあることが必要です。</p>
 
+<figure><img src="../img/ja-library-dark.png" alt="Mac のライブラリ画面（曲名・アーティスト・アルバム・再生時間）" loading="lazy"><figcaption>Mac のライブラリ画面（曲名・アーティスト・アルバム・再生時間）</figcaption></figure>
+
 <h2 id="install">インストール</h2>
 <h3>Mac</h3>
 <p><a href="https://github.com/tekapo/voynix/releases">Releases</a> から <code>.dmg</code> をダウンロードして Applications にドラッグします。</p>
@@ -63,7 +65,9 @@
 <h3>音楽を取り込む（Mac）</h3>
 <p>サイドバーの <strong>「＋ New」→「Add Music Folder…」</strong>から音楽フォルダを追加するとスキャンが始まります。<strong>Settings → Music Folders</strong> からは再スキャン（Rescan All）や iTunes ライブラリの読み込み（Import iTunes Library…）も行えます。</p>
 <h3>ライブラリ、プレイリスト、Podcast</h3>
-<p>アーティスト・アルバム・プレイリストから曲を探せます。プレイリストはサイドバーから作成します。スマートプレイリストの作成・編集は Mac のみで、Android へは通常プレイリストとして同期されます。Podcast は再生速度の変更と ±10秒スキップに対応しています。Android は Mac のライブラリをミラーする専用クライアントなので、曲の追加・管理は Mac で行ってください。</p>
+<p>アーティスト・アルバム・プレイリストから曲を探せます。プレイリストはサイドバーから作成します。スマートプレイリストの作成・編集は Mac のみで、Android へは通常プレイリストとして同期されます。Podcast は再生速度の変更と ±10秒スキップに対応しています。</p>
+<figure><img src="../img/ja-albums-dark.png" alt="Mac のアルバム一覧" loading="lazy"><figcaption>Mac のアルバム一覧</figcaption></figure>
+<p>Android は Mac のライブラリをミラーする専用クライアントなので、曲の追加・管理は Mac で行ってください。</p>
 
 <h2 id="sync">Mac と Android の Wi-Fi 同期</h2>
 <div class="note">Mac と Android は同じ Wi-Fi ネットワーク上にある必要があります。</div>
@@ -99,7 +103,9 @@
 <p>Dock の右クリックメニューにも対応しています。</p>
 
 <h2 id="backup">バックアップと復元</h2>
-<p>Mac では <strong>Settings → Library → Export Backup…</strong> でプレイリスト・フォルダ・設定を JSON ファイルに保存でき、<strong>Import Backup…</strong> で復元できます。音楽ファイル自体は含まれないため、別途バックアップしてください。</p>
+<p>Mac では <strong>Settings → Library → Export Backup…</strong> で、プレイリスト（通常・スマート）、登録済みの音楽フォルダ、設定、アーティスト画像、アルバムカバーを 1 つの ZIP ファイルに書き出せます。<strong>Import Backup…</strong> で、ライブラリにマージできます。インポートしても既存のプレイリストやフォルダは上書きされず、不足しているものだけが追加されます。音楽ファイル自体は含まれないため、別途バックアップしてください。</p>
+<figure><img src="../img/ja-settings-library-dark.png" alt="設定 → ライブラリ（言語設定とバックアップのボタン）" loading="lazy"><figcaption>設定 → ライブラリ（言語設定とバックアップのボタン）</figcaption></figure>
+
 <p>Android のバックアップは、ペアリング情報を別端末に復元させないため意図的に無効です。機種変更後はアプリを入れ直し、再ペアリングして同期してください。</p>
 
 <h2 id="faq">FAQ と既知の制限</h2>
