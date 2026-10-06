@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.2 — 2026-10-06
+- Update the `rand` 0.8 dependency to 0.8.8 (Cargo.lock only) to address a Dependabot advisory
+
 ## 0.22.1 — 2026-10-06
 - Upgrade the test toolchain to vitest 5 (resolves the open Dependabot alerts for vitest, @vitest/mocker and tinypool)
 - Run CI on Node 26, which the `node:sqlite`-based tests need under vitest 5
