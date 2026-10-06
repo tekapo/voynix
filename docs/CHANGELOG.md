@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.3 — 2026-10-06
+- Update Tauri to 2.12 and the dialog / fs / opener / sql plugins (Rust and npm sides together). Drops the old `kuchikiki` → `rand` 0.7.3 build-time dependency flagged by Dependabot
+
 ## 0.22.2 — 2026-10-06
 - Update the `rand` 0.8 dependency to 0.8.8 (Cargo.lock only) to address a Dependabot advisory
 
