@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.5 — 2026-10-06
+- Fix the Android Wi-Fi Sync screen hiding the pairing progress and error when they fell below the screen edge (it now scrolls, and the status is shown at the top). The "can't connect" message now names the host and the same-Wi-Fi requirement, in English and Japanese (#17).
+- Add a hard call timeout to the pairing probes so an unreachable Mac can't leave the spinner running.
+
 ## 0.22.4 — 2026-10-06
 - Add a "User manual" link to the About screen on Mac (Settings → About) and Android (Settings), opening the English or Japanese manual site to match the app language (#23).
 - Make the Android settings screen scrollable so the bottom rows are no longer cut off on large displays or font sizes.

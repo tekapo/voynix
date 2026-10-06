@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -39,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -88,7 +89,7 @@ fun SyncScreen(vm: SyncViewModel, onBack: () -> Unit) {
             )
         },
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
+        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp).verticalScroll(rememberScrollState())) {
             if (peer == null) {
                 PairingSection(vm)
             } else {
@@ -141,6 +142,18 @@ private fun PairingSection(vm: SyncViewModel) {
     Text(stringResource(R.string.sync_pair_with_mac), style = MaterialTheme.typography.bodyMedium)
     Spacer(Modifier.height(12.dp))
 
+    // Progress and errors sit right under the intro, not under the manual-entry
+    // form: they must stay on screen however tall the form is (large fonts, the
+    // keyboard open), or a failed pairing looks like nothing happened.
+    if (isPairing) {
+        CircularProgressIndicator()
+        Spacer(Modifier.height(12.dp))
+    }
+    pairError?.let {
+        Text(it, color = MaterialTheme.colorScheme.error)
+        Spacer(Modifier.height(12.dp))
+    }
+
     val context = LocalContext.current
     val scanFailedMessage = stringResource(R.string.sync_qr_scan_failed)
     Button(
@@ -171,9 +184,13 @@ private fun PairingSection(vm: SyncViewModel) {
 
     if (discovered.isNotEmpty()) {
         Spacer(Modifier.height(12.dp))
-        LazyColumn {
-            items(discovered, key = { it.url }) { p ->
-                DiscoveredPeerRow(p, enabled = !isPairing, onClick = { vm.pairWithDiscovered(p) })
+        // A plain Column, not a LazyColumn: the screen already scrolls, and a lazy
+        // list can't be nested in a vertically scrolling parent.
+        Column {
+            discovered.forEach { p ->
+                key(p.url) {
+                    DiscoveredPeerRow(p, enabled = !isPairing, onClick = { vm.pairWithDiscovered(p) })
+                }
             }
         }
     }
@@ -204,15 +221,6 @@ private fun PairingSection(vm: SyncViewModel) {
         enabled = !isPairing && manualUrl.isNotBlank() && manualToken.isNotBlank(),
     ) {
         Text(stringResource(R.string.sync_pair_manually))
-    }
-
-    if (isPairing) {
-        Spacer(Modifier.height(12.dp))
-        CircularProgressIndicator()
-    }
-    pairError?.let {
-        Spacer(Modifier.height(12.dp))
-        Text(it, color = MaterialTheme.colorScheme.error)
     }
 }
 

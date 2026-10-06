@@ -7,11 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.voynix.data.db.SettingEntity
 import com.voynix.data.db.VoynixDatabase
 import com.voynix.logic.DiscoveredPeer
+import com.voynix.R
 import com.voynix.logic.PeerConnection
 import com.voynix.logic.SyncPeer
 import com.voynix.logic.SyncProgress
 import com.voynix.logic.SyncSummary
 import com.voynix.logic.checkPeerConnection
+import com.voynix.logic.hostOfUrl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -190,7 +192,7 @@ class SyncViewModel(private val context: Context, private val db: VoynixDatabase
             try {
                 val fingerprint = api.fetchFingerprint(url)
                 if (fingerprint == null) {
-                    _pairError.value = "Can't connect to Mac"
+                    _pairError.value = cantReachMessage(url)
                     return@launch
                 }
                 _pendingPairing.value = PendingPairing(
@@ -225,7 +227,7 @@ class SyncViewModel(private val context: Context, private val db: VoynixDatabase
                     com.voynix.logic.PeerProbeResult.OK -> savePairedPeer(qr.url, qr.token, qr.fingerprint)
                     com.voynix.logic.PeerProbeResult.UNAUTHORIZED -> _pairError.value = "Invalid token"
                     // A fingerprint mismatch (pinned TLS handshake failing) lands here too.
-                    com.voynix.logic.PeerProbeResult.UNREACHABLE -> _pairError.value = "Can't connect to Mac"
+                    com.voynix.logic.PeerProbeResult.UNREACHABLE -> _pairError.value = cantReachMessage(qr.url)
                 }
             } catch (e: IllegalArgumentException) {
                 _pairError.value = "Invalid URL or token"
@@ -234,6 +236,10 @@ class SyncViewModel(private val context: Context, private val db: VoynixDatabase
             }
         }
     }
+
+    /** Names the host we tried so a wrong network (another subnet's IP) is easy to spot. */
+    private fun cantReachMessage(url: String): String =
+        context.getString(R.string.sync_error_cant_reach_mac, hostOfUrl(url))
 
     /** Surfaces a QR-scanner failure (e.g. Google Play services unavailable) in the pairing UI. */
     fun reportPairError(message: String) {
@@ -257,7 +263,7 @@ class SyncViewModel(private val context: Context, private val db: VoynixDatabase
                             return@launch
                         }
                         com.voynix.logic.PeerProbeResult.UNREACHABLE -> {
-                            _pairError.value = "Can't connect to Mac"
+                            _pairError.value = cantReachMessage(pending.url)
                             return@launch
                         }
                     }

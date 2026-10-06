@@ -4,6 +4,7 @@ import com.voynix.logic.PeerProbeResult
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.SocketPolicy
 import okhttp3.tls.HandshakeCertificates
 import okhttp3.tls.HeldCertificate
 import okio.Buffer
@@ -129,6 +130,25 @@ class SyncApiTest {
     fun `ping returns UNREACHABLE on an unreachable host`() = runTest {
         server.shutdown()
         assertEquals(PeerProbeResult.UNREACHABLE, api.ping(url(), "tok", pin, timeoutMs = 500))
+    }
+
+    @Test
+    fun `ping gives up in bounded time when the server accepts but never answers`() = runTest {
+        server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE))
+        val start = System.nanoTime()
+        assertEquals(PeerProbeResult.UNREACHABLE, api.ping(url(), "tok", pin, timeoutMs = 300))
+        val elapsedMs = (System.nanoTime() - start) / 1_000_000
+        // callTimeout is 3x the per-phase timeout; leave generous slack for slow CI.
+        assertTrue("took ${elapsedMs}ms", elapsedMs < 3_000)
+    }
+
+    @Test
+    fun `fetchFingerprint gives up in bounded time when the server never answers`() = runTest {
+        server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE))
+        val start = System.nanoTime()
+        api.fetchFingerprint(url(), timeoutMs = 300)
+        val elapsedMs = (System.nanoTime() - start) / 1_000_000
+        assertTrue("took ${elapsedMs}ms", elapsedMs < 3_000)
     }
 
     @Test

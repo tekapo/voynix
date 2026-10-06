@@ -365,6 +365,13 @@ class NormalizePairingInputTest {
     }
 
     @Test
+    fun `hostOfUrl shows just the host of a pairing URL`() {
+        assertEquals("192.168.50.61", hostOfUrl("https://192.168.50.61:65198"))
+        assertEquals("192.168.50.61", hostOfUrl("  https://192.168.50.61:65198/  "))
+        assertEquals("not a url", hostOfUrl("not a url"))
+    }
+
+    @Test
     fun leavesHalfWidthUntouched() {
         assertEquals("https://192.168.0.2:60930", normalizePairingInput("https://192.168.0.2:60930"))
     }
