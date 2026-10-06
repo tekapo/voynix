@@ -1,0 +1,45 @@
+:root {
+  --bg: #fff; --fg: #1c1c1e; --muted: #6b6b70; --accent: #c24e00;
+  --border: #e3e3e8; --code: #f3f3f6; --note: #fff6ee;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121214; --fg: #ececf0; --muted: #9a9aa3; --accent: #f0a066;
+    --border: #2b2b31; --code: #1d1d22; --note: #241a12;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 16px/1.7 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe UI", sans-serif;
+}
+a { color: var(--accent); }
+header.top {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--bg); z-index: 10;
+}
+header.top .brand { font-weight: 700; color: var(--fg); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+header.top img { width: 24px; height: 24px; }
+header.top nav a { margin-left: 12px; font-size: 14px; }
+.layout { display: flex; max-width: 1000px; margin: 0 auto; padding: 0 16px; gap: 40px; }
+aside.toc { width: 200px; flex: none; position: sticky; top: 64px; align-self: flex-start; padding: 24px 0; font-size: 14px; }
+aside.toc a { display: block; color: var(--muted); text-decoration: none; padding: 3px 0; }
+aside.toc a:hover { color: var(--accent); }
+main { min-width: 0; flex: 1; padding-bottom: 64px; }
+h1 { font-size: 2rem; margin: 32px 0 8px; }
+h2 { font-size: 1.4rem; margin: 48px 0 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+h3 { font-size: 1.1rem; margin: 28px 0 4px; }
+.lead { color: var(--muted); font-size: 1.1rem; }
+code { background: var(--code); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+th, td { text-align: left; padding: 6px 10px; border: 1px solid var(--border); }
+th { background: var(--code); }
+.note { background: var(--note); border-left: 3px solid var(--accent); padding: 8px 14px; border-radius: 4px; margin: 14px 0; }
+footer { border-top: 1px solid var(--border); padding: 20px 16px; text-align: center; color: var(--muted); font-size: 14px; }
+@media (max-width: 760px) {
+  aside.toc { display: none; }
+  header.top nav a:not(.lang) { display: none; }
+  table { display: block; overflow-x: auto; }
+}

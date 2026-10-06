@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voynix ユーザーマニュアル</title>
+<meta name="description" content="Mac と Android 向けのローカルファーストな音楽プレーヤー Voynix のインストール方法と使い方。">
+<link rel="icon" href="../favicon.svg">
+<link rel="alternate" hreflang="en" href="../en/">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="./"><img src="../favicon.svg" alt="">Voynix</a>
+  <nav>
+    <a href="https://github.com/tekapo/voynix/releases">Releases</a>
+    <a href="https://github.com/tekapo/voynix">GitHub</a>
+    <a class="lang" href="../en/" hreflang="en">English</a>
+  </nav>
+</header>
+<div class="layout">
+<aside class="toc">
+  <a href="#overview">概要</a>
+  <a href="#install">インストール</a>
+  <a href="#start">はじめに</a>
+  <a href="#sync">Wi-Fi 同期</a>
+  <a href="#auto">Android Auto</a>
+  <a href="#shortcuts">キーボードショートカット</a>
+  <a href="#backup">バックアップと復元</a>
+  <a href="#faq">FAQ と既知の制限</a>
+  <a href="#security">セキュリティとプライバシー</a>
+  <a href="#links">関連リンク</a>
+</aside>
+<main>
+<h1>Voynix ユーザーマニュアル</h1>
+<p class="lead">Voynix は、Mac と Android 向けのローカルファーストな音楽プレーヤーです。</p>
+
+<h2 id="overview">概要</h2>
+<ul>
+  <li>Mac のライブラリを Wi-Fi 経由で Android に同期します。再生履歴やお気に入りも、Android から Mac に反映されます</li>
+  <li>Android Auto に対応しています</li>
+  <li>macOS 標準の「ミュージック」アプリの代わりになることを目指しています</li>
+</ul>
+<ul>
+  <li><strong>音楽再生</strong>: ローカルの音楽ファイル（mp3, m4a, flac）をスキャンしてライブラリ管理（アーティスト、アルバム、プレイリスト）。Mac・Android とも曲間の無音を挟まないギャップレス再生に対応</li>
+  <li><strong>プレイリスト</strong>: 通常のプレイリストに加え、ジャンル・アーティスト・再生回数・追加日・お気に入りなどの条件で自動的に曲を集めるスマートプレイリスト。Most Played / Recently Added / Recently Played も用意</li>
+  <li><strong>曲情報の編集</strong>: 「Get Info…」から曲・アルバム・アーティスト単位でタイトルやタグを編集可能。アーティスト画像は自動取得できます</li>
+  <li><strong>Podcast</strong>: 再生速度の変更（0.8〜2.0x）、±10秒スキップ、シャッフル対象外</li>
+  <li><strong>iTunes 連携</strong>: iTunes のライブラリ XML からプレイリストをインポート</li>
+</ul>
+<p><strong>動作環境:</strong> macOS（配布している DMG は Apple Silicon 専用）、Android 8.0（API 26）以上。Android Auto は任意です。同期には Mac と Android が同じ Wi-Fi ネットワーク上にあることが必要です。</p>
+
+<h2 id="install">インストール</h2>
+<h3>Mac</h3>
+<p><a href="https://github.com/tekapo/voynix/releases">Releases</a> から <code>.dmg</code> をダウンロードして Applications にドラッグします。</p>
+<div class="note">アプリは Apple の署名・公証を受けていません。初回は Finder でアプリを<strong>右クリック →「開く」</strong>で起動してください。ダブルクリックだと警告で開けない場合があります。</div>
+<h3>Android</h3>
+<p><a href="https://github.com/tekapo/voynix/releases">Releases</a> から <code>voynix-&lt;バージョン&gt;.apk</code> をダウンロードして端末で開きます。初回は、ブラウザやファイルアプリに「提供元不明のアプリ」のインストールを許可するよう求められます。</p>
+<p>更新を自動で受け取りたい場合は <a href="https://obtainium.imranr.dev/">Obtainium</a> に登録します。「アプリを追加」→ <code>https://github.com/tekapo/voynix</code> を入力してインストールすると、各 Release の <code>.apk</code> を取得し、新しいバージョンが出たときに通知してくれます。</p>
+<p>APK は Google Play では配布していません。初回起動時、Android 13 以上では通知権限の許可を求められます。</p>
+
+<h2 id="start">はじめに</h2>
+<h3>音楽を取り込む（Mac）</h3>
+<p>サイドバーの <strong>「＋ New」→「Add Music Folder…」</strong>から音楽フォルダを追加するとスキャンが始まります。<strong>Settings → Music Folders</strong> からは再スキャン（Rescan All）や iTunes ライブラリの読み込み（Import iTunes Library…）も行えます。</p>
+<h3>ライブラリ、プレイリスト、Podcast</h3>
+<p>アーティスト・アルバム・プレイリストから曲を探せます。プレイリストはサイドバーから作成します。スマートプレイリストの作成・編集は Mac のみで、Android へは通常プレイリストとして同期されます。Podcast は再生速度の変更と ±10秒スキップに対応しています。Android は Mac のライブラリをミラーする専用クライアントなので、曲の追加・管理は Mac で行ってください。</p>
+
+<h2 id="sync">Mac と Android の Wi-Fi 同期</h2>
+<div class="note">Mac と Android は同じ Wi-Fi ネットワーク上にある必要があります。</div>
+<ol>
+  <li>Mac 側で Sync 画面を開き<strong>「Start Server」</strong>を押します。QR コードが表示されます。</li>
+  <li>Android の設定から<strong>「Wi-Fi Sync」</strong>を開き、QR コードを読み取ります（Google のコードスキャナを使うためカメラ権限は不要）。QR にはサーバー証明書のフィンガープリントが含まれるため、セキュリティコードの確認は不要です。同一 Wi-Fi 上の Mac を自動検出する方法や、URL とペアリングコードの手動入力も使えます。</li>
+  <li>Mac 側に承認プロンプトが表示されたら許可します。</li>
+  <li>曲・プレイリスト・再生履歴・お気に入りが Android へ取り込まれます。以降は手動での再同期に加え、Wi-Fi 圏内であれば約6時間ごとにバックグラウンドで自動同期されます。Android の設定で ON/OFF や充電中のみへの限定ができます。</li>
+</ol>
+<p>ALAC など Android 側で再生できない形式の曲は、Mac 上で自動的に変換してから送られます。</p>
+<p>手動入力でペアリングする場合は、表示されるセキュリティコードが双方で一致していることを確認してください。</p>
+
+<h2 id="auto">Android Auto</h2>
+<p>車載機に接続すると、ホーム画面から曲・プレイリスト・Podcast をブラウズして再生できます。シャッフル/リピート、Podcast の ±10秒スキップにも対応しています。</p>
+<p>Google Play 以外から入れたアプリは、Android Auto 側で「提供元不明のアプリ」を有効にしないとアプリ一覧に出てきません。初回のみ以下の設定が必要です。</p>
+<ol>
+  <li>端末で Android Auto アプリを開く</li>
+  <li>設定 → 一番下の「バージョン」を約10回タップする（デベロッパーになった旨のメッセージが表示される）</li>
+  <li>設定画面から戻り、左上のメニュー（≡）を開くと「デベロッパー向け設定」が増えている</li>
+  <li>デベロッパー向け設定 →「提供元不明のアプリ」を ON にする</li>
+  <li>Android Auto を強制停止するか端末を再起動し、車に再接続する</li>
+</ol>
+<p>これで一覧に「Voynix」が表示されます。詳しい確認方法は <a href="https://github.com/tekapo/voynix/blob/main/android-native/README.ja.md">android-native/README.ja.md</a> を参照してください。</p>
+
+<h2 id="shortcuts">キーボードショートカット（Mac）</h2>
+<table>
+  <tr><th>キー</th><th>動作</th></tr>
+  <tr><td>Space</td><td>再生 / 一時停止</td></tr>
+  <tr><td>← / →</td><td>前後の曲へ移動（Podcast 再生中は ±10秒）</td></tr>
+  <tr><td>⌘F</td><td>検索欄にフォーカス</td></tr>
+  <tr><td>Escape</td><td>フォーカス解除</td></tr>
+</table>
+<p>Dock の右クリックメニューにも対応しています。</p>
+
+<h2 id="backup">バックアップと復元</h2>
+<p>Mac では <strong>Settings → Library → Export Backup…</strong> でプレイリスト・フォルダ・設定を JSON ファイルに保存でき、<strong>Import Backup…</strong> で復元できます。音楽ファイル自体は含まれないため、別途バックアップしてください。</p>
+<p>Android のバックアップは、ペアリング情報を別端末に復元させないため意図的に無効です。機種変更後はアプリを入れ直し、再ペアリングして同期してください。</p>
+
+<h2 id="faq">FAQ と既知の制限</h2>
+<h3>同期で Mac が見つかりません。</h3>
+<p>Mac と Android が同じ Wi-Fi ネットワークにあるか（ゲストネットワークや一部のルーターは端末同士を隔離します）、Mac 側でサーバーを起動しているかを確認してください。自動検出で見つからない場合は QR コードの読み取り、または URL とペアリングコードの手動入力を使います。</p>
+<h3>macOS でアプリが開けません。</h3>
+<p>Finder でアプリを右クリックして「開く」を選びます（インストールの項を参照）。</p>
+<h3>Android Auto に Voynix が表示されません。</h3>
+<p>Android Auto のデベロッパー向け設定で「提供元不明のアプリ」を ON にします（Android Auto の項を参照）。</p>
+<h3>既知の制限</h3>
+<ul>
+  <li>Android から曲ファイルを直接追加・スキャンすることはできません。</li>
+  <li>スマートプレイリストの作成・編集は Mac 版のみで可能です。</li>
+  <li>DMG は Apple Silicon（arm64）専用です。</li>
+  <li>Android のバックアップは無効です。機種変更後は再ペアリングしてください。</li>
+</ul>
+
+<h2 id="security">セキュリティとプライバシー</h2>
+<p>Voynix はローカルファーストです。ライブラリは端末の中に留まり、アカウントも解析ツールもありません。同期サーバーは、起動している間だけ Mac 上で動作してローカルネットワークから接続でき、Mac 側で承認したペアリングが必要です。通信は、QR コードにフィンガープリントを含む証明書で保護されます。脆弱性の報告方法は <a href="https://github.com/tekapo/voynix/blob/main/SECURITY.md">SECURITY.md</a> を参照してください。</p>
+
+<h2 id="links">関連リンク</h2>
+<ul>
+  <li><a href="https://github.com/tekapo/voynix/releases">Releases</a></li>
+  <li><a href="https://github.com/tekapo/voynix/blob/main/docs/CHANGELOG.md">変更履歴</a>（英語）</li>
+  <li><a href="https://github.com/tekapo/voynix/blob/main/docs/THIRD_PARTY_NOTICES.ja.md">サードパーティ素材の表記</a></li>
+  <li>開発者向け: <a href="https://github.com/tekapo/voynix/blob/main/docs/DEVELOPMENT.ja.md">DEVELOPMENT.ja.md</a>（Mac）、<a href="https://github.com/tekapo/voynix/blob/main/android-native/README.ja.md">android-native/README.ja.md</a>（Android）</li>
+</ul>
+</main>
+</div>
+<footer>Voynix · MIT License · <a href="https://github.com/tekapo/voynix">GitHub</a></footer>
+</body>
+</html>
