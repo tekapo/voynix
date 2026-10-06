@@ -407,6 +407,8 @@
     "transcodeHint": "Androidがネイティブに再生できないファイルに適用されます。変更すると次回の同期時に再変換されます。",
     "appName": "Voynix",
     "versionLabel": " — バージョン {{version}}",
+    "userManual": "ユーザーマニュアル",
+    "websiteUrl": "https://tekapo.github.io/voynix/ja/",
     "openSourceLicenses": "オープンソースライセンス",
     "licensesLoadFailed": "ライセンス一覧を読み込めませんでした。",
     "aboutTagline": "モダンでローカルファーストな音楽プレイヤー。",

@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.4 — 2026-10-06
+- Add a "User manual" link to the About screen on Mac (Settings → About) and Android (Settings), opening the English or Japanese manual site to match the app language (#23).
+
 ## 0.22.3 — 2026-10-06
 - Update Tauri to 2.12 and the dialog / fs / opener / sql plugins (Rust and npm sides together). Drops the old `kuchikiki` → `rand` 0.7.3 build-time dependency flagged by Dependabot
 

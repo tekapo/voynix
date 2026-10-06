@@ -111,6 +111,8 @@
     <string name="settings_album_art_cache_cleared">Album art cache cleared</string>
     <string name="settings_device_id">Device ID</string>
     <string name="settings_device_id_placeholder">-</string>
+    <string name="settings_user_manual">User manual</string>
+    <string name="settings_user_manual_url" translatable="false">https://tekapo.github.io/voynix/en/</string>
     <string name="settings_licenses">Open source licenses</string>
     <string name="licenses_title">Open source licenses</string>
     <string name="licenses_load_failed">Couldn\'t load the license list.</string>

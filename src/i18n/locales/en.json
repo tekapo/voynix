@@ -411,6 +411,8 @@
     "transcodeHint": "Applies to files Android can't play natively. Changing this re-converts them on the next sync.",
     "appName": "Voynix",
     "versionLabel": " — Version {{version}}",
+    "userManual": "User manual",
+    "websiteUrl": "https://tekapo.github.io/voynix/en/",
     "openSourceLicenses": "Open source licenses",
     "licensesLoadFailed": "Couldn't load the license list.",
     "aboutTagline": "A modern, local-first music player.",
