@@ -2,6 +2,8 @@
 
 [English](./README.md) | 日本語
 
+📖 **[ユーザーマニュアル](https://tekapo.github.io/voynix/ja/)** — インストール、同期、Android Auto、FAQ
+
 ## TL;DR
 
 Voynix は、Mac と Android 向けのローカルファーストな音楽プレーヤーです。

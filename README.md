@@ -2,6 +2,8 @@
 
 English | [日本語](./README.ja.md)
 
+📖 **[User manual](https://tekapo.github.io/voynix/)** — installation, sync, Android Auto, FAQ
+
 ## TL;DR
 
 Voynix is a local-first music player for Mac and Android.

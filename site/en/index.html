@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voynix User Manual</title>
+<meta name="description" content="How to install and use Voynix, a local-first music player for Mac and Android.">
+<link rel="icon" href="../favicon.svg">
+<link rel="alternate" hreflang="ja" href="../ja/">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="./"><img src="../favicon.svg" alt="">Voynix</a>
+  <nav>
+    <a href="https://github.com/tekapo/voynix/releases">Releases</a>
+    <a href="https://github.com/tekapo/voynix">GitHub</a>
+    <a class="lang" href="../ja/" hreflang="ja">日本語</a>
+  </nav>
+</header>
+<div class="layout">
+<aside class="toc">
+  <a href="#overview">Overview</a>
+  <a href="#install">Installation</a>
+  <a href="#start">Getting started</a>
+  <a href="#sync">Wi-Fi sync</a>
+  <a href="#auto">Android Auto</a>
+  <a href="#shortcuts">Keyboard shortcuts</a>
+  <a href="#backup">Backup and restore</a>
+  <a href="#faq">FAQ and limitations</a>
+  <a href="#security">Security and privacy</a>
+  <a href="#links">More</a>
+</aside>
+<main>
+<h1>Voynix User Manual</h1>
+<p class="lead">Voynix is a local-first music player for Mac and Android.</p>
+
+<h2 id="overview">Overview</h2>
+<ul>
+  <li>Syncs your Mac library to Android over Wi-Fi; play history and favorites sync back too</li>
+  <li>Supports Android Auto</li>
+  <li>Aims to be an alternative to the Music app on macOS</li>
+</ul>
+<ul>
+  <li><strong>Playback</strong>: scans local music files (mp3, m4a, flac) into a library of artists, albums and playlists. Gapless playback on both Mac and Android</li>
+  <li><strong>Playlists</strong>: regular playlists, plus smart playlists that collect tracks by genre, artist, play count, date added, favorites and more. Most Played, Recently Added and Recently Played are built in</li>
+  <li><strong>Editing track info</strong>: "Get Info…" edits titles and tags per track, album or artist. Artist images can be fetched automatically</li>
+  <li><strong>Podcasts</strong>: playback speed (0.8–2.0x), ±10-second skip, excluded from shuffle</li>
+  <li><strong>iTunes import</strong>: import playlists from an iTunes library XML</li>
+</ul>
+<p><strong>Requirements:</strong> macOS (the DMG is Apple Silicon only) and/or Android 8.0 (API 26) or later. Android Auto is optional. Sync needs both devices on the same Wi-Fi network.</p>
+
+<h2 id="install">Installation</h2>
+<h3>Mac</h3>
+<p>Download the <code>.dmg</code> from <a href="https://github.com/tekapo/voynix/releases">Releases</a> and drag the app to Applications.</p>
+<div class="note">The app is not signed or notarized by Apple. On first launch, <strong>right-click the app in Finder and choose "Open"</strong>. Double-clicking may show a warning and refuse to open it.</div>
+<h3>Android</h3>
+<p>Download <code>voynix-&lt;version&gt;.apk</code> from <a href="https://github.com/tekapo/voynix/releases">Releases</a> and open it on the device. The first time, Android asks you to allow installing apps from your browser or file manager ("Install unknown apps").</p>
+<p>To get updates automatically, use <a href="https://obtainium.imranr.dev/">Obtainium</a>: choose "Add App", enter <code>https://github.com/tekapo/voynix</code>, and install. Obtainium picks the <code>.apk</code> from each Release and notifies you of new versions.</p>
+<p>The APK is not distributed through Google Play. On first launch, Android 13 and later ask for the notification permission.</p>
+
+<h2 id="start">Getting started</h2>
+<h3>Adding music (Mac)</h3>
+<p>In the sidebar, choose <strong>＋ New → Add Music Folder…</strong> and pick a folder; scanning starts right away. In <strong>Settings → Music Folders</strong> you can rescan (Rescan All) and import an iTunes library (Import iTunes Library…).</p>
+<h3>Library, playlists and podcasts</h3>
+<p>Browse by artist, album or playlist. Create playlists from the sidebar; smart playlists are created and edited on the Mac only and reach Android as regular playlists. Podcasts offer speed control and ±10-second skip. Android is a client that mirrors the Mac library, so add and manage music on the Mac.</p>
+
+<h2 id="sync">Wi-Fi sync between Mac and Android</h2>
+<div class="note">Both devices must be on the same Wi-Fi network.</div>
+<ol>
+  <li>On the Mac, open the Sync screen and click <strong>Start Server</strong>. A QR code is shown.</li>
+  <li>On Android, open Settings → <strong>Wi-Fi Sync</strong> and scan the QR code (Google's code scanner is used, so no camera permission is needed). The QR code contains the server certificate's fingerprint, so you don't need to verify the security code. Alternatively, use automatic discovery of the Mac, or enter the URL and pairing code manually.</li>
+  <li>Approve the prompt that appears on the Mac.</li>
+  <li>Tracks, playlists, play history and favorites are imported to Android. After that you can re-sync manually, and within Wi-Fi range it syncs automatically about every 6 hours. Auto sync can be turned off or limited to charging in the Android settings.</li>
+</ol>
+<p>Tracks in formats Android can't play, such as ALAC, are converted on the Mac before being sent.</p>
+<p>With manual entry, make sure the security code shown matches on both devices.</p>
+
+<h2 id="auto">Android Auto</h2>
+<p>Connected to a head unit, you can browse and play tracks, playlists and podcasts from the home screen, with shuffle/repeat and ±10-second podcast skip.</p>
+<p>Because the app is installed outside Google Play, it won't appear in Android Auto's app list unless "Unknown sources" is enabled. This one-time setup is needed:</p>
+<ol>
+  <li>Open the Android Auto app on the phone.</li>
+  <li>Go to Settings and tap "Version" at the bottom about 10 times (a message says you're now a developer).</li>
+  <li>Go back and open the menu (≡) at the top left; "Developer settings" has appeared.</li>
+  <li>Developer settings → turn on "Unknown sources".</li>
+  <li>Force-stop Android Auto (or restart the phone) and reconnect to the car.</li>
+</ol>
+<p>"Voynix" should now appear in the list. For detailed troubleshooting see <a href="https://github.com/tekapo/voynix/blob/main/android-native/README.md">android-native/README.md</a>.</p>
+
+<h2 id="shortcuts">Keyboard shortcuts (Mac)</h2>
+<table>
+  <tr><th>Key</th><th>Action</th></tr>
+  <tr><td>Space</td><td>Play / pause</td></tr>
+  <tr><td>← / →</td><td>Previous / next track (±10 seconds while playing a podcast)</td></tr>
+  <tr><td>⌘F</td><td>Focus the search field</td></tr>
+  <tr><td>Escape</td><td>Clear focus</td></tr>
+</table>
+<p>The Dock right-click menu is also supported.</p>
+
+<h2 id="backup">Backup and restore</h2>
+<p>On the Mac, <strong>Settings → Library → Export Backup…</strong> saves your playlists, folders and settings to a JSON file, and <strong>Import Backup…</strong> restores it. Your music files are not included; keep them in your own backups.</p>
+<p>Android backup is disabled on purpose so the pairing token is never restored on another device. After changing phones, install the app, pair again and sync.</p>
+
+<h2 id="faq">FAQ and known limitations</h2>
+<h3>Sync can't find my Mac.</h3>
+<p>Check that both devices are on the same Wi-Fi network (guest networks and some routers isolate devices from each other) and that the server is started on the Mac. If automatic discovery fails, scan the QR code or enter the URL and pairing code manually.</p>
+<h3>macOS refuses to open the app.</h3>
+<p>Right-click the app in Finder and choose "Open" (see Installation).</p>
+<h3>Voynix doesn't show up in Android Auto.</h3>
+<p>Enable "Unknown sources" in Android Auto's developer settings (see Android Auto above).</p>
+<h3>Known limitations</h3>
+<ul>
+  <li>Songs cannot be added or scanned directly on Android.</li>
+  <li>Smart playlists can only be created and edited on the Mac.</li>
+  <li>The DMG is Apple Silicon (arm64) only.</li>
+  <li>Android backup is disabled; pair again after changing phones.</li>
+</ul>
+
+<h2 id="security">Security and privacy</h2>
+<p>Voynix is local-first: your library stays on your devices, and the app has no accounts and no analytics. The sync server runs on your Mac only while you start it, is reachable on your local network, and requires pairing that you approve on the Mac. Traffic is protected by a certificate whose fingerprint is carried in the QR code. To report a vulnerability, see <a href="https://github.com/tekapo/voynix/blob/main/SECURITY.md">SECURITY.md</a>.</p>
+
+<h2 id="links">More</h2>
+<ul>
+  <li><a href="https://github.com/tekapo/voynix/releases">Releases</a></li>
+  <li><a href="https://github.com/tekapo/voynix/blob/main/docs/CHANGELOG.md">Changelog</a></li>
+  <li><a href="https://github.com/tekapo/voynix/blob/main/docs/THIRD_PARTY_NOTICES.md">Third-party notices</a></li>
+  <li>Developer docs: <a href="https://github.com/tekapo/voynix/blob/main/docs/DEVELOPMENT.md">DEVELOPMENT.md</a> (Mac), <a href="https://github.com/tekapo/voynix/blob/main/android-native/README.md">android-native/README.md</a> (Android)</li>
+</ul>
+</main>
+</div>
+<footer>Voynix · MIT License · <a href="https://github.com/tekapo/voynix">GitHub</a></footer>
+</body>
+</html>
