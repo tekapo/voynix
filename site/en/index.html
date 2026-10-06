@@ -56,7 +56,7 @@
 <h2 id="install">Installation</h2>
 <h3>Mac</h3>
 <p>Download the <code>.dmg</code> from <a href="https://github.com/tekapo/voynix/releases">Releases</a> and drag the app to Applications.</p>
-<div class="note">The app is not signed or notarized by Apple. On first launch, <strong>right-click the app in Finder and choose "Open"</strong>. Double-clicking may show a warning and refuse to open it. If macOS says the app is "damaged", run <code>xattr -cr /Applications/Voynix.app</code> in Terminal and open it again.</div>
+<div class="note">The app is not signed or notarized by Apple. macOS blocks it on first launch. Press "Done" (not "Move to Trash"), then open System Settings → Privacy &amp; Security and click <strong>"Open Anyway"</strong> next to the Voynix message. You can also run <code>xattr -cr /Applications/Voynix.app</code> in Terminal and open the app again. This is needed only once.</div>
 <h3>Android</h3>
 <p>Download <code>voynix-&lt;version&gt;.apk</code> from <a href="https://github.com/tekapo/voynix/releases">Releases</a> and open it on the device. The first time, Android asks you to allow installing apps from your browser or file manager ("Install unknown apps").</p>
 <p>To get updates automatically, use <a href="https://obtainium.imranr.dev/">Obtainium</a>: choose "Add App", enter <code>https://github.com/tekapo/voynix</code>, and install. Obtainium picks the <code>.apk</code> from each Release and notifies you of new versions.</p>
@@ -141,7 +141,7 @@
 <h3>Where is my data stored?</h3>
 <p>On the Mac, in <code>~/Library/Application Support/com.tekapo.voynix</code> (library database and caches). Your music files stay where they are; Voynix only changes them when you save edited tags with "Get Info…". Deleting the app does not remove this folder.</p>
 <h3>macOS refuses to open the app.</h3>
-<p>Right-click the app in Finder and choose "Open" (see Installation).</p>
+<p>Press "Done" in the warning (not "Move to Trash"), then click "Open Anyway" in System Settings → Privacy &amp; Security, or run <code>xattr -cr /Applications/Voynix.app</code> in Terminal (see Installation).</p>
 <h3>Voynix doesn't show up in Android Auto.</h3>
 <p>Enable "Unknown sources" in Android Auto's developer settings (see Android Auto above).</p>
 <h3>Known limitations</h3>

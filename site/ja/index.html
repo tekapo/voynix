@@ -56,7 +56,7 @@
 <h2 id="install">インストール</h2>
 <h3>Mac</h3>
 <p><a href="https://github.com/tekapo/voynix/releases">Releases</a> から <code>.dmg</code> をダウンロードして Applications にドラッグします。</p>
-<div class="note">アプリは Apple の署名・公証を受けていません。初回は Finder でアプリを<strong>右クリック →「開く」</strong>で起動してください。ダブルクリックだと警告で開けない場合があります。「壊れている」と表示されたら、ターミナルで <code>xattr -cr /Applications/Voynix.app</code> を実行してからもう一度開いてください。</div>
+<div class="note">アプリは Apple の署名・公証を受けていません。初回は macOS にブロックされます。警告で「ゴミ箱に入れる」ではなく「完了」を押し、システム設定 →「プライバシーとセキュリティ」で Voynix の項目の横にある<strong>「このまま開く」</strong>を押してください。ターミナルで <code>xattr -cr /Applications/Voynix.app</code> を実行してから開き直す方法もあります。初回だけ必要です。</div>
 <h3>Android</h3>
 <p><a href="https://github.com/tekapo/voynix/releases">Releases</a> から <code>voynix-&lt;バージョン&gt;.apk</code> をダウンロードして端末で開きます。初回は、ブラウザやファイルアプリに「提供元不明のアプリ」のインストールを許可するよう求められます。</p>
 <p>更新を自動で受け取りたい場合は <a href="https://obtainium.imranr.dev/">Obtainium</a> に登録します。「アプリを追加」→ <code>https://github.com/tekapo/voynix</code> を入力してインストールすると、各 Release の <code>.apk</code> を取得し、新しいバージョンが出たときに通知してくれます。</p>
@@ -141,7 +141,7 @@
 <h3>データはどこに保存されますか？</h3>
 <p>Mac では <code>~/Library/Application Support/com.tekapo.voynix</code>（ライブラリのデータベースとキャッシュ）に保存されます。音楽ファイル自体は元の場所にあり、Voynix が変更するのは「情報を見る…」で編集したタグを保存したときだけです。アプリを削除してもこのフォルダは消えません。</p>
 <h3>macOS でアプリが開けません。</h3>
-<p>Finder でアプリを右クリックして「開く」を選びます（インストールの項を参照）。「壊れている」と表示される場合は、ターミナルで <code>xattr -cr /Applications/Voynix.app</code> を実行してください。</p>
+<p>警告で「完了」を押し（「ゴミ箱に入れる」は押さない）、システム設定 →「プライバシーとセキュリティ」で「このまま開く」を押すか、ターミナルで <code>xattr -cr /Applications/Voynix.app</code> を実行してください（インストールの項を参照）。</p>
 <h3>Android Auto に Voynix が表示されません。</h3>
 <p>Android Auto のデベロッパー向け設定で「提供元不明のアプリ」を ON にします（Android Auto の項を参照）。</p>
 <h3>既知の制限</h3>

@@ -31,9 +31,10 @@ Voynix は、Mac と Android 向けのローカルファーストな音楽プレ
 
 [Releases](https://github.com/tekapo/voynix/releases) から、Mac 用の `.dmg` または Android 用の `.apk` をダウンロードします。
 
-Mac 版は Apple の署名・公証を受けていないため、初回は Finder でアプリを**右クリック →「開く」**で
-起動してください。「壊れている」と表示されたら、`xattr -cr /Applications/Voynix.app` を実行してからもう一度開きます。Android は [Obtainium](https://obtainium.imranr.dev/) に `https://github.com/tekapo/voynix`
-を登録すると、更新を自動で受け取れます。
+Mac 版は Apple の署名・公証を受けていないため、初回は macOS にブロックされます。警告で「ゴミ箱に入れる」ではなく
+「完了」を押し、システム設定 →「プライバシーとセキュリティ」で Voynix の項目の横にある**「このまま開く」**を押してください。
+ターミナルで `xattr -cr /Applications/Voynix.app` を実行してから開き直す方法もあります。Android は
+[Obtainium](https://obtainium.imranr.dev/) に `https://github.com/tekapo/voynix` を登録すると、更新を自動で受け取れます。
 
 音楽の取り込み、Android との同期、Android Auto の設定など、詳しくは
 [ユーザーマニュアル](https://tekapo.github.io/voynix/ja/)を参照してください。
