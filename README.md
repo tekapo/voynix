@@ -2,8 +2,13 @@
 
 English | [日本語](./README.ja.md)
 
-A local-first music player that manages and plays your music library on a Mac, and syncs it over Wi-Fi
-to an Android device (Android Auto supported) so you can take it with you.
+## TL;DR
+
+Voynix is a local-first music player for Mac and Android.
+
+- Syncs your Mac library to Android over Wi-Fi; play history and favorites sync back too
+- Supports Android Auto
+- Aims to be an alternative to the Music app on macOS
 
 ## Features
 
