@@ -10,7 +10,7 @@ It mirrors the Mac library over Wi-Fi as a mirror-only client (it never scans or
 itself). Start Voynix on the Mac and turn on sync first.
 
 This file is for developers (building, testing, verifying Android Auto). For how to use the app (pairing,
-enabling Android Auto), see the [root README](../README.md). For the Mac app, see
+enabling Android Auto), see the [user manual](https://tekapo.github.io/voynix/en/). For the Mac app, see
 [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md).
 
 ## Requirements

@@ -12,7 +12,7 @@ Mac 側のライブラリをミラー専用クライアントとして Wi-Fi 経
 
 このファイルは開発者向け（ビルド・テスト・Android Auto の検証手順）です。
 アプリの使い方（ペアリング手順や Android Auto を有効化する手順など）は
-[ルートの README.ja.md](../README.ja.md) を、Mac 版は
+[ユーザーマニュアル](https://tekapo.github.io/voynix/ja/) を、Mac 版は
 [docs/DEVELOPMENT.ja.md](../docs/DEVELOPMENT.ja.md) を参照してください。
 
 ## 動作環境
