@@ -123,8 +123,11 @@ The APK is not built in CI. It is built on a local machine that holds the releas
 Release by hand, so the key never sits on GitHub. For preparing the release key, see
 [android-native/README.md](../android-native/README.md#release-key-once-per-machine).
 
-1. Push the `v<version>` tag with `npm run release` and wait for the Build macOS workflow to create the
-   Release
+`npm run release` does all of it in one go: it pushes the tag, waits for the Build macOS workflow, then attaches
+the APK (use `-- --no-android` to push the tag only). To attach the APK on its own:
+
+1. Push the `v<version>` tag (e.g. `npm run release -- --no-android`) and wait for the Build macOS workflow to
+   create the Release
 2. Run `npm run release:android`. It builds a signed APK with `assembleRelease` and attaches it to the
    Release as `voynix-<version>.apk` with `gh release upload` (overwriting an existing one). With
    `-- --dry-run` it only builds and skips the upload
@@ -145,7 +148,7 @@ You need to be logged in to the `gh` CLI. The script stops with an error if the 
 | `npm run test:coverage` | Run tests with coverage |
 | `npm run licenses:generate` | Regenerate the dependency license notices |
 | `npm run version:bump` | Update the version number (applied to both Mac and Android) |
-| `npm run release` | Create and push the `v<version>` tag for the current version (triggers the macOS build on GitHub Actions) |
+| `npm run release` | Create and push the `v<version>` tag for the current version, wait for the macOS build on GitHub Actions, then attach the signed APK to the Release (`-- --no-android` pushes the tag only) |
 | `npm run release:android` | Build the signed APK and attach it to the GitHub Release for the current version (the Release must already exist) |
 | `npm run install:android-native` | Install the Android debug build on a device |
 | `npm run build:android-native` | Build the Android release APK (signed, minified) |

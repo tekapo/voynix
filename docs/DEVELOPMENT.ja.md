@@ -124,7 +124,10 @@ APK は CI ではビルドせず、リリース鍵のある手元のマシンで
 （鍵を GitHub に預けないため）。リリース鍵の準備は
 [android-native/README.ja.md](../android-native/README.ja.md#リリース鍵の準備初回のみマシンごと) を参照してください。
 
-1. `npm run release` で `v<version>` タグを push し、Build macOS ワークフローが Release を作るのを待つ
+`npm run release` は、タグの push → Build macOS ワークフローの完了待ち → APK の添付までを続けて行います
+（タグだけ push したいときは `-- --no-android`）。APK の添付だけを単独で行う場合は次のとおりです。
+
+1. `npm run release -- --no-android` などで `v<version>` タグを push し、Build macOS ワークフローが Release を作るのを待つ
 2. `npm run release:android` を実行する。`assembleRelease` で署名済み APK を作り、`gh release upload` で
    `voynix-<version>.apk` を Release に添付します（既存なら上書き）。`-- --dry-run` を付けるとビルドだけ
    行い、アップロードはしません
@@ -144,7 +147,7 @@ APK は CI ではビルドせず、リリース鍵のある手元のマシンで
 | `npm run test:coverage` | カバレッジ付きでテスト実行 |
 | `npm run licenses:generate` | 依存ライブラリのライセンス表記を再生成 |
 | `npm run version:bump` | バージョン番号を更新（Mac / Android 両方に反映） |
-| `npm run release` | 現在のバージョンで `v<version>` タグを作成・push（GitHub Actions の macOS ビルドをトリガー） |
+| `npm run release` | 現在のバージョンで `v<version>` タグを作成・push し、macOS ビルドの完了を待って署名済み APK を Release に添付（`-- --no-android` でタグ push のみ） |
 | `npm run release:android` | 署名済み APK をビルドし、現在のバージョンの GitHub Release に添付（Release が先に存在している必要がある） |
 | `npm run install:android-native` | Android のデバッグビルドを実機にインストール |
 | `npm run build:android-native` | Android のリリースビルド（署名・minify 有効）を作成 |
