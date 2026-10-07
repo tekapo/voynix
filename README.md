@@ -10,7 +10,6 @@ Voynix is a local-first music player for Mac and Android.
 
 - Syncs your Mac library to Android over Wi-Fi; play history and favorites sync back too
 - Supports Android Auto
-- Aims to be an alternative to the Music app on macOS
 
 ## Features
 

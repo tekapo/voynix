@@ -10,7 +10,6 @@ Voynix は、Mac と Android 向けのローカルファーストな音楽プレ
 
 - Mac のライブラリを Wi-Fi 経由で Android に同期します。再生履歴やお気に入りも、Android から Mac に反映されます
 - Android Auto に対応しています
-- macOS 標準の「ミュージック」アプリの代わりになることを目指しています
 
 ## 主な機能
 
