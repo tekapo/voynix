@@ -1,6 +1,6 @@
 [package]
 name = "voynix"
-version = "0.22.10"
+version = "0.22.11"
 description = "Music player for Mac and Android with Wi-Fi library sync"
 authors = ["JOTAKI, Taisuke"]
 license = "MIT"
