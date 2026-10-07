@@ -148,7 +148,8 @@ You need to be logged in to the `gh` CLI. The script stops with an error if the 
 | `npm run test:coverage` | Run tests with coverage |
 | `npm run licenses:generate` | Regenerate the dependency license notices |
 | `npm run version:bump` | Update the version number (applied to both Mac and Android) |
-| `npm run release` | Create and push the `v<version>` tag for the current version, wait for the macOS build on GitHub Actions, then attach the signed APK to the Release (`-- --no-android` pushes the tag only) |
+| `npm run release` | Create and push the `v<version>` tag for the current version, wait for the macOS build on GitHub Actions, then attach the signed APK to the Release and update the Homebrew cask (`-- --no-android` pushes the tag only) |
+| `npm run release:cask` | Update `version` / `sha256` of the cask in the `tekapo/homebrew-voynix` tap to the current version's DMG (run by `npm run release`; the Release must already exist) |
 | `npm run release:android` | Build the signed APK and attach it to the GitHub Release for the current version (the Release must already exist) |
 | `npm run install:android-native` | Install the Android debug build on a device |
 | `npm run build:android-native` | Build the Android release APK (signed, minified) |

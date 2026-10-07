@@ -3,7 +3,8 @@
 // GitHub Actions workflow (.github/workflows/build-macos.yml) to build a
 // macOS release artifact. Then it waits for that workflow to create the
 // Release and runs scripts/release-android.mjs to build the signed APK
-// locally and attach it (the release key stays on this machine).
+// locally and attach it (the release key stays on this machine), and finally
+// updates the Homebrew cask in tekapo/homebrew-voynix (scripts/release-cask.mjs).
 //
 //   npm run release            # tag, push, wait for CI, attach the APK
 //   npm run release -- --no-android   # tag and push only
@@ -87,6 +88,11 @@ async function attachAndroid() {
     }
     const apk = spawnSync("node", [path("scripts/release-android.mjs")], { cwd: ROOT, stdio: "inherit" });
     if (apk.status !== 0) process.exit(apk.status ?? 1);
+    const cask = spawnSync("node", [path("scripts/release-cask.mjs")], { cwd: ROOT, stdio: "inherit" });
+    if (cask.status !== 0) {
+        console.error("Updating the Homebrew cask failed; run `npm run release:cask` after fixing it.");
+        process.exit(cask.status ?? 1);
+    }
     console.log(`Released ${tag}: https://github.com/${repoSlug()}/releases/tag/${tag}`);
 }
 

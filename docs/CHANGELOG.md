@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.12 — 2026-10-07
+- The Mac app can now be installed with Homebrew (`brew install --cask tekapo/voynix/voynix`); `npm run release` updates the cask in the tekapo/homebrew-voynix tap (`npm run release:cask`).
+
 ## 0.22.11 — 2026-10-07
 - Release to verify Obtainium updates over the installed APK (#26). README and the manual now warn about macOS Gatekeeper and Android Advanced Protection blocking installs.
 

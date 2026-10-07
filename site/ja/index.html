@@ -56,6 +56,7 @@
 <h2 id="install">インストール</h2>
 <h3>Mac</h3>
 <p><a href="https://github.com/tekapo/voynix/releases">Releases</a> から <code>.dmg</code> をダウンロードして Applications にドラッグします。</p>
+<p>Homebrew（Apple Silicon）では <code>brew install --cask tekapo/voynix/voynix</code> を実行します。この場合は下の警告は出ません。更新は <code>brew upgrade --cask voynix</code> です。</p>
 <div class="note"><strong>重要:</strong> アプリは Apple の署名・公証を受けていません。初回は macOS にブロックされます。警告で「ゴミ箱に入れる」ではなく「完了」を押し、システム設定 →「プライバシーとセキュリティ」で Voynix の項目の横にある<strong>「このまま開く」</strong>を押してください。ターミナルで <code>xattr -cr /Applications/Voynix.app</code> を実行してから開き直す方法もあります。初回だけ必要です。</div>
 <h3>Android</h3>
 <div class="note"><strong>インストール前に:</strong> Android の<strong>「高度な保護機能」</strong>がオンだと、「高度な保護機能により制限されています」と表示され、APK をインストールできません（Obtainium 経由も同様）。先に設定 → セキュリティとプライバシーでオフにしてください。インストール元のアプリには「提供元不明のアプリ」の許可も必要です。</div>

@@ -40,6 +40,15 @@ Voynix は、Mac と Android 向けのローカルファーストな音楽プレ
 > インストール前に、設定 → セキュリティとプライバシーでオフにしてください。あわせて、インストール元のアプリ
 > （ブラウザ、ファイルアプリ、Obtainium）に「提供元不明のアプリ」の許可も必要です。
 
+**Homebrew でのインストール（Mac、Apple Silicon）:**
+
+```
+brew install --cask tekapo/voynix/voynix
+```
+
+Cask がインストール後に quarantine 属性を外すため、上記の Gatekeeper の警告は出ません。
+更新は `brew upgrade --cask voynix` です。
+
 Android は [Obtainium](https://obtainium.imranr.dev/) に `https://github.com/tekapo/voynix` を登録すると、更新を自動で受け取れます。
 
 音楽の取り込み、Android との同期、Android Auto の設定など、詳しくは

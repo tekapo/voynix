@@ -147,7 +147,8 @@ APK は CI ではビルドせず、リリース鍵のある手元のマシンで
 | `npm run test:coverage` | カバレッジ付きでテスト実行 |
 | `npm run licenses:generate` | 依存ライブラリのライセンス表記を再生成 |
 | `npm run version:bump` | バージョン番号を更新（Mac / Android 両方に反映） |
-| `npm run release` | 現在のバージョンで `v<version>` タグを作成・push し、macOS ビルドの完了を待って署名済み APK を Release に添付（`-- --no-android` でタグ push のみ） |
+| `npm run release` | 現在のバージョンで `v<version>` タグを作成・push し、macOS ビルドの完了を待って署名済み APK を Release に添付し、Homebrew の Cask を更新（`-- --no-android` でタグ push のみ） |
+| `npm run release:cask` | `tekapo/homebrew-voynix` tap の Cask の `version` / `sha256` を、現在のバージョンの DMG に合わせて更新（`npm run release` が実行する。Release が先に存在している必要がある） |
 | `npm run release:android` | 署名済み APK をビルドし、現在のバージョンの GitHub Release に添付（Release が先に存在している必要がある） |
 | `npm run install:android-native` | Android のデバッグビルドを実機にインストール |
 | `npm run build:android-native` | Android のリリースビルド（署名・minify 有効）を作成 |
