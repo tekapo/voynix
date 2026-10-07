@@ -123,8 +123,8 @@ The APK is not built in CI. It is built on a local machine that holds the releas
 Release by hand, so the key never sits on GitHub. For preparing the release key, see
 [android-native/README.md](../android-native/README.md#release-key-once-per-machine).
 
-`npm run release` does all of it in one go: it pushes the tag, waits for the Build macOS workflow, then attaches
-the APK (use `-- --no-android` to push the tag only). To attach the APK on its own:
+`npm run release` does all of it in one go: it pushes the tag, waits for the Build macOS workflow, attaches
+the APK, then updates the Homebrew cask (use `-- --no-android` to push the tag only). To attach the APK on its own:
 
 1. Push the `v<version>` tag (e.g. `npm run release -- --no-android`) and wait for the Build macOS workflow to
    create the Release
@@ -134,6 +134,19 @@ the APK (use `-- --no-android` to push the tag only). To attach the APK on its o
 
 You need to be logged in to the `gh` CLI. The script stops with an error if the release key
 (`local.properties`) isn't configured.
+
+### Homebrew cask
+
+The Mac app is also installable with `brew install --cask tekapo/voynix/voynix` (Apple Silicon only). The cask
+lives in the separate tap repository [`tekapo/homebrew-voynix`](https://github.com/tekapo/homebrew-voynix)
+(`Casks/voynix.rb`). `npm run release` runs `npm run release:cask` at the end, which downloads the Release's
+DMG and updates `version` and `sha256` in the cask through the GitHub API (`-- --dry-run` prints the result
+without pushing). To run it on its own, the Release must already exist.
+
+The app is not notarized, so the cask's `postflight` removes the quarantine flag with `xattr -dr
+com.apple.quarantine`. Homebrew 7's `brew style` asks for `postflight_steps` instead, but that form cannot run
+`xattr`, so the legacy `postflight` is kept on purpose (verified working). If a future Homebrew rejects it,
+revisit this.
 
 ## Command reference
 

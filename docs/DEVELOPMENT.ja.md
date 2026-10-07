@@ -124,7 +124,7 @@ APK は CI ではビルドせず、リリース鍵のある手元のマシンで
 （鍵を GitHub に預けないため）。リリース鍵の準備は
 [android-native/README.ja.md](../android-native/README.ja.md#リリース鍵の準備初回のみマシンごと) を参照してください。
 
-`npm run release` は、タグの push → Build macOS ワークフローの完了待ち → APK の添付までを続けて行います
+`npm run release` は、タグの push → Build macOS ワークフローの完了待ち → APK の添付 → Homebrew Cask の更新までを続けて行います
 （タグだけ push したいときは `-- --no-android`）。APK の添付だけを単独で行う場合は次のとおりです。
 
 1. `npm run release -- --no-android` などで `v<version>` タグを push し、Build macOS ワークフローが Release を作るのを待つ
@@ -133,6 +133,18 @@ APK は CI ではビルドせず、リリース鍵のある手元のマシンで
    行い、アップロードはしません
 
 `gh` CLI のログインが必要です。リリース鍵（`local.properties`）が未設定だとエラーで止まります。
+
+### Homebrew Cask
+
+Mac 版は `brew install --cask tekapo/voynix/voynix` でもインストールできます（Apple Silicon のみ）。Cask は別リポジトリの
+tap [`tekapo/homebrew-voynix`](https://github.com/tekapo/homebrew-voynix)（`Casks/voynix.rb`）にあります。
+`npm run release` は最後に `npm run release:cask` を実行し、Release の DMG をダウンロードして、GitHub API 経由で
+Cask の `version` と `sha256` を更新します（`-- --dry-run` なら push せず結果だけ表示）。単独で実行する場合は、
+Release が先に存在している必要があります。
+
+アプリは公証されていないため、Cask の `postflight` で `xattr -dr com.apple.quarantine` を実行して quarantine を外しています。
+Homebrew 7 の `brew style` は `postflight_steps` への置き換えを求めますが、その書き方では `xattr` を実行できないため、
+従来の `postflight` をあえて使っています（動作確認済み）。将来の Homebrew で受け付けなくなったら見直してください。
 
 ## コマンド一覧
 

@@ -138,11 +138,13 @@
 <h3>Mac の IP アドレスが変わって、Android が Mac に接続できません。</h3>
 <p>ネットワークによっては自動復旧できないことがあります。Mac の Wi-Fi 同期画面を開き、QR コードを読み取って再ペアリングしてください。</p>
 <h3>アプリのアップデート方法は？</h3>
-<p>Mac は、新しい <code>.dmg</code> をダウンロードして「アプリケーション」内のアプリを置き換えます。Android は Obtainium が自動で更新します。使っていない場合は、新しい <code>.apk</code> を上書きインストールしてください。データは保持されます。</p>
+<p>Mac は、新しい <code>.dmg</code> をダウンロードして「アプリケーション」内のアプリを置き換えます（Homebrew で入れた場合は <code>brew upgrade --cask voynix</code>）。Android は Obtainium が自動で更新します。使っていない場合は、新しい <code>.apk</code> を上書きインストールしてください。データは保持されます。</p>
+<h3>アンインストールするには？</h3>
+<p>Mac は、「アプリケーション」から Voynix をゴミ箱に入れます（Homebrew で入れた場合は <code>brew uninstall --cask voynix</code>。<code>--zap</code> を付けるとデータも削除します）。データのフォルダは残るので、不要なら <code>~/Library/Application Support/com.tekapo.voynix</code> を削除してください。音楽ファイルが削除されることはありません。Android は通常どおりアンインストールします。端末内のデータも一緒に消えます。</p>
 <h3>データはどこに保存されますか？</h3>
 <p>Mac では <code>~/Library/Application Support/com.tekapo.voynix</code>（ライブラリのデータベースとキャッシュ）に保存されます。音楽ファイル自体は元の場所にあり、Voynix が変更するのは「情報を見る…」で編集したタグを保存したときだけです。アプリを削除してもこのフォルダは消えません。</p>
 <h3>macOS でアプリが開けません。</h3>
-<p>警告で「完了」を押し（「ゴミ箱に入れる」は押さない）、システム設定 →「プライバシーとセキュリティ」で「このまま開く」を押すか、ターミナルで <code>xattr -cr /Applications/Voynix.app</code> を実行してください（インストールの項を参照）。</p>
+<p>（Homebrew でインストールするとこの警告は出ません。）警告で「完了」を押し（「ゴミ箱に入れる」は押さない）、システム設定 →「プライバシーとセキュリティ」で「このまま開く」を押すか、ターミナルで <code>xattr -cr /Applications/Voynix.app</code> を実行してください（インストールの項を参照）。</p>
 <h3>Android Auto に Voynix が表示されません。</h3>
 <p>Android Auto のデベロッパー向け設定で「提供元不明のアプリ」を ON にします（Android Auto の項を参照）。</p>
 <h3>既知の制限</h3>

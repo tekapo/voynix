@@ -138,11 +138,13 @@
 <h3>My Mac's IP address changed and Android says it can't reach the Mac.</h3>
 <p>Automatic recovery can fail on some networks. Open the Wi-Fi sync window on the Mac and pair again by scanning the QR code.</p>
 <h3>How do I update the app?</h3>
-<p>Mac: download the new <code>.dmg</code> and replace the app in Applications. Android: Obtainium updates it for you; otherwise install the new <code>.apk</code> over the old one. Your data is kept.</p>
+<p>Mac: download the new <code>.dmg</code> and replace the app in Applications, or run <code>brew upgrade --cask voynix</code> if you installed with Homebrew. Android: Obtainium updates it for you; otherwise install the new <code>.apk</code> over the old one. Your data is kept.</p>
+<h3>How do I uninstall the app?</h3>
+<p>Mac: drag Voynix from Applications to the Trash (or run <code>brew uninstall --cask voynix</code> if you installed with Homebrew; add <code>--zap</code> to remove the data as well). The data folder stays behind; delete <code>~/Library/Application Support/com.tekapo.voynix</code> if you no longer need it. Your music files are never removed. Android: uninstall as usual; the data on the device is deleted with it.</p>
 <h3>Where is my data stored?</h3>
 <p>On the Mac, in <code>~/Library/Application Support/com.tekapo.voynix</code> (library database and caches). Your music files stay where they are; Voynix only changes them when you save edited tags with "Get Info…". Deleting the app does not remove this folder.</p>
 <h3>macOS refuses to open the app.</h3>
-<p>Press "Done" in the warning (not "Move to Trash"), then click "Open Anyway" in System Settings → Privacy &amp; Security, or run <code>xattr -cr /Applications/Voynix.app</code> in Terminal (see Installation).</p>
+<p>(Installing with Homebrew avoids this warning.) Press "Done" in the warning (not "Move to Trash"), then click "Open Anyway" in System Settings → Privacy &amp; Security, or run <code>xattr -cr /Applications/Voynix.app</code> in Terminal (see Installation).</p>
 <h3>Voynix doesn't show up in Android Auto.</h3>
 <p>Enable "Unknown sources" in Android Auto's developer settings (see Android Auto above).</p>
 <h3>Known limitations</h3>
