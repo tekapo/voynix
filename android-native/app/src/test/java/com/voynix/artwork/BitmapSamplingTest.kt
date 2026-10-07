@@ -34,12 +34,12 @@ class CalculateInSampleSizeTest {
 class DecodeSampledTest {
     @Test
     fun `a huge cover is decoded smaller than its source`() {
-        val src = Bitmap.createBitmap(4096, 4096, Bitmap.Config.ARGB_8888)
+        val src = Bitmap.createBitmap(2048, 2048, Bitmap.Config.ARGB_8888)
         val bytes = ByteArrayOutputStream().also { src.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
 
         val out = decodeSampled(bytes)
 
         assertNotNull(out)
-        assertTrue(out!!.width < 4096 && out.width >= MAX_ART_EDGE_PX)
+        assertTrue(out!!.width < 2048 && out.width >= MAX_ART_EDGE_PX)
     }
 }
