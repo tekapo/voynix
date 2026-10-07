@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.15 — 2026-10-07
+- Removed the `android.hardware.type.automotive` uses-feature from the Android manifest, which Google Play rejects together with the Android Auto `com.google.android.gms.car.application` metadata (#39). Android Auto support is unchanged.
+
 ## 0.22.14 — 2026-10-07
 - Added `npm run build:android-aab`, which builds the signed release App Bundle for Google Play (#39). The site also gained a privacy policy page.
 

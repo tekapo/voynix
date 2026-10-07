@@ -17,9 +17,6 @@
     <!-- AutoSyncWorker's setForeground while a background sync is running. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
-    <!-- AndroidAuto/Automotive support -->
-    <uses-feature android:name="android.hardware.type.automotive" android:required="false" />
-
     <application
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
