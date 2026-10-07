@@ -142,9 +142,9 @@ tap [`tekapo/homebrew-voynix`](https://github.com/tekapo/homebrew-voynix)（`Cas
 Cask の `version` と `sha256` を更新します（`-- --dry-run` なら push せず結果だけ表示）。単独で実行する場合は、
 Release が先に存在している必要があります。
 
-アプリは公証されていないため、Cask の `postflight` で `xattr -dr com.apple.quarantine` を実行して quarantine を外しています。
-Homebrew 7 の `brew style` は `postflight_steps` への置き換えを求めますが、その書き方では `xattr` を実行できないため、
-従来の `postflight` をあえて使っています（動作確認済み）。将来の Homebrew で受け付けなくなったら見直してください。
+アプリは公証されていないため、Cask の `postflight_steps` で `xattr -dr com.apple.quarantine` をインストール済みのアプリに実行しています。
+パスには `{{appdir}}` トークンを使い、手順がサンドボックスで動くため `writable_paths` にもアプリを指定します（`brew style` も通ります）。
+従来の `postflight` でも動きますが、インストールのたびに非推奨の警告が出ます。
 
 ## コマンド一覧
 

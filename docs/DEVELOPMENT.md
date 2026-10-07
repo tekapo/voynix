@@ -143,10 +143,10 @@ lives in the separate tap repository [`tekapo/homebrew-voynix`](https://github.c
 DMG and updates `version` and `sha256` in the cask through the GitHub API (`-- --dry-run` prints the result
 without pushing). To run it on its own, the Release must already exist.
 
-The app is not notarized, so the cask's `postflight` removes the quarantine flag with `xattr -dr
-com.apple.quarantine`. Homebrew 7's `brew style` asks for `postflight_steps` instead, but that form cannot run
-`xattr`, so the legacy `postflight` is kept on purpose (verified working). If a future Homebrew rejects it,
-revisit this.
+The app is not notarized, so the cask's `postflight_steps` block runs `xattr -dr com.apple.quarantine` on the
+installed app. It uses the `{{appdir}}` path token (and lists the app in `writable_paths`, because the steps run in
+a sandbox), which also keeps `brew style` happy. The legacy `postflight` block works too but prints a deprecation
+warning on every install.
 
 ## Command reference
 

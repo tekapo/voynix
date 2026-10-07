@@ -48,7 +48,8 @@ brew install --cask tekapo/voynix/voynix
 ```
 
 The cask removes the quarantine flag after installing, so the Gatekeeper warning above does not appear.
-Upgrade with `brew upgrade --cask voynix`.
+Upgrade with `brew upgrade --cask voynix`. If Homebrew 7 says it refuses to load the cask from an untrusted tap,
+run `brew trust tekapo/voynix` once.
 
 On Android you can get automatic updates with [Obtainium](https://obtainium.imranr.dev/) by adding
 `https://github.com/tekapo/voynix`.

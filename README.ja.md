@@ -48,7 +48,8 @@ brew install --cask tekapo/voynix/voynix
 ```
 
 Cask がインストール後に quarantine 属性を外すため、上記の Gatekeeper の警告は出ません。
-更新は `brew upgrade --cask voynix` です。
+更新は `brew upgrade --cask voynix` です。Homebrew 7 で「信頼されていない tap」として読み込みを拒否されたら、
+一度だけ `brew trust tekapo/voynix` を実行してください。
 
 Android は [Obtainium](https://obtainium.imranr.dev/) に `https://github.com/tekapo/voynix` を登録すると、更新を自動で受け取れます。
 
