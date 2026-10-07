@@ -1,7 +1,7 @@
 {
   "name": "voynix",
   "private": true,
-  "version": "0.22.13",
+  "version": "0.22.14",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -29,7 +29,8 @@
     "licenses:generate": "node scripts/generate-licenses.mjs",
     "release": "node scripts/release.mjs",
     "release:android": "node scripts/release-android.mjs",
-    "release:cask": "node scripts/release-cask.mjs"
+    "release:cask": "node scripts/release-cask.mjs",
+    "build:android-aab": "node scripts/build-aab.mjs"
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.14.13",

@@ -163,6 +163,7 @@ revisit this.
 | `npm run version:bump` | Update the version number (applied to both Mac and Android) |
 | `npm run release` | Create and push the `v<version>` tag for the current version, wait for the macOS build on GitHub Actions, then attach the signed APK to the Release and update the Homebrew cask (`-- --no-android` pushes the tag only) |
 | `npm run release:cask` | Update `version` / `sha256` of the cask in the `tekapo/homebrew-voynix` tap to the current version's DMG (run by `npm run release`; the Release must already exist) |
+| `npm run build:android-aab` | Build the signed release App Bundle (`voynix-<version>.aab`) for Google Play and print its path. Upload it by hand in Play Console (not attached to the GitHub Release) |
 | `npm run release:android` | Build the signed APK and attach it to the GitHub Release for the current version (the Release must already exist) |
 | `npm run install:android-native` | Install the Android debug build on a device |
 | `npm run build:android-native` | Build the Android release APK (signed, minified) |

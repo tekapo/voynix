@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.14 — 2026-10-07
+- Added `npm run build:android-aab`, which builds the signed release App Bundle for Google Play (#39). The site also gained a privacy policy page.
+
 ## 0.22.13 — 2026-10-07
 - Fixed a flaky Android unit test (`DecodeSampledTest`) that ran out of memory on CI by decoding a 2048 px bitmap instead of 4096 px. No app changes.
 

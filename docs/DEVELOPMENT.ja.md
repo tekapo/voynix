@@ -161,6 +161,7 @@ Homebrew 7 の `brew style` は `postflight_steps` への置き換えを求め�
 | `npm run version:bump` | バージョン番号を更新（Mac / Android 両方に反映） |
 | `npm run release` | 現在のバージョンで `v<version>` タグを作成・push し、macOS ビルドの完了を待って署名済み APK を Release に添付し、Homebrew の Cask を更新（`-- --no-android` でタグ push のみ） |
 | `npm run release:cask` | `tekapo/homebrew-voynix` tap の Cask の `version` / `sha256` を、現在のバージョンの DMG に合わせて更新（`npm run release` が実行する。Release が先に存在している必要がある） |
+| `npm run build:android-aab` | Google Play 向けの署名済み App Bundle（`voynix-<version>.aab`）をビルドし、パスを表示する。Play Console で手動アップロードする（GitHub Release には添付しない） |
 | `npm run release:android` | 署名済み APK をビルドし、現在のバージョンの GitHub Release に添付（Release が先に存在している必要がある） |
 | `npm run install:android-native` | Android のデバッグビルドを実機にインストール |
 | `npm run build:android-native` | Android のリリースビルド（署名・minify 有効）を作成 |
