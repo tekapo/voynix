@@ -58,6 +58,7 @@ Android は [Obtainium](https://obtainium.imranr.dev/) に `https://github.com/t
 ## ドキュメント
 
 - [ユーザーマニュアル](https://tekapo.github.io/voynix/ja/)（使い方、Wi-Fi 同期、Android Auto、キーボードショートカット、バックアップ、FAQ と既知の制限）
+- [プライバシーポリシー](https://tekapo.github.io/voynix/ja/privacy.html)
 - [CHANGELOG.md](./docs/CHANGELOG.md)（英語）: バージョンごとの変更
 - [SECURITY.md](./SECURITY.md): 脆弱性の報告方法
 - [Homebrew tap](https://github.com/tekapo/homebrew-voynix): `brew install --cask tekapo/voynix/voynix` 用の Cask

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voynix Privacy Policy</title>
+<meta name="description" content="Privacy policy of Voynix, a local-first music player for Mac and Android.">
+<link rel="icon" href="../favicon.svg">
+<link rel="alternate" hreflang="ja" href="../ja/privacy.html">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="./"><img src="../favicon.svg" alt="">Voynix</a>
+  <nav>
+    <a href="https://github.com/tekapo/voynix/releases">Releases</a>
+    <a href="https://github.com/tekapo/voynix">GitHub</a>
+    <a class="lang" href="../ja/privacy.html" hreflang="ja">日本語</a>
+  </nav>
+</header>
+<div class="layout">
+<main>
+<h1>Voynix Privacy Policy</h1>
+<p class="lead">Last updated: October 7, 2026</p>
+
+<p>Voynix is a local-first music player for Mac and Android, developed by an individual (<a href="https://github.com/tekapo">tekapo</a>). This policy explains what data the Voynix apps handle. In short: <strong>the developer does not collect your data.</strong> There are no accounts, no analytics, no advertising and no developer-run servers.</p>
+
+<h2 id="stored">Data stored on your devices</h2>
+<p>Voynix keeps your library (track information read from your music files, playlists, play history, favorites, settings, artist images and album covers) on your own devices: on the Mac in <code>~/Library/Application Support/com.tekapo.voynix</code>, and on Android in the app's private storage. Your music files are read in place and are never uploaded anywhere. Deleting the app (and, on the Mac, that folder) removes this data.</p>
+
+<h2 id="sync">Wi-Fi sync</h2>
+<p>When you pair a Mac and an Android device, the marked playlists, tracks, play history and favorites are copied directly between your two devices over your local network. The sync server runs on your Mac and requires pairing, and traffic is protected by a certificate that is pinned at pairing time. This data is not sent to the developer or to any third party.</p>
+
+<h2 id="third-parties">Requests to third-party services</h2>
+<p>Some features look up information online. In these cases the text below is sent to the service, which also sees your IP address as with any internet request. No account or identifier from Voynix is attached.</p>
+<table>
+<tr><th>Service</th><th>Used for</th><th>What is sent</th></tr>
+<tr><td><a href="https://lrclib.net/">LRCLIB</a></td><td>Lyrics (Mac and Android), when you open the lyrics view</td><td>Artist, track title, album and duration of the track</td></tr>
+<tr><td><a href="https://developers.deezer.com/">Deezer</a></td><td>Artist images and album covers (Mac)</td><td>Artist name, or the search text you enter for album covers</td></tr>
+<tr><td><a href="https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/iTuneSearchAPI/">iTunes Search API (Apple)</a></td><td>Album covers (Mac)</td><td>Artist name and album title, or the search text you enter</td></tr>
+</table>
+<p>Those services' own privacy policies apply to the requests they receive. Voynix does not send your music files, your library as a whole or your play history to them.</p>
+
+<h2 id="android">Android permissions and the camera</h2>
+<ul>
+  <li><strong>Network access</strong> (internet, network and Wi-Fi state, multicast): sync with your Mac, discovering the Mac on your network, and the lyrics lookup above</li>
+  <li><strong>Notifications</strong> and <strong>foreground service</strong> (media playback, data sync) and <strong>wake lock</strong>: playback controls, keeping playback and sync running with the screen off</li>
+  <li><strong>QR code pairing</strong> uses Google's code scanner provided by Google Play services. Voynix only receives the decoded text of the QR code; it does not receive or store camera images.</li>
+</ul>
+
+<h2 id="other">Other information</h2>
+<ul>
+  <li>Voynix does not send crash reports or usage statistics.</li>
+  <li>Voynix does not knowingly collect any information from children, and it has no accounts or sign-in.</li>
+  <li>Downloading the app from GitHub Releases or Homebrew is handled by those services under their own policies.</li>
+</ul>
+
+<h2 id="changes">Changes and contact</h2>
+<p>If this policy changes, the new version is published on this page with an updated date, and the history is kept in the <a href="https://github.com/tekapo/voynix/commits/main/site/en/privacy.html">repository</a>. For questions, please open an <a href="https://github.com/tekapo/voynix/issues">issue on GitHub</a>. To report a vulnerability, see <a href="https://github.com/tekapo/voynix/blob/main/SECURITY.md">SECURITY.md</a>.</p>
+</main>
+</div>
+<footer>Voynix · MIT License · <a href="https://github.com/tekapo/voynix">GitHub</a> · <a href="./">User manual</a></footer>
+</body>
+</html>
