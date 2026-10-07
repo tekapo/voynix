@@ -56,8 +56,9 @@
 <h2 id="install">インストール</h2>
 <h3>Mac</h3>
 <p><a href="https://github.com/tekapo/voynix/releases">Releases</a> から <code>.dmg</code> をダウンロードして Applications にドラッグします。</p>
-<div class="note">アプリは Apple の署名・公証を受けていません。初回は macOS にブロックされます。警告で「ゴミ箱に入れる」ではなく「完了」を押し、システム設定 →「プライバシーとセキュリティ」で Voynix の項目の横にある<strong>「このまま開く」</strong>を押してください。ターミナルで <code>xattr -cr /Applications/Voynix.app</code> を実行してから開き直す方法もあります。初回だけ必要です。</div>
+<div class="note"><strong>重要:</strong> アプリは Apple の署名・公証を受けていません。初回は macOS にブロックされます。警告で「ゴミ箱に入れる」ではなく「完了」を押し、システム設定 →「プライバシーとセキュリティ」で Voynix の項目の横にある<strong>「このまま開く」</strong>を押してください。ターミナルで <code>xattr -cr /Applications/Voynix.app</code> を実行してから開き直す方法もあります。初回だけ必要です。</div>
 <h3>Android</h3>
+<div class="note"><strong>インストール前に:</strong> Android の<strong>「高度な保護機能」</strong>がオンだと、「高度な保護機能により制限されています」と表示され、APK をインストールできません（Obtainium 経由も同様）。先に設定 → セキュリティとプライバシーでオフにしてください。インストール元のアプリには「提供元不明のアプリ」の許可も必要です。</div>
 <p><a href="https://github.com/tekapo/voynix/releases">Releases</a> から <code>voynix-&lt;バージョン&gt;.apk</code> をダウンロードして端末で開きます。初回は、ブラウザやファイルアプリに「提供元不明のアプリ」のインストールを許可するよう求められます。</p>
 <p>更新を自動で受け取りたい場合は <a href="https://obtainium.imranr.dev/">Obtainium</a> に登録します。「アプリを追加」→ <code>https://github.com/tekapo/voynix</code> を入力してインストールすると、各 Release の <code>.apk</code> を取得し、新しいバージョンが出たときに通知してくれます。</p>
 <p>APK は Google Play では配布していません。初回起動時、Android 13 以上では通知権限の許可を求められます。</p>

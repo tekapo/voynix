@@ -31,10 +31,17 @@ Voynix is a local-first music player for Mac and Android.
 
 Download the Mac `.dmg` or the Android `.apk` from [Releases](https://github.com/tekapo/voynix/releases).
 
-The Mac app is not signed or notarized by Apple, so macOS blocks it on first launch. Press "Done" (not
-"Move to Trash"), then open System Settings → Privacy & Security and click **"Open Anyway"** next to the
-Voynix message. Or run `xattr -cr /Applications/Voynix.app` in Terminal and open the app again. On Android,
-you can get automatic updates with [Obtainium](https://obtainium.imranr.dev/) by adding
+> [!WARNING]
+> **Mac:** the app is not signed or notarized by Apple, so macOS blocks it on first launch. Press "Done" (not
+> "Move to Trash"), then open System Settings → Privacy & Security and click **"Open Anyway"** next to the
+> Voynix message. Or run `xattr -cr /Applications/Voynix.app` in Terminal and open the app again.
+>
+> **Android:** the APK is not distributed through Google Play. If Android's **Advanced Protection** is on,
+> installing it (including via Obtainium) is blocked with "restricted by Advanced Protection". Turn it off
+> in Settings → Security & privacy before installing. You also need to allow "Install unknown apps" for the app you
+> install from (browser, file manager or Obtainium).
+
+On Android you can get automatic updates with [Obtainium](https://obtainium.imranr.dev/) by adding
 `https://github.com/tekapo/voynix`.
 
 See the [user manual](https://tekapo.github.io/voynix/) for details, including how to add music, sync with

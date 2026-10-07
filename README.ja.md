@@ -31,10 +31,17 @@ Voynix は、Mac と Android 向けのローカルファーストな音楽プレ
 
 [Releases](https://github.com/tekapo/voynix/releases) から、Mac 用の `.dmg` または Android 用の `.apk` をダウンロードします。
 
-Mac 版は Apple の署名・公証を受けていないため、初回は macOS にブロックされます。警告で「ゴミ箱に入れる」ではなく
-「完了」を押し、システム設定 →「プライバシーとセキュリティ」で Voynix の項目の横にある**「このまま開く」**を押してください。
-ターミナルで `xattr -cr /Applications/Voynix.app` を実行してから開き直す方法もあります。Android は
-[Obtainium](https://obtainium.imranr.dev/) に `https://github.com/tekapo/voynix` を登録すると、更新を自動で受け取れます。
+> [!WARNING]
+> **Mac:** アプリは Apple の署名・公証を受けていないため、初回は macOS にブロックされます。警告で「ゴミ箱に入れる」ではなく
+> 「完了」を押し、システム設定 →「プライバシーとセキュリティ」で Voynix の項目の横にある**「このまま開く」**を押してください。
+> ターミナルで `xattr -cr /Applications/Voynix.app` を実行してから開き直す方法もあります。
+>
+> **Android:** APK は Google Play では配布していません。Android の**「高度な保護機能」**がオンだと、
+> 「高度な保護機能により制限されています」と表示されてインストールできません（Obtainium 経由も同様）。
+> インストール前に、設定 → セキュリティとプライバシーでオフにしてください。あわせて、インストール元のアプリ
+> （ブラウザ、ファイルアプリ、Obtainium）に「提供元不明のアプリ」の許可も必要です。
+
+Android は [Obtainium](https://obtainium.imranr.dev/) に `https://github.com/tekapo/voynix` を登録すると、更新を自動で受け取れます。
 
 音楽の取り込み、Android との同期、Android Auto の設定など、詳しくは
 [ユーザーマニュアル](https://tekapo.github.io/voynix/ja/)を参照してください。

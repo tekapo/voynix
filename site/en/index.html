@@ -56,8 +56,9 @@
 <h2 id="install">Installation</h2>
 <h3>Mac</h3>
 <p>Download the <code>.dmg</code> from <a href="https://github.com/tekapo/voynix/releases">Releases</a> and drag the app to Applications.</p>
-<div class="note">The app is not signed or notarized by Apple. macOS blocks it on first launch. Press "Done" (not "Move to Trash"), then open System Settings → Privacy &amp; Security and click <strong>"Open Anyway"</strong> next to the Voynix message. You can also run <code>xattr -cr /Applications/Voynix.app</code> in Terminal and open the app again. This is needed only once.</div>
+<div class="note"><strong>Important:</strong> the app is not signed or notarized by Apple. macOS blocks it on first launch. Press "Done" (not "Move to Trash"), then open System Settings → Privacy &amp; Security and click <strong>"Open Anyway"</strong> next to the Voynix message. You can also run <code>xattr -cr /Applications/Voynix.app</code> in Terminal and open the app again. This is needed only once.</div>
 <h3>Android</h3>
+<div class="note"><strong>Before installing:</strong> if Android's <strong>Advanced Protection</strong> is on, installing the APK (including through Obtainium) is blocked with "restricted by Advanced Protection". Turn it off in Settings → Security &amp; privacy first. You also need to allow "Install unknown apps" for the app you install from.</div>
 <p>Download <code>voynix-&lt;version&gt;.apk</code> from <a href="https://github.com/tekapo/voynix/releases">Releases</a> and open it on the device. The first time, Android asks you to allow installing apps from your browser or file manager ("Install unknown apps").</p>
 <p>To get updates automatically, use <a href="https://obtainium.imranr.dev/">Obtainium</a>: choose "Add App", enter <code>https://github.com/tekapo/voynix</code>, and install. Obtainium picks the <code>.apk</code> from each Release and notifies you of new versions.</p>
 <p>The APK is not distributed through Google Play. On first launch, Android 13 and later ask for the notification permission.</p>
