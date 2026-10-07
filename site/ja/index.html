@@ -58,7 +58,7 @@
 <p>Homebrew（Apple Silicon）では <code>brew install --cask tekapo/voynix/voynix</code> を実行します。この場合は下の警告は出ません。更新は <code>brew upgrade --cask voynix</code> です。</p>
 <div class="note"><strong>重要:</strong> アプリは Apple の署名・公証を受けていません。初回は macOS にブロックされます。警告で「ゴミ箱に入れる」ではなく「完了」を押し、システム設定 →「プライバシーとセキュリティ」で Voynix の項目の横にある<strong>「このまま開く」</strong>を押してください。ターミナルで <code>xattr -cr /Applications/Voynix.app</code> を実行してから開き直す方法もあります。初回だけ必要です。</div>
 <h3>Android</h3>
-<div class="note"><strong>インストール前に:</strong> Android の<strong>「高度な保護機能」</strong>がオンだと、「高度な保護機能により制限されています」と表示され、APK をインストールできません（Obtainium 経由も同様）。先に設定 → セキュリティとプライバシーでオフにしてください。インストール元のアプリには「提供元不明のアプリ」の許可も必要です。</div>
+<div class="note"><strong>インストール前に:</strong> Android の<strong>「高度な保護機能」</strong>がオンだと、「高度な保護機能により制限されています」と表示され、APK をインストールできません（Obtainium 経由も同様）。先に設定 → セキュリティとプライバシーでオフにしてください。インストール元のアプリには「提供元不明のアプリ」の許可も必要です。<strong>更新も同様にブロックされます。</strong>オンのままだと Obtainium に「この提供元のアプリを許可」を設定できないため、更新のたびにオフにしてください（更新後にオンへ戻せます）。</div>
 <p><a href="https://github.com/tekapo/voynix/releases">Releases</a> から <code>voynix-&lt;バージョン&gt;.apk</code> をダウンロードして端末で開きます。初回は、ブラウザやファイルアプリに「提供元不明のアプリ」のインストールを許可するよう求められます。</p>
 <p>更新を自動で受け取りたい場合は <a href="https://obtainium.imranr.dev/">Obtainium</a> に登録します。「アプリを追加」→ <code>https://github.com/tekapo/voynix</code> を入力してインストールすると、各 Release の <code>.apk</code> を取得し、新しいバージョンが出たときに通知してくれます。</p>
 <p>APK は Google Play では配布していません。初回起動時、Android 13 以上では通知権限の許可を求められます。</p>
@@ -138,7 +138,7 @@
 <h3>Mac の IP アドレスが変わって、Android が Mac に接続できません。</h3>
 <p>ネットワークによっては自動復旧できないことがあります。Mac の Wi-Fi 同期画面を開き、QR コードを読み取って再ペアリングしてください。</p>
 <h3>アプリのアップデート方法は？</h3>
-<p>Mac は、新しい <code>.dmg</code> をダウンロードして「アプリケーション」内のアプリを置き換えます（Homebrew で入れた場合は <code>brew upgrade --cask voynix</code>）。Android は Obtainium が自動で更新します。使っていない場合は、新しい <code>.apk</code> を上書きインストールしてください。データは保持されます。</p>
+<p>Mac は、新しい <code>.dmg</code> をダウンロードして「アプリケーション」内のアプリを置き換えます（Homebrew で入れた場合は <code>brew upgrade --cask voynix</code>）。Android は Obtainium で更新します（先に高度な保護機能をオフにしてください。インストールの項を参照）。使っていない場合は、新しい <code>.apk</code> を上書きインストールしてください。データは保持されます。</p>
 <h3>アンインストールするには？</h3>
 <p>Mac は、「アプリケーション」から Voynix をゴミ箱に入れます（Homebrew で入れた場合は <code>brew uninstall --cask voynix</code>。<code>--zap</code> を付けるとデータも削除します）。データのフォルダは残るので、不要なら <code>~/Library/Application Support/com.tekapo.voynix</code> を削除してください。音楽ファイルが削除されることはありません。Android は通常どおりアンインストールします。端末内のデータも一緒に消えます。</p>
 <h3>データはどこに保存されますか？</h3>

@@ -38,7 +38,8 @@ Download the Mac `.dmg` or the Android `.apk` from [Releases](https://github.com
 > **Android:** the APK is not distributed through Google Play. If Android's **Advanced Protection** is on,
 > installing it (including via Obtainium) is blocked with "restricted by Advanced Protection". Turn it off
 > in Settings → Security & privacy before installing. You also need to allow "Install unknown apps" for the app you
-> install from (browser, file manager or Obtainium).
+> install from (browser, file manager or Obtainium). The same applies to **updates**: with Advanced Protection on,
+> Android refuses to let Obtainium install apps, so turn it off for each update too (you can turn it back on afterwards).
 
 **Install with Homebrew (Mac, Apple Silicon):**
 
