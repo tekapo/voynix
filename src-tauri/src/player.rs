@@ -15,15 +15,25 @@
 //! Tauri's (async) command handlers post `Command`s to that thread over an
 //! `mpsc` channel and `player-*` events go back to the frontend via
 //! `AppHandle::emit`.
+//!
+//! The output stream is bound to whichever device was the system default
+//! when it was opened. If that device goes away (Bluetooth speaker turned
+//! off, a monitor's DisplayPort audio vanishing as it sleeps) CoreAudio stops
+//! the stream for good, so the output is reopened on the current default —
+//! and likewise when the default itself changes — carrying the loaded track
+//! over at its position. Without this, playback silently stayed dead until
+//! the app was restarted.
 
 mod gapless;
 
 use gapless::SymphoniaSource;
-use rodio::{DeviceSinkBuilder, Player};
+use rodio::cpal::traits::{DeviceTrait, HostTrait};
+use rodio::cpal::{self, DeviceId, StreamError};
+use rodio::{DeviceSinkBuilder, MixerDeviceSink, Player};
 use serde::Serialize;
 use std::path::PathBuf;
 use std::sync::mpsc::{channel, Sender};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter};
 
 /// Commands sent to the dedicated playback thread.
@@ -35,7 +45,15 @@ enum Command {
     Stop,
     Seek(f64),
     SetVolume(f32),
+    /// Sent from cpal's error callback (another thread) when the output
+    /// device behind the stream opened as generation `.0` disappears. Older
+    /// generations are ignored — that stream has already been replaced.
+    DeviceLost(u64),
 }
+
+/// How often the poll loop checks whether the system default output device
+/// changed. Reading the default is a single CoreAudio property query.
+const DEFAULT_DEVICE_CHECK_INTERVAL: Duration = Duration::from_secs(2);
 
 /// Shared handle managed by Tauri (`app.manage(...)`) and used by the
 /// `player_*` commands in `lib.rs` to talk to the dedicated thread.
@@ -48,7 +66,10 @@ impl PlayerHandle {
         let (tx, rx) = channel::<Command>();
         std::thread::Builder::new()
             .name("voynix-player".into())
-            .spawn(move || run(app, rx))
+            .spawn({
+                let tx = tx.clone();
+                move || run(app, tx, rx)
+            })
             .expect("failed to spawn playback thread");
         PlayerHandle { tx }
     }
@@ -108,10 +129,13 @@ struct ErrorPayload {
 }
 
 /// What's queued behind the currently-loaded track, for a gapless hand-off.
-/// `id` lets `set_next` no-op on a redundant call.
+/// `id` lets `set_next` no-op on a redundant call; `path` becomes the
+/// current path once it's handed off to, and lets it be re-queued when the
+/// output is reopened.
 #[derive(Debug, PartialEq)]
 struct Pending {
     id: String,
+    path: PathBuf,
     duration: f64,
 }
 
@@ -152,7 +176,7 @@ mod transition_tests {
     fn no_change_while_len_holds_or_grows() {
         let mut pending = None;
         assert_eq!(detect_transition(true, 1, 1, &mut pending), Transition::None);
-        let mut pending = Some(Pending { id: "b".into(), duration: 10.0 });
+        let mut pending = Some(Pending { id: "b".into(), path: "b.m4a".into(), duration: 10.0 });
         assert_eq!(detect_transition(true, 1, 2, &mut pending), Transition::None);
         assert!(pending.is_some()); // untouched — no transition happened
     }
@@ -173,11 +197,72 @@ mod transition_tests {
 
     #[test]
     fn a_drop_with_something_queued_is_a_gapless_advance() {
-        let mut pending = Some(Pending { id: "next".into(), duration: 42.0 });
+        let mut pending = Some(Pending { id: "next".into(), path: "next.m4a".into(), duration: 42.0 });
         let t = detect_transition(true, 2, 1, &mut pending);
-        assert_eq!(t, Transition::AdvancedTo(Pending { id: "next".into(), duration: 42.0 }));
+        assert_eq!(t, Transition::AdvancedTo(Pending { id: "next".into(), path: "next.m4a".into(), duration: 42.0 }));
         assert!(pending.is_none()); // consumed — it's current now, not pending
     }
+}
+
+/// Whether the system default output device has moved away from the one the
+/// stream was opened on. Unknown ids on either side (a query that failed)
+/// never count as a change — reopening on a guess could only hurt.
+fn default_changed(opened: Option<&DeviceId>, default: Option<&DeviceId>) -> bool {
+    matches!((opened, default), (Some(a), Some(b)) if a != b)
+}
+
+#[cfg(test)]
+mod default_device_tests {
+    use super::*;
+
+    fn id(name: &str) -> DeviceId {
+        DeviceId(cpal::default_host().id(), name.into())
+    }
+
+    #[test]
+    fn same_device_is_no_change() {
+        assert!(!default_changed(Some(&id("a")), Some(&id("a"))));
+    }
+
+    #[test]
+    fn different_device_is_a_change() {
+        assert!(default_changed(Some(&id("a")), Some(&id("b"))));
+    }
+
+    #[test]
+    fn unknown_ids_are_never_a_change() {
+        assert!(!default_changed(None, Some(&id("b"))));
+        assert!(!default_changed(Some(&id("a")), None));
+        assert!(!default_changed(None, None));
+    }
+}
+
+/// An open output stream plus what's needed to tell whether it's stale.
+struct Output {
+    sink: MixerDeviceSink,
+    device_id: Option<DeviceId>,
+    generation: u64,
+}
+
+/// Opens the current system default output device. Its error callback posts
+/// `DeviceLost(generation)` back to the playback thread, since the callback
+/// itself runs on a cpal thread that can't touch the `Player`.
+fn open_output(tx: &Sender<Command>, generation: u64) -> Result<Output, String> {
+    let device = cpal::default_host()
+        .default_output_device()
+        .ok_or_else(|| "no audio output device".to_string())?;
+    let device_id = device.id().ok();
+    let tx = tx.clone();
+    let on_error = move |err: StreamError| {
+        eprintln!("audio stream error: {err}");
+        if err == StreamError::DeviceNotAvailable {
+            let _ = tx.send(Command::DeviceLost(generation));
+        }
+    };
+    let sink = DeviceSinkBuilder::from_device(device)
+        .and_then(|b| b.with_error_callback(on_error).open_sink_or_fallback())
+        .map_err(|e| format!("couldn't open audio output: {e}"))?;
+    Ok(Output { sink, device_id, generation })
 }
 
 /// Owns the `Player` and everything about "what's currently loaded" for the
@@ -185,6 +270,8 @@ mod transition_tests {
 /// isn't), which is fine — it's only ever touched from `run`'s own thread.
 struct Engine {
     player: Player,
+    /// Declared after `player` so the stream outlives it on drop.
+    output: Output,
     current_id: Option<String>,
     current_path: Option<PathBuf>,
     current_duration: f64,
@@ -288,7 +375,7 @@ impl Engine {
                     Ok(source) => {
                         let duration = source.total_duration.map(|d| d.as_secs_f64()).unwrap_or(0.0);
                         self.player.append(source);
-                        self.pending = Some(Pending { id, duration });
+                        self.pending = Some(Pending { id, path, duration });
                     }
                     Err(message) => {
                         let _ = app.emit("player-error", ErrorPayload { message });
@@ -302,29 +389,89 @@ impl Engine {
     }
 }
 
-fn run(app: AppHandle, rx: std::sync::mpsc::Receiver<Command>) {
-    let device_sink = match DeviceSinkBuilder::open_default_sink() {
-        Ok(s) => s,
-        Err(e) => {
-            let _ = app.emit("player-error", ErrorPayload { message: format!("no audio output device: {e}") });
+impl Engine {
+    /// Moves playback onto a freshly opened stream on the current default
+    /// device: a new `Player` on its mixer, the loaded track re-opened at the
+    /// old position with the same paused/playing state and volume, and the
+    /// queued next track (if any) re-appended behind it. If the new device
+    /// can't be opened, everything stays as it was and the error is reported.
+    fn reopen_output(&mut self, app: &AppHandle, tx: &Sender<Command>) {
+        let output = match open_output(tx, self.output.generation + 1) {
+            Ok(o) => o,
+            Err(message) => {
+                let _ = app.emit("player-error", ErrorPayload { message });
+                return;
+            }
+        };
+        let pos = self.player.get_pos();
+        let was_paused = self.player.is_paused();
+        let volume = self.player.volume();
+        self.player.stop();
+        let player = new_player(&output.sink);
+        player.set_volume(volume);
+        self.player = player;
+        self.output = output;
+        self.last_len = 0;
+
+        let Some(path) = self.current_id.as_ref().and(self.current_path.clone()) else {
+            self.pending = None;
+            return;
+        };
+        match SymphoniaSource::open(&path) {
+            Ok(source) => {
+                self.player.append(source);
+                let _ = self.player.try_seek(pos);
+            }
+            Err(message) => {
+                self.current_id = None;
+                self.pending = None;
+                let _ = app.emit("player-error", ErrorPayload { message });
+                return;
+            }
+        }
+        if let Some(next) = &self.pending {
+            match SymphoniaSource::open(&next.path) {
+                Ok(source) => self.player.append(source),
+                Err(_) => self.pending = None,
+            }
+        }
+        if !was_paused {
+            self.player.play();
+        }
+        self.last_len = self.player.len();
+    }
+}
+
+/// `Player` starts *unpaused* — with nothing appended yet that's silent, but
+/// the moment anything is appended (e.g. `set_next` queuing a track for a
+/// merely-armed, not-yet-playing selection) it would start playing
+/// immediately. Pause up front so only an explicit `load(autoplay: true)` or
+/// `play()` command ever starts sound.
+fn new_player(sink: &MixerDeviceSink) -> Player {
+    let player = Player::connect_new(sink.mixer());
+    player.pause();
+    player
+}
+
+fn run(app: AppHandle, tx: Sender<Command>, rx: std::sync::mpsc::Receiver<Command>) {
+    let output = match open_output(&tx, 0) {
+        Ok(o) => o,
+        Err(message) => {
+            let _ = app.emit("player-error", ErrorPayload { message });
             return;
         }
     };
-    let player = Player::connect_new(device_sink.mixer());
-    // `Player` starts *unpaused* — with nothing appended yet that's silent,
-    // but the moment anything is appended (e.g. `set_next` queuing a track
-    // for a merely-armed, not-yet-playing selection) it would start playing
-    // immediately. Pause up front so only an explicit `load(autoplay: true)`
-    // or `play()` command ever starts sound.
-    player.pause();
+    let player = new_player(&output.sink);
     let mut engine = Engine {
         player,
+        output,
         current_id: None,
         current_path: None,
         current_duration: 0.0,
         pending: None,
         last_len: 0,
     };
+    let mut last_default_check = Instant::now();
 
     loop {
         // Poll for a command without blocking forever, so position ticks and
@@ -347,8 +494,22 @@ fn run(app: AppHandle, rx: std::sync::mpsc::Receiver<Command>) {
                 let _ = engine.player.try_seek(Duration::from_secs_f64(pos));
             }
             Ok(Command::SetVolume(v)) => engine.player.set_volume(v),
+            Ok(Command::DeviceLost(generation)) => {
+                if generation == engine.output.generation {
+                    engine.reopen_output(&app, &tx);
+                }
+            }
             Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {}
-            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => return, // app shutting down
+            // Unreachable while `tx` lives here, but harmless to keep.
+            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => return,
+        }
+
+        if last_default_check.elapsed() >= DEFAULT_DEVICE_CHECK_INTERVAL {
+            last_default_check = Instant::now();
+            let default_id = cpal::default_host().default_output_device().and_then(|d| d.id().ok());
+            if default_changed(engine.output.device_id.as_ref(), default_id.as_ref()) {
+                engine.reopen_output(&app, &tx);
+            }
         }
 
         let len = engine.player.len();
@@ -356,6 +517,7 @@ fn run(app: AppHandle, rx: std::sync::mpsc::Receiver<Command>) {
             Transition::None => {}
             Transition::AdvancedTo(next) => {
                 engine.current_id = Some(next.id.clone());
+                engine.current_path = Some(next.path);
                 engine.current_duration = next.duration;
                 let _ = app.emit("player-advanced", AdvancedPayload { track_id: next.id });
             }

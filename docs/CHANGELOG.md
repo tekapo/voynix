@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.16 — 2026-10-08
+- Fixed Mac music playback going silent for good (until the app was restarted) after the audio output device disappeared, e.g. a Bluetooth speaker disconnecting or a monitor sleeping. The output now reopens on the current default device and resumes the track at the same position.
+- Mac playback now also follows changes to the system default output device.
+
 ## 0.22.15 — 2026-10-07
 - Removed the `android.hardware.type.automotive` uses-feature from the Android manifest, which Google Play rejects together with the Android Auto `com.google.android.gms.car.application` metadata (#39). Android Auto support is unchanged.
 
