@@ -124,7 +124,7 @@ APK は CI ではビルドせず、リリース鍵のある手元のマシンで
 （鍵を GitHub に預けないため）。リリース鍵の準備は
 [android-native/README.ja.md](../android-native/README.ja.md#リリース鍵の準備初回のみマシンごと) を参照してください。
 
-`npm run release` は、タグの push → Build macOS ワークフローの完了待ち → APK の添付 → Homebrew Cask の更新までを続けて行います
+`npm run release` は、タグの push → Build macOS ワークフローの完了待ち → APK の添付 → Homebrew Cask の更新 → Google Play へのアップロードまでを続けて行います
 （タグだけ push したいときは `-- --no-android`）。APK の添付だけを単独で行う場合は次のとおりです。
 
 1. `npm run release -- --no-android` などで `v<version>` タグを push し、Build macOS ワークフローが Release を作るのを待つ
@@ -133,6 +133,16 @@ APK は CI ではビルドせず、リリース鍵のある手元のマシンで
    行い、アップロードはしません
 
 `gh` CLI のログインが必要です。リリース鍵（`local.properties`）が未設定だとエラーで止まります。
+
+### Google Play へのアップロード
+
+`npm run release` は最後に `npm run release:play` を実行し、署名済み AAB をビルドして、Gradle Play Publisher
+（`./gradlew publishReleaseBundle`）で Play の**内部テスト**トラックにアップロードします。リリースノートには、
+`docs/CHANGELOG.md` のそのバージョンの項目を Play の上限の 500 文字までで使います。Play のサービス アカウント キーが
+未設定ならこの手順は飛ばします（`-- --no-play` でも飛ばせます）。製品版への昇格は Play Console で手動で行います。
+キーの準備は [android-native/README.ja.md](../android-native/README.ja.md#google-play-のアップロード鍵初回のみマシンごと) を参照してください。
+
+プラグインは 3.x に固定しています。4.x は Gradle 9.1 以上が必要なためです。
 
 ### Homebrew Cask
 
@@ -159,9 +169,10 @@ Release が先に存在している必要があります。
 | `npm run test:coverage` | カバレッジ付きでテスト実行 |
 | `npm run licenses:generate` | 依存ライブラリのライセンス表記を再生成 |
 | `npm run version:bump` | バージョン番号を更新（Mac / Android 両方に反映） |
-| `npm run release` | 現在のバージョンで `v<version>` タグを作成・push し、macOS ビルドの完了を待って署名済み APK を Release に添付し、Homebrew の Cask を更新（`-- --no-android` でタグ push のみ） |
+| `npm run release` | 現在のバージョンで `v<version>` タグを作成・push し、macOS ビルドの完了を待って署名済み APK を Release に添付し、Homebrew の Cask を更新し、AAB を Google Play の内部テストにアップロード（`-- --no-android` でタグ push のみ、`-- --no-play` で Play を飛ばす） |
 | `npm run release:cask` | `tekapo/homebrew-voynix` tap の Cask の `version` / `sha256` を、現在のバージョンの DMG に合わせて更新（`npm run release` が実行する。Release が先に存在している必要がある） |
-| `npm run build:android-aab` | Google Play 向けの署名済み App Bundle（`voynix-<version>.aab`）をビルドし、パスを表示する。Play Console で手動アップロードする（GitHub Release には添付しない） |
+| `npm run build:android-aab` | Google Play 向けの署名済み App Bundle（`voynix-<version>.aab`）をビルドし、パスを表示する。Play Console で手動アップロードするとき用（`npm run release:play` は自動でアップロードする。GitHub Release には添付しない） |
+| `npm run release:play` | 署名済み AAB をビルドし、このバージョンの CHANGELOG の項目をリリースノートにして Google Play の内部テストにアップロード（`-- --dry-run` でリリースノートの表示のみ） |
 | `npm run release:android` | 署名済み APK をビルドし、現在のバージョンの GitHub Release に添付（Release が先に存在している必要がある） |
 | `npm run install:android-native` | Android のデバッグビルドを実機にインストール |
 | `npm run build:android-native` | Android のリリースビルド（署名・minify 有効）を作成 |

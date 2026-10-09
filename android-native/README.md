@@ -102,6 +102,25 @@ If you lose the key you can no longer publish updates signed with the same key, 
 To attach the signed APK to a GitHub Release, see "Versioning and releases" in
 [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md).
 
+### Google Play upload key (once per machine)
+
+`npm run release:play` uploads the signed AAB to Play's internal testing track through the Google Play
+Developer API (Gradle Play Publisher's `publishReleaseBundle`). It authenticates as a service account:
+
+1. In Google Cloud Console, create a project, enable the **Google Play Android Developer API**, create a
+   service account and download a JSON key for it
+2. In Play Console → **Users and permissions**, invite the service account's email and give it access to the
+   Voynix app with **Release to testing tracks** only. It then can't touch production, which stays a manual
+   promotion in Play Console
+3. Keep the JSON key outside the repository and point `android-native/local.properties` at it (an absolute
+   path, or relative to `android-native/`):
+
+```properties
+voynix.play.serviceAccountCredentials=/path/to/play-service-account.json
+```
+
+Instead of the file, the key's JSON can be passed in the `ANDROID_PUBLISHER_CREDENTIALS` environment variable.
+
 ### Over Wi-Fi (no USB)
 
 ```sh

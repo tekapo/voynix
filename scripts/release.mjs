@@ -3,10 +3,13 @@
 // GitHub Actions workflow (.github/workflows/build-macos.yml) to build a
 // macOS release artifact. Then it waits for that workflow to create the
 // Release and runs scripts/release-android.mjs to build the signed APK
-// locally and attach it (the release key stays on this machine), and finally
-// updates the Homebrew cask in tekapo/homebrew-voynix (scripts/release-cask.mjs).
+// locally and attach it (the release key stays on this machine), updates the
+// Homebrew cask in tekapo/homebrew-voynix (scripts/release-cask.mjs), and
+// finally uploads the AAB to Google Play internal testing
+// (scripts/release-play.mjs, skipped when no Play key is configured).
 //
-//   npm run release            # tag, push, wait for CI, attach the APK
+//   npm run release            # tag, push, wait for CI, attach the APK, upload to Play
+//   npm run release -- --no-play      # everything except the Google Play upload
 //   npm run release -- --no-android   # tag and push only
 //   npm run release -- --dry-run
 
@@ -24,6 +27,7 @@ function run(cmd, args) {
 
 const dryRun = process.argv.includes("--dry-run");
 const skipAndroid = process.argv.includes("--no-android");
+const skipPlay = process.argv.includes("--no-play");
 
 // Every file version:bump touches must already agree.
 try {
@@ -92,6 +96,13 @@ async function attachAndroid() {
     if (cask.status !== 0) {
         console.error("Updating the Homebrew cask failed; run `npm run release:cask` after fixing it.");
         process.exit(cask.status ?? 1);
+    }
+    if (!skipPlay) {
+        const play = spawnSync("node", [path("scripts/release-play.mjs"), "--if-configured"], { cwd: ROOT, stdio: "inherit" });
+        if (play.status !== 0) {
+            console.error("Uploading to Google Play failed; run `npm run release:play` after fixing it.");
+            process.exit(play.status ?? 1);
+        }
     }
     console.log(`Released ${tag}: https://github.com/${repoSlug()}/releases/tag/${tag}`);
 }

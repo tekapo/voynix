@@ -21,6 +21,8 @@ androidxTestCore = "1.6.1"
 workManager = "2.10.0"
 glance = "1.1.1"
 playServicesCodeScanner = "16.1.0"
+# Gradle Play Publisher 4.x needs Gradle 9.1+; stay on 3.x until the wrapper moves to Gradle 9.
+playPublisher = "3.13.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -67,3 +69,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+play-publisher = { id = "com.github.triplet.play", version.ref = "playPublisher" }

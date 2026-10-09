@@ -105,6 +105,24 @@ voynix.release.keyPassword=...
 署名済み APK を GitHub Release に添付する手順は、
 [docs/DEVELOPMENT.ja.md](../docs/DEVELOPMENT.ja.md) の「バージョンとリリース」を参照してください。
 
+### Google Play のアップロード鍵（初回のみ・マシンごと）
+
+`npm run release:play` は、署名済み AAB を Google Play Developer API 経由で Play の内部テストトラックにアップロードします
+（Gradle Play Publisher の `publishReleaseBundle`）。認証にはサービス アカウントを使います。
+
+1. Google Cloud Console でプロジェクトを作り、**Google Play Android Developer API** を有効にして、サービス アカウントを
+   作成し、その JSON キーをダウンロードする
+2. Play Console の **ユーザーと権限** でサービス アカウントのメールアドレスを招待し、Voynix アプリに対して
+   **テストトラックへのリリース** の権限だけを与える。製品版には触れられなくなるので、製品版への昇格は Play Console で手動で行う
+3. JSON キーはリポジトリの外に置き、`android-native/local.properties` でその場所を指定する（絶対パス、または
+   `android-native/` からの相対パス）:
+
+```properties
+voynix.play.serviceAccountCredentials=/path/to/play-service-account.json
+```
+
+ファイルの代わりに、キーの JSON を環境変数 `ANDROID_PUBLISHER_CREDENTIALS` で渡すこともできます。
+
 ### Wi-Fi経由（USBなし）
 
 ```sh

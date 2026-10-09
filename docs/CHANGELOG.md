@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.18 — 2026-10-09
+- Added `npm run release:play`, which builds the signed AAB and uploads it to Google Play internal testing with Gradle Play Publisher, using this version's CHANGELOG entry as release notes (#39). `npm run release` now runs it at the end, and skips it when no Play service account key is configured (`--no-play` skips it too). Production releases are still promoted by hand in Play Console.
+
 ## 0.22.17 — 2026-10-09
 - Added a "Support on Ko-fi" button to the Mac app's Settings → About tab (#40). The Android app deliberately has no donation link, because Google Play's payments policy restricts them.
 - Added Ko-fi links to the README, the site footer and a GitHub Sponsor button (`.github/FUNDING.yml`).

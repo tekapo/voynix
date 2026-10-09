@@ -9,3 +9,6 @@
 .cxx
 local.properties
 /app/build
+
+# Release notes generated from docs/CHANGELOG.md by scripts/release-play.mjs
+/app/src/main/play/

@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.play.publisher)
 }
 
 // Release signing credentials live in local.properties (gitignored, per-machine),
@@ -16,6 +17,9 @@ val localProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 val releaseStoreFile = localProperties.getProperty("voynix.release.storeFile")
+// Google Play service account key (JSON) for publishReleaseBundle, also kept out
+// of the repository. Without it GPP falls back to ANDROID_PUBLISHER_CREDENTIALS.
+val playCredentials = localProperties.getProperty("voynix.play.serviceAccountCredentials")
 
 android {
     namespace = "com.voynix"
@@ -25,8 +29,8 @@ android {
         applicationId = "com.tekapo.voynix"
         minSdk = 26
         targetSdk = 36
-        versionCode = 136
-        versionName = "0.22.17"
+        versionCode = 137
+        versionName = "0.22.18"
     }
 
     signingConfigs {
@@ -93,6 +97,17 @@ android {
 
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
+}
+
+// Gradle Play Publisher: `npm run release:play` runs publishReleaseBundle, which
+// uploads the signed AAB to internal testing only. Promoting a release to
+// production stays a manual step in Play Console.
+play {
+    track.set("internal")
+    defaultToAppBundles.set(true)
+    if (playCredentials != null) {
+        serviceAccountCredentials.set(rootProject.file(playCredentials))
+    }
 }
 
 dependencies {

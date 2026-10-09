@@ -2,7 +2,8 @@
 // Build the signed release Android App Bundle (.aab) for Google Play and
 // copy it to voynix-<version>.aab next to the Gradle output. The AAB is signed
 // with the release key, which Play uses as the upload key (Play App Signing).
-// It is uploaded by hand in Play Console (Testing → Internal testing), not
+// It is for a manual upload in Play Console (Testing → Internal testing);
+// `npm run release:play` builds and uploads it automatically. It is not
 // attached to the GitHub Release.
 //
 //   npm run build:android-aab
