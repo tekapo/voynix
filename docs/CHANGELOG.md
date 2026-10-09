@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.22.17 — 2026-10-09
+- Added a "Support on Ko-fi" button to the Mac app's Settings → About tab (#40). The Android app deliberately has no donation link, because Google Play's payments policy restricts them.
+- Added Ko-fi links to the README, the site footer and a GitHub Sponsor button (`.github/FUNDING.yml`).
+
 ## 0.22.16 — 2026-10-08
 - Fixed Mac music playback going silent for good (until the app was restarted) after the audio output device disappeared, e.g. a Bluetooth speaker disconnecting or a monitor sleeping. The output now reopens on the current default device and resumes the track at the same position.
 - Mac playback now also follows changes to the system default output device.

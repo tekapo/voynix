@@ -414,6 +414,8 @@
     "userManual": "User manual",
     "websiteUrl": "https://tekapo.github.io/voynix/en/",
     "openSourceLicenses": "Open source licenses",
+    "supportOnKofi": "Support on Ko-fi",
+    "supportUrl": "https://ko-fi.com/tekapo",
     "licensesLoadFailed": "Couldn't load the license list.",
     "aboutTagline": "A modern, local-first music player.",
     "language": "Language",

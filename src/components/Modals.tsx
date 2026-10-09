@@ -560,6 +560,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <button type="button" className="modal-btn cancel" onClick={toggleLicenses}>
                         {t('settings.openSourceLicenses')}
                     </button>
+                    {' '}
+                    <button type="button" className="modal-btn cancel" onClick={() => { openUrl(t('settings.supportUrl')).catch(() => {}); }}>
+                        {t('settings.supportOnKofi')}
+                    </button>
                     {licenses !== null && (
                         <pre className="settings-licenses" tabIndex={0}>{licenses}</pre>
                     )}

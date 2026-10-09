@@ -64,6 +64,10 @@ Android は [Obtainium](https://obtainium.imranr.dev/) に `https://github.com/t
 - [SECURITY.md](./SECURITY.md): 脆弱性の報告方法
 - [Homebrew tap](https://github.com/tekapo/homebrew-voynix): `brew install --cask tekapo/voynix/voynix` 用の Cask
 
+## 支援
+
+Voynix は無料のオープンソースです。気に入っていただけたら、[Ko-fi](https://ko-fi.com/tekapo) で開発を支援できます。
+
 ## 開発者向け情報
 
 ビルド方法や開発コマンドなどは [DEVELOPMENT.ja.md](./docs/DEVELOPMENT.ja.md)（Mac 版）、

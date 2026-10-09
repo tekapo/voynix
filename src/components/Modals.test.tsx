@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import { SettingsModal } from "./Modals";
 
 vi.mock("@tauri-apps/api/app", () => ({ getVersion: async () => "0.0.0-test" }));
+const openUrl = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl }));
 
 function makeProps(over: Partial<React.ComponentProps<typeof SettingsModal>> = {}) {
     return {
@@ -58,5 +60,15 @@ describe("SettingsModal backup section", () => {
 
         expect(screen.getByRole("button", { name: "Export Backup…" })).toBeDisabled();
         expect(screen.getByRole("button", { name: "Import Backup…" })).toBeDisabled();
+    });
+});
+
+describe("SettingsModal about tab", () => {
+    it("opens the Ko-fi page from the support button", () => {
+        render(<SettingsModal {...makeProps()} />);
+        fireEvent.click(screen.getByRole("tab", { name: "About" }));
+
+        fireEvent.click(screen.getByRole("button", { name: "Support on Ko-fi" }));
+        expect(openUrl).toHaveBeenCalledWith("https://ko-fi.com/tekapo");
     });
 });

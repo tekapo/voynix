@@ -65,6 +65,10 @@ Android, and set up Android Auto.
 - [SECURITY.md](./SECURITY.md): how to report a vulnerability
 - [Homebrew tap](https://github.com/tekapo/homebrew-voynix): the cask for `brew install --cask tekapo/voynix/voynix`
 
+## Support
+
+Voynix is free and open source. If you find it useful, you can support its development on [Ko-fi](https://ko-fi.com/tekapo).
+
 ## For developers
 
 For build instructions and development commands, see [DEVELOPMENT.md](./docs/DEVELOPMENT.md) (Mac) and

@@ -410,6 +410,8 @@
     "userManual": "ユーザーマニュアル",
     "websiteUrl": "https://tekapo.github.io/voynix/ja/",
     "openSourceLicenses": "オープンソースライセンス",
+    "supportOnKofi": "Ko-fiで応援する",
+    "supportUrl": "https://ko-fi.com/tekapo",
     "licensesLoadFailed": "ライセンス一覧を読み込めませんでした。",
     "aboutTagline": "モダンでローカルファーストな音楽プレイヤー。",
     "language": "言語",
