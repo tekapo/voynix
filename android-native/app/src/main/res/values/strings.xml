@@ -184,4 +184,19 @@
     <string name="auto_repeat">Repeat</string>
     <string name="auto_back_10">Back 10 seconds</string>
     <string name="auto_forward_10">Forward 10 seconds</string>
+
+    <!-- Welcome guide -->
+    <string name="welcome_step1_title">Welcome to Voynix</string>
+    <string name="welcome_step1_body">A local-first music player. Your music comes from your Mac over Wi-Fi, so it plays without a network connection.</string>
+    <string name="welcome_step2_title">Get ready on your Mac</string>
+    <string name="welcome_step2_body">Install Voynix on your Mac, add your music folder, and open Wi-Fi Sync to show a QR code. Both devices must be on the same Wi-Fi network.</string>
+    <string name="welcome_step3_title">Pair with your Mac</string>
+    <string name="welcome_step3_body">Open Wi-Fi Sync here and scan the QR code on your Mac (or enter the details by hand). Then turn on "Sync to device" for the playlists you want.</string>
+    <string name="welcome_progress">%1$d / %2$d</string>
+    <string name="welcome_next">Next</string>
+    <string name="welcome_back">Back</string>
+    <string name="welcome_skip">Skip</string>
+    <string name="welcome_later">Later</string>
+    <string name="welcome_open_sync">Open Wi-Fi Sync</string>
+    <string name="settings_welcome_guide">Show welcome guide</string>
 </resources>

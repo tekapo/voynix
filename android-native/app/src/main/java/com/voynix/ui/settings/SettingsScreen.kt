@@ -66,6 +66,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onOpenSync: () -> Unit,
     onOpenLicenses: () -> Unit,
+    onShowWelcome: () -> Unit,
 ) {
     var deviceId by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -148,6 +149,14 @@ fun SettingsScreen(
                 leadingContent = { Icon(Icons.Filled.MenuBook, contentDescription = null) },
                 modifier = Modifier.clickable {
                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(manualUrl)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                },
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_welcome_guide)) },
+                leadingContent = { Icon(Icons.Filled.Info, contentDescription = null) },
+                modifier = Modifier.clickable {
+                    onShowWelcome()
+                    onBack()
                 },
             )
             ListItem(

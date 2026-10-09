@@ -3129,3 +3129,10 @@ button {
     font-size: 0.95rem;
   }
 }
+
+/* First-launch welcome dialog */
+.welcome-modal { max-width: 460px; }
+.welcome-action { margin: 0.75rem 0 1rem; }
+.welcome-dots { display: flex; justify-content: center; gap: 0.4rem; margin: 0 0 1rem; }
+.welcome-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--border, #888); opacity: 0.5; }
+.welcome-dots span.active { background: var(--accent, currentColor); opacity: 1; }

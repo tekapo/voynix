@@ -6,7 +6,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -15,8 +19,10 @@ import com.voynix.artwork.AlbumArtResolver
 import com.voynix.artwork.ArtistArtResolver
 import com.voynix.data.db.VoynixDatabase
 import com.voynix.logic.effectiveShuffle
+import com.voynix.logic.shouldShowWelcome
 import com.voynix.lyrics.LrclibApi
 import com.voynix.playback.PlayerController
+import com.voynix.sync.SyncPeerStore
 import com.voynix.sync.SyncViewModel
 import com.voynix.ui.components.MiniPlayer
 import com.voynix.library.LibraryViewModel
@@ -37,6 +43,17 @@ fun VoynixApp(
     val podcastNoShuffle by player.podcastNoShuffle.collectAsState()
     val shuffleOn = effectiveShuffle(playerUiState.shuffle, podcastNoShuffle, playerUiState.queue.map { it.kind })
     val navController = rememberNavController()
+
+    // First launch: show the welcome guide once, unless a Mac is already paired.
+    // Marked seen as soon as it opens so quitting mid-guide doesn't bring it back.
+    var showWelcome by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        val welcomeStore = WelcomeStore(db)
+        if (shouldShowWelcome(welcomeStore.isSeen(), SyncPeerStore(db).get() != null)) {
+            showWelcome = true
+            welcomeStore.markSeen()
+        }
+    }
     val backStackEntry by navController.currentBackStackEntryAsState()
     val hideMiniPlayer = backStackEntry?.destination?.let {
         it.hasRoute(Route.NowPlaying::class) || it.hasRoute(Route.Lyrics::class)
@@ -73,7 +90,18 @@ fun VoynixApp(
             artistArt = artistArt,
             lrclibApi = lrclibApi,
             onImportTrack = onImportTrack,
+            onShowWelcome = { showWelcome = true },
             modifier = Modifier.padding(innerPadding),
+        )
+    }
+
+    if (showWelcome) {
+        WelcomeDialog(
+            onDismiss = { showWelcome = false },
+            onOpenSync = {
+                showWelcome = false
+                navController.navigate(Route.Sync)
+            },
         )
     }
 }

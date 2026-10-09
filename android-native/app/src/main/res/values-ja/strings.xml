@@ -184,4 +184,19 @@
     <string name="auto_repeat">リピート</string>
     <string name="auto_back_10">10秒戻る</string>
     <string name="auto_forward_10">10秒進む</string>
+
+    <!-- ウェルカムガイド -->
+    <string name="welcome_step1_title">Voynix へようこそ</string>
+    <string name="welcome_step1_body">ローカルファーストな音楽プレイヤーです。曲は Mac から Wi-Fi で同期するので、ネットワークがなくても再生できます。</string>
+    <string name="welcome_step2_title">Mac で準備</string>
+    <string name="welcome_step2_body">Mac に Voynix をインストールし、音楽フォルダを追加して、Wi-Fi 同期を開き QR コードを表示してください。両方の端末が同じ Wi-Fi に接続されている必要があります。</string>
+    <string name="welcome_step3_title">Mac とペアリング</string>
+    <string name="welcome_step3_body">ここで Wi-Fi 同期を開き、Mac の QR コードを読み取ってください（手動入力も可能です）。そのあと、同期したいプレイリストの「デバイスと同期」をオンにします。</string>
+    <string name="welcome_progress">%1$d / %2$d</string>
+    <string name="welcome_next">次へ</string>
+    <string name="welcome_back">戻る</string>
+    <string name="welcome_skip">スキップ</string>
+    <string name="welcome_later">あとで</string>
+    <string name="welcome_open_sync">Wi-Fi同期を開く</string>
+    <string name="settings_welcome_guide">使い方ガイドを表示</string>
 </resources>

@@ -21,6 +21,7 @@ import { useScanFolders } from "./hooks/useScanFolders";
 import { useSyncServer } from "./hooks/useSyncServer";
 import { useTauriEvent } from "./hooks/useTauriEvent";
 import { AlbumContextMenu } from "./components/AlbumContextMenu";
+import { WelcomeModal } from "./components/WelcomeModal";
 import { AlbumInfoModal, AlbumTagFields } from "./components/AlbumInfoModal";
 import { ArtistContextMenu } from "./components/ArtistContextMenu";
 import { ArtistImagePicker } from "./components/ArtistImagePicker";
@@ -52,6 +53,7 @@ import {
   deletePlaylist as dbDeletePlaylist,
   getAllTracks,
   getPlaylists,
+  getScanFolders,
   getSetting,
   getLibrarySyncSources,
   setLibrarySyncSources,
@@ -247,6 +249,9 @@ function App() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  // First-launch guide: opened once by initialize() on an empty install, or on
+  // demand from Settings → About.
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
   // Smart Playlist editor: null when closed. Same shape for create (name
   // starts blank, rules start at DEFAULT_SMART_RULES) and edit (both
   // prefilled from the playlist being edited) — see SmartPlaylistModal.
@@ -425,6 +430,14 @@ function App() {
         // so we check the result of refreshing.
         const updatedPlaylists = await getPlaylists();
         setPlaylists(updatedPlaylists);
+
+        // First launch: nothing in the library and the guide never shown.
+        // Marked seen right away so a quit mid-guide doesn't bring it back.
+        if (updatedPlaylists.length === 0 && (await getScanFolders()).length === 0
+            && (await getSetting("welcome_seen")) !== "1") {
+          setIsWelcomeOpen(true);
+          setSetting("welcome_seen", "1").catch(() => {});
+        }
 
         // Restore the last-played view + track (position is re-armed by the
         // restore effect once the view's tracks resolve). React state lives only
@@ -1805,8 +1818,19 @@ function App() {
           toggleServer={toggleServer}
         />
 
+        <WelcomeModal
+          isOpen={isWelcomeOpen}
+          onClose={() => setIsWelcomeOpen(false)}
+          hasFolders={scanFolders.length > 0}
+          isScanning={isScanning}
+          scanProgress={scanProgress}
+          onAddFolder={handleAddScanFolder}
+          onOpenSync={() => { setIsWelcomeOpen(false); openSyncModal(); }}
+        />
+
         <SettingsModal
           isOpen={isSettingsModalOpen}
+          onShowWelcome={() => setIsWelcomeOpen(true)}
           onClose={() => setIsSettingsModalOpen(false)}
           folders={scanFolders}
           isScanning={isScanning}

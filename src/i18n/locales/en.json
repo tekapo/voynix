@@ -365,6 +365,24 @@
     "startServer": "Start Server",
     "never": "never"
   },
+  "welcome": {
+    "step1Title": "Welcome to Voynix",
+    "step1Body": "A local-first music player for your Mac, with Wi-Fi sync to your Android phone. Two quick steps to get started.",
+    "step2Title": "Add your music",
+    "step2Body": "Choose the folder that holds your music. Voynix scans it and builds your library; your files stay where they are.",
+    "addFolder": "Add Music Folder…",
+    "scanning": "Scanning…",
+    "scanningProgress": "Scanning… {{done}} / {{total}}",
+    "folderAdded": "Folder added. You can add more later in Settings.",
+    "step3Title": "Sync with Android",
+    "step3Body": "Install Voynix on your Android phone, then open Wi-Fi Sync here and scan the QR code from the phone's Wi-Fi Sync screen. Both devices must be on the same Wi-Fi network.",
+    "openSync": "Open Wi-Fi Sync",
+    "openManual": "User manual",
+    "skip": "Skip",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done"
+  },
   "settings": {
     "title": "Settings",
     "tabFolders": "Music Folders",
@@ -414,6 +432,7 @@
     "userManual": "User manual",
     "websiteUrl": "https://tekapo.github.io/voynix/en/",
     "openSourceLicenses": "Open source licenses",
+    "showWelcome": "Show welcome guide",
     "supportOnKofi": "Support on Ko-fi",
     "supportUrl": "https://ko-fi.com/tekapo",
     "licensesLoadFailed": "Couldn't load the license list.",

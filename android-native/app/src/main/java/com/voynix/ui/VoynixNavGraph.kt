@@ -44,6 +44,7 @@ fun VoynixNavGraph(
     artistArt: ArtistArtResolver,
     lrclibApi: LrclibApi,
     onImportTrack: (Uri) -> Unit,
+    onShowWelcome: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val back: () -> Unit = { navController.popBackStack() }
@@ -207,6 +208,7 @@ fun VoynixNavGraph(
                 onBack = back,
                 onOpenSync = { navController.navigate(Route.Sync) },
                 onOpenLicenses = { navController.navigate(Route.Licenses) },
+                onShowWelcome = onShowWelcome,
             )
         }
 

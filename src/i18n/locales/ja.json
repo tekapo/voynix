@@ -361,6 +361,24 @@
     "startServer": "サーバーを開始",
     "never": "なし"
   },
+  "welcome": {
+    "step1Title": "Voynix へようこそ",
+    "step1Body": "Mac 向けのローカルファーストな音楽プレイヤーです。Android とは Wi-Fi で同期できます。はじめに 2 つの手順を案内します。",
+    "step2Title": "音楽を追加",
+    "step2Body": "音楽が入っているフォルダを選んでください。Voynix がスキャンしてライブラリを作ります。ファイルは元の場所のままです。",
+    "addFolder": "音楽フォルダを追加…",
+    "scanning": "スキャン中…",
+    "scanningProgress": "スキャン中… {{done}} / {{total}}",
+    "folderAdded": "フォルダを追加しました。あとから設定で追加もできます。",
+    "step3Title": "Android と同期",
+    "step3Body": "Android に Voynix をインストールし、ここで Wi-Fi 同期を開いて、スマホの Wi-Fi 同期画面から QR コードを読み取ってください。両方の端末が同じ Wi-Fi に接続されている必要があります。",
+    "openSync": "Wi-Fi 同期を開く",
+    "openManual": "ユーザーマニュアル",
+    "skip": "スキップ",
+    "back": "戻る",
+    "next": "次へ",
+    "done": "完了"
+  },
   "settings": {
     "title": "設定",
     "tabFolders": "ミュージックフォルダ",
@@ -410,6 +428,7 @@
     "userManual": "ユーザーマニュアル",
     "websiteUrl": "https://tekapo.github.io/voynix/ja/",
     "openSourceLicenses": "オープンソースライセンス",
+    "showWelcome": "使い方ガイドを表示",
     "supportOnKofi": "Ko-fiで応援する",
     "supportUrl": "https://ko-fi.com/tekapo",
     "licensesLoadFailed": "ライセンス一覧を読み込めませんでした。",

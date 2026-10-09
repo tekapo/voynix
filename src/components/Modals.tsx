@@ -205,6 +205,8 @@ interface SettingsModalProps {
      *  the folder actions above (an import re-scans any new folders). */
     onExportBackup: () => void;
     onImportBackup: () => void;
+    /** Reopens the first-launch welcome guide (About tab). */
+    onShowWelcome?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -220,6 +222,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     onRescanFolder,
     onImportXml,
     onSetFolderKind,
+    onShowWelcome,
     showPathColumn,
     onTogglePathColumn,
     podcastNoShuffle,
@@ -564,6 +567,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <button type="button" className="modal-btn cancel" onClick={() => { openUrl(t('settings.supportUrl')).catch(() => {}); }}>
                         {t('settings.supportOnKofi')}
                     </button>
+                    {onShowWelcome && <>
+                        {' '}
+                        <button type="button" className="modal-btn cancel" onClick={() => { onClose(); onShowWelcome(); }}>
+                            {t('settings.showWelcome')}
+                        </button>
+                    </>}
                     {licenses !== null && (
                         <pre className="settings-licenses" tabIndex={0}>{licenses}</pre>
                     )}
