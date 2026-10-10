@@ -1,0 +1,69 @@
+name: Bug report
+description: Report something that isn't working
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Check the [user manual / FAQ](https://tekapo.github.io/voynix/) first.
+
+        **Security issues:** please don't open a public issue. Use the
+        [private vulnerability report form](https://github.com/tekapo/voynix/security/advisories/new) instead.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where does it happen?
+      multiple: true
+      options:
+        - Mac app
+        - Android app
+        - Mac ↔ Android sync
+        - Android Auto
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Voynix version
+      description: "Mac: Settings → About. Android: Settings screen."
+      placeholder: e.g. 0.23.1
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS and device
+      description: macOS version, or Android version and device model.
+      placeholder: e.g. macOS 15.6 / Android 15, Pixel 9
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Paste any error text here. You can also drag screenshots into this box.
+      render: shell
+  - type: checkboxes
+    id: latest
+    attributes:
+      label: Checks
+      options:
+        - label: I'm using the latest release

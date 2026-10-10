@@ -1,0 +1,69 @@
+name: バグ報告
+description: うまく動かない点を報告する
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ご報告ありがとうございます。まず[ユーザーマニュアル / FAQ](https://tekapo.github.io/voynix/)をご確認ください。
+
+        **セキュリティ上の問題:** 公開の issue には書かず、
+        [非公開の脆弱性報告フォーム](https://github.com/tekapo/voynix/security/advisories/new)から報告してください。
+  - type: dropdown
+    id: platform
+    attributes:
+      label: どこで起きますか？
+      multiple: true
+      options:
+        - Mac アプリ
+        - Android アプリ
+        - Mac ↔ Android 同期
+        - Android Auto
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Voynix のバージョン
+      description: "Mac: 設定 → 情報。Android: 設定画面。"
+      placeholder: 例 0.23.1
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS・端末
+      description: macOS のバージョン、または Android のバージョンと端末名。
+      placeholder: 例 macOS 15.6 / Android 15、Pixel 9
+  - type: textarea
+    id: description
+    attributes:
+      label: 何が起きましたか？
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待した動作
+  - type: textarea
+    id: logs
+    attributes:
+      label: ログ・スクリーンショット
+      description: エラー文があれば貼ってください。スクリーンショットはこの欄にドラッグして添付できます。
+      render: shell
+  - type: checkboxes
+    id: latest
+    attributes:
+      label: 確認
+      options:
+        - label: 最新のリリースを使っています

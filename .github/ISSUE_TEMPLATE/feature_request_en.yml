@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an idea or improvement
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion. This is a personal project maintained on a best-effort basis,
+        so I can't promise every request will be implemented.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Which part is it about?
+      multiple: true
+      options:
+        - Mac app
+        - Android app
+        - Mac ↔ Android sync
+        - Android Auto
+        - Other
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do, and what gets in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you like it to work?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds
+      description: Anything you've tried or considered instead.
