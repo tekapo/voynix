@@ -92,6 +92,8 @@ import { nextSort, SortKey, SortState, sortNatural, sortTracks } from "./trackSo
 import type { LastPlayback } from "./db";
 import { LibraryLayout, Playlist, SmartRules, Track, TrackIdentity, TrackKind, ViewMode } from "./types";
 
+const MAX_AUTO_SKIPS = 5;
+
 function App() {
   const { t } = useTranslation();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -136,6 +138,9 @@ function App() {
   // id it advanced to. The load effect below checks this first: that track is
   // already loaded and playing, so it must not call engine.load() again.
   const nativeAdvancedToIdRef = useRef<string | null>(null);
+  // Consecutive load failures while auto-skipping unplayable tracks (missing
+  // file, undecodable); caps the skipping so an all-bad queue can't spin.
+  const loadFailStreakRef = useRef(0);
   // Setting: a Podcast playlist plays in order even while shuffle is on (the
   // shuffle toggle itself is left alone, so the next music playlist still
   // shuffles). Default on; persisted as "podcast_no_shuffle".
@@ -749,6 +754,7 @@ function App() {
         lastSavedPosRef.current = seekTo;
         pendingSeekRef.current = null;
         markLoaded(currentTrack.id);
+        loadFailStreakRef.current = 0;
         setIsPlaying(true);
         setError(null);
         // See updateEngineNext's own comment: must run *after* engine.load()
@@ -756,8 +762,14 @@ function App() {
         // gapless hand-off for this track can silently never engage.
         updateEngineNext();
       } catch (e: any) {
+        if (cancelled) return;
         console.error("Playback prep error:", e);
+        setIsPlaying(false);
         setError(t('errors.playbackPrepFailed', { error: e.message || String(e) }));
+        // A bad file (e.g. a stale library row whose file is gone) shouldn't
+        // strand the listener on a dead ⏸ — move on to the next track.
+        if (++loadFailStreakRef.current < MAX_AUTO_SKIPS) playAdjacent(1);
+        else loadFailStreakRef.current = 0;
       }
       // Cover art itself is handled by useNowPlayingArtwork (see currentArtwork
       // above), which resolves for armed-but-not-loaded tracks too and reacts

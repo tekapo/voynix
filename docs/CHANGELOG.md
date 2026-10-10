@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.23.1 — 2026-10-10
+- Fixed playback stalling with a pause icon and 0:00 / 0:00 when a track's file is missing (e.g. a stale library row hit during shuffle): a failed load now rejects, and the player skips to the next track (up to 5 in a row).
+- A missing gapless "next" file no longer flips the UI to paused while the current track keeps playing.
+
 ## 0.23.0 — 2026-10-09
 - Added a first-launch welcome guide to the Mac and Android apps (#41). On the Mac it walks through adding a music folder and pairing with Android; on Android it explains Wi-Fi sync and opens the pairing screen. It shows once on a fresh install (never when a library or a paired Mac already exists) and can be reopened from Settings.
 

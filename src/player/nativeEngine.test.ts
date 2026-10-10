@@ -39,3 +39,12 @@ describe("NativeEngine play/pause state", () => {
         expect(onPlay).toHaveBeenCalledTimes(1);
     });
 });
+
+describe("NativeEngine load failures", () => {
+    it("rejects load() when the Rust side can't open the file, instead of reporting success", async () => {
+        invoke.mockRejectedValueOnce("No such file or directory");
+        const engine = new NativeEngine();
+
+        await expect(engine.load(track, { autoplay: true })).rejects.toBe("No such file or directory");
+    });
+});

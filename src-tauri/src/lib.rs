@@ -1105,14 +1105,18 @@ fn greet(name: &str) -> String {
 // src/player/nativeEngine.ts on the frontend) ---
 
 #[tauri::command]
-fn player_load(
-    state: tauri::State<player::PlayerHandle>,
+async fn player_load(
+    state: tauri::State<'_, player::PlayerHandle>,
     track_id: String,
     path: String,
     autoplay: bool,
     seek_to: f64,
-) {
-    state.load(track_id, PathBuf::from(path), autoplay, seek_to);
+) -> Result<(), String> {
+    let rx = state.load(track_id, PathBuf::from(path), autoplay, seek_to);
+    // Opening the file happens on the playback thread; wait off the async pool.
+    tauri::async_runtime::spawn_blocking(move || rx.recv().map_err(|e| e.to_string())?)
+        .await
+        .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]

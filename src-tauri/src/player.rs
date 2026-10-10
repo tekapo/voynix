@@ -32,13 +32,16 @@ use rodio::cpal::{self, DeviceId, StreamError};
 use rodio::{DeviceSinkBuilder, MixerDeviceSink, Player};
 use serde::Serialize;
 use std::path::PathBuf;
-use std::sync::mpsc::{channel, Sender};
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter};
 
 /// Commands sent to the dedicated playback thread.
 enum Command {
-    Load { track_id: String, path: PathBuf, autoplay: bool, seek: f64 },
+    /// `reply` carries the open result back to the `player_load` command, so
+    /// a missing/undecodable file rejects the frontend's `load()` instead of
+    /// surfacing later as an event that can race the caller's own bookkeeping.
+    Load { track_id: String, path: PathBuf, autoplay: bool, seek: f64, reply: Sender<Result<(), String>> },
     SetNext { track_id: Option<String>, path: Option<PathBuf> },
     Play,
     Pause,
@@ -80,8 +83,11 @@ impl PlayerHandle {
         let _ = self.tx.send(cmd);
     }
 
-    pub fn load(&self, track_id: String, path: PathBuf, autoplay: bool, seek: f64) {
-        self.send(Command::Load { track_id, path, autoplay, seek });
+    /// Queues a load and returns the receiver for its open result.
+    pub fn load(&self, track_id: String, path: PathBuf, autoplay: bool, seek: f64) -> Receiver<Result<(), String>> {
+        let (reply, rx) = channel();
+        self.send(Command::Load { track_id, path, autoplay, seek, reply });
+        rx
     }
 
     pub fn set_next(&self, track_id: Option<String>, path: Option<PathBuf>) {
@@ -284,7 +290,7 @@ struct Engine {
 }
 
 impl Engine {
-    fn load(&mut self, app: &AppHandle, track_id: String, path: PathBuf, autoplay: bool, seek: f64) {
+    fn load(&mut self, app: &AppHandle, track_id: String, path: PathBuf, autoplay: bool, seek: f64) -> Result<(), String> {
         self.pending = None;
         // Flushes whatever was playing/queued — append() below blocks
         // (briefly; this thread, never the audio callback thread) until that
@@ -308,10 +314,11 @@ impl Engine {
                 self.current_duration = duration;
                 self.last_len = self.player.len();
                 let _ = app.emit("player-position", PositionPayload { track_id, position: seek, duration });
+                Ok(())
             }
             Err(message) => {
                 self.current_id = None;
-                let _ = app.emit("player-error", ErrorPayload { message });
+                Err(message)
             }
         }
     }
@@ -377,9 +384,11 @@ impl Engine {
                         self.player.append(source);
                         self.pending = Some(Pending { id, path, duration });
                     }
-                    Err(message) => {
-                        let _ = app.emit("player-error", ErrorPayload { message });
-                    }
+                    // The current track keeps playing; with no gapless hand-off
+                    // queued, the frontend just loads the next one normally
+                    // (and reports the failure then). An error event here would
+                    // wrongly flip the UI to paused mid-track.
+                    Err(message) => eprintln!("next track unavailable: {message}"),
                 }
             }
             _ => {
@@ -478,8 +487,8 @@ fn run(app: AppHandle, tx: Sender<Command>, rx: std::sync::mpsc::Receiver<Comman
         // the "did the loaded track just finish/hand off" check keep running
         // even when nothing new arrives from the frontend.
         match rx.recv_timeout(Duration::from_millis(250)) {
-            Ok(Command::Load { track_id, path, autoplay, seek }) => {
-                engine.load(&app, track_id, path, autoplay, seek)
+            Ok(Command::Load { track_id, path, autoplay, seek, reply }) => {
+                let _ = reply.send(engine.load(&app, track_id, path, autoplay, seek));
             }
             Ok(Command::SetNext { track_id, path }) => engine.set_next(&app, track_id, path),
             Ok(Command::Play) => engine.player.play(),
