@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability / 脆弱性を報告する
+    url: https://github.com/tekapo/voynix/security/advisories/new
+    about: Please report security issues privately here, not in a public issue. / セキュリティ上の問題は公開 issue ではなく、こちらから非公開で報告してください。
+  - name: User manual and FAQ / ユーザーマニュアル・FAQ
+    url: https://tekapo.github.io/voynix/
+    about: Installation, sync, Android Auto, and FAQ. / インストール、同期、Android Auto、FAQ。
