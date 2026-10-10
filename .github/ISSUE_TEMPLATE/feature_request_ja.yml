@@ -1,0 +1,39 @@
+name: 機能リクエスト
+description: アイデアや改善を提案する
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ご提案ありがとうございます。個人プロジェクトのため対応はベストエフォートで、
+        すべてのリクエストを実装できるとは限りません。
+  - type: dropdown
+    id: platform
+    attributes:
+      label: どの部分についてですか？
+      multiple: true
+      options:
+        - Mac アプリ
+        - Android アプリ
+        - Mac ↔ Android 同期
+        - Android Auto
+        - その他
+  - type: textarea
+    id: problem
+    attributes:
+      label: 課題・ユースケース
+      description: 何をしたくて、何が障害になっていますか？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 提案する解決策
+      description: どのように動いてほしいですか？
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 代替案・回避策
+      description: 試したことや検討した他の方法があれば書いてください。
