@@ -61,6 +61,7 @@ Android, and set up Android Auto.
 
 - [User manual](https://tekapo.github.io/voynix/) (usage, Wi-Fi sync, Android Auto, keyboard shortcuts, backup, FAQ and known limitations)
 - [Privacy policy](https://tekapo.github.io/voynix/en/privacy.html)
+- [Echo playback over your LAN](./docs/echo-lan.md): optional, advanced — play Voynix playlists on an Echo through your own Alexa skill, without exposing anything to the internet
 - [CHANGELOG.md](./docs/CHANGELOG.md): changes in each version
 - [SECURITY.md](./SECURITY.md): how to report a vulnerability
 - [Homebrew tap](https://github.com/tekapo/homebrew-voynix): the cask for `brew install --cask tekapo/voynix/voynix`

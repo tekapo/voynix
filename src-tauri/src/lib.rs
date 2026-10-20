@@ -1,5 +1,6 @@
 mod metadata;
 mod player;
+mod remote;
 mod server;
 mod tls;
 mod transcode;
@@ -1066,6 +1067,52 @@ fn set_sync_snapshot(
     Ok(())
 }
 
+/// Echo (Alexa) playback server — see remote.rs. Off unless the user enables it.
+#[tauri::command]
+async fn start_remote_server(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, Arc<Mutex<remote::RemoteServer>>>,
+    port: u16,
+    secret: String,
+    cert_path: String,
+    key_path: String,
+) -> Result<remote::RemoteStatus, String> {
+    remote::start(state.inner().clone(), port, secret, cert_path, key_path, Some(app)).await
+}
+
+#[tauri::command]
+async fn stop_remote_server(
+    state: tauri::State<'_, Arc<Mutex<remote::RemoteServer>>>,
+) -> Result<(), String> {
+    remote::stop(state.inner().clone()).await
+}
+
+#[tauri::command]
+fn remote_server_status(
+    state: tauri::State<'_, Arc<Mutex<remote::RemoteServer>>>,
+) -> Option<remote::RemoteStatus> {
+    remote::status(state.inner())
+}
+
+#[tauri::command]
+fn set_remote_library(
+    state: tauri::State<'_, Arc<Mutex<remote::RemoteServer>>>,
+    library: remote::RemoteLibraryIn,
+) -> Result<(), String> {
+    state.lock().map_err(|e| e.to_string())?.set_library(library);
+    Ok(())
+}
+
+/// Applies a regenerated shared secret to a running server.
+#[tauri::command]
+fn set_remote_secret(
+    state: tauri::State<'_, Arc<Mutex<remote::RemoteServer>>>,
+    secret: String,
+) -> Result<(), String> {
+    state.lock().map_err(|e| e.to_string())?.set_secret(secret);
+    Ok(())
+}
+
 #[tauri::command]
 fn take_sync_inbox(
     state: tauri::State<'_, Arc<Mutex<server::SyncServer>>>,
@@ -1307,6 +1354,7 @@ pub fn run() {
 
     let app = builder
         .manage(Arc::new(Mutex::new(server::SyncServer::new())))
+        .manage(Arc::new(Mutex::new(remote::RemoteServer::new())))
         .manage(ScanState::default())
         .manage(metadata::ThumbPrewarmState::default())
         .setup(|app| {
@@ -1336,6 +1384,11 @@ pub fn run() {
             requeue_sync_inbox,
             sync_server_activity,
             sync_server_status,
+            start_remote_server,
+            stop_remote_server,
+            remote_server_status,
+            set_remote_library,
+            set_remote_secret,
             transcode::prepare_sync_media,
             show_in_finder,
             get_track_artwork,

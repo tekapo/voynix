@@ -10,7 +10,9 @@ export const BACKUP_FORMAT = "voynix-backup";
 export const BACKUP_VERSION = 2;
 
 // Only these settings travel in a backup — everything else is either
-// per-device identity (device_id, sync_token, sync_server_port) or session
+// per-device identity (device_id, sync_token, sync_server_port, remote_*: the
+// Echo server's secret is a credential and its port/certificate paths describe
+// this machine, so none of it may travel) or session
 // state that shouldn't be replayed onto another install (last_*,
 // json_migrated). Keep this in sync with db/settings.ts's key list.
 export const BACKUP_SETTING_KEYS = [

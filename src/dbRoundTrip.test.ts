@@ -46,6 +46,7 @@ import {
     _resetInitForTests,
     applyManifestStats,
     applySyncInbox,
+    buildRemoteLibrary,
     buildSyncSnapshot,
     getAllTracks,
     getDb,
@@ -434,5 +435,62 @@ describe("smart playlist sync over real SQLite", () => {
         expect(smartPlaylist!.track_keys).toEqual(["rock-1"]);
         expect(manifest.tracks.some(t => t.track_key === "rock-1")).toBe(true);
         expect(manifest.tracks.some(t => t.track_key === "jazz-1")).toBe(false);
+    });
+});
+
+describe("remote library over real SQLite", () => {
+    let mac: Device;
+
+    beforeEach(() => {
+        mac = createDevice("mac");
+    });
+
+    it("includes every playlist (smart evaluated) and only the tracks they reference, by file", async () => {
+        const musicId = await seedTrack(mac, { trackKey: "song-1" });
+        await seedTrack(mac, { trackKey: "orphan-1" });
+        const podcastId = await seedTrack(mac, { trackKey: "ep-1" });
+        await withDevice(mac, async () => {
+            const db = await getDb();
+            await db.execute("UPDATE tracks SET genre = 'Rock' WHERE id = $1", [musicId]);
+            await db.execute("UPDATE tracks SET kind = 'podcast' WHERE id = $1", [podcastId]);
+            // Neither playlist is flagged sync_to_device: Echo playback is not
+            // limited to what's synced to the phone.
+            await db.execute("INSERT INTO playlists (id, name, type, kind) VALUES ('pl-pod', 'Shows', 'custom', 'podcast')");
+            await db.execute("INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES ('pl-pod', $1, 0)", [podcastId]);
+            const rules = { v: 1, match: 'all', conditions: [{ field: 'genre', op: 'contains', value: 'rock' }], sortBy: 'natural', sortDesc: false, limit: null };
+            await db.execute(
+                "INSERT INTO playlists (id, name, type, rules) VALUES ('pl-smart', 'Rock Mix', 'smart', $1)",
+                [JSON.stringify(rules)]
+            );
+        });
+
+        const lib = await withDevice(mac, () => buildRemoteLibrary());
+
+        expect(lib.playlists.find(p => p.name === "Rock Mix")?.track_keys).toEqual(["song-1"]);
+        expect(lib.playlists.find(p => p.name === "Shows")?.track_keys).toEqual(["ep-1"]);
+
+        // A track in no playlist can't be asked for by name, so it isn't pushed.
+        expect(lib.tracks.map(t => t.track_key).sort()).toEqual(["ep-1", "song-1"]);
+        for (const t of lib.tracks) expect(t.file_paths).toHaveLength(1);
+        expect(Object.keys(lib.tracks[0]).sort()).toEqual(["file_paths", "track_key"]);
+    });
+
+    it("sends every file of a track that exists at two paths, so the server can serve the one that is there", async () => {
+        await seedTrack(mac, { trackKey: "song-1" });
+        await withDevice(mac, async () => {
+            const db = await getDb();
+            await db.execute(
+                `INSERT INTO tracks (id, title, file_path, file_name, track_key, content_hash, origin)
+                 VALUES ('dup-song-1', 'Song', '/Volumes/old-disk/song-1.mp3', 'song-1.mp3', 'song-1', 'same-bytes', 'local')`
+            );
+            await db.execute("INSERT INTO playlists (id, name, type) VALUES ('pl', 'Mix', 'custom')");
+            await db.execute("INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES ('pl', 't-song-1-mac', 0)");
+        });
+
+        const lib = await withDevice(mac, () => buildRemoteLibrary());
+
+        expect(lib.playlists.find(p => p.name === "Mix")?.track_keys).toEqual(["song-1"]);
+        expect(lib.tracks).toHaveLength(1);
+        expect([...lib.tracks[0].file_paths].sort()).toEqual(["/Volumes/old-disk/song-1.mp3", "/music/mac/song-1.mp3"]);
     });
 });

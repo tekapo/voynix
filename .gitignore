@@ -61,3 +61,6 @@ Thumbs.db
 _memo/
 .vscode/
 _screenshots/
+
+# Echo skill: holds the shared secret
+alexa-skill/lambda/config.json

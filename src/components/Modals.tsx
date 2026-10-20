@@ -8,6 +8,8 @@ import type { TranscodeFormat } from '../db';
 import { Icon } from './Icon';
 import type { LanguagePreference } from '../i18n';
 import { pairingQrDataUri } from '../syncPairing';
+import type { RemoteAccess } from '../hooks/useRemoteServer';
+import { RemoteAccessSection } from './RemoteAccessSection';
 
 // Render modals at <body> so the fixed-position overlay isn't offset by an
 // ancestor that establishes a containing block (the sidebar's transform, the
@@ -207,6 +209,8 @@ interface SettingsModalProps {
     onImportBackup: () => void;
     /** Reopens the first-launch welcome guide (About tab). */
     onShowWelcome?: () => void;
+    /** Remote (Alexa) API — see useRemoteServer.ts. Omitted: the Remote tab is hidden. */
+    remote?: RemoteAccess;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -240,6 +244,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     onChangeLanguage,
     onExportBackup,
     onImportBackup,
+    remote,
 }) => {
     const { t } = useTranslation();
     // Shown in the About section — read from the bundle so it never drifts from
@@ -264,7 +269,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             .catch(() => setLicenses(t('settings.licensesLoadFailed')));
     };
 
-    type SettingsTab = 'folders' | 'library' | 'sync' | 'about';
+    type SettingsTab = 'folders' | 'library' | 'sync' | 'remote' | 'about';
     const [activeTab, setActiveTab] = useState<SettingsTab>('folders');
 
     if (!isOpen) return null;
@@ -273,6 +278,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         { id: 'folders', label: t('settings.tabFolders') },
         { id: 'library', label: t('settings.tabLibrary') },
         { id: 'sync', label: t('settings.tabSync') },
+        ...(remote ? [{ id: 'remote' as const, label: t('settings.tabRemote') }] : []),
         { id: 'about', label: t('settings.tabAbout') }
     ];
 
@@ -551,6 +557,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </p>
                 </div>
                 </>}
+
+                {activeTab === 'remote' && remote && <RemoteAccessSection remote={remote} />}
 
                 {activeTab === 'about' && <>
                 <div className="settings-section">

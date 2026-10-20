@@ -1,6 +1,6 @@
 [package]
 name = "voynix"
-version = "0.23.1"
+version = "0.24.0"
 description = "Music player for Mac and Android with Wi-Fi library sync"
 authors = ["JOTAKI, Taisuke"]
 license = "MIT"
@@ -56,6 +56,10 @@ base64 = "0.22"
 sha2 = "0.10"
 once_cell = "1.19"
 subtle = "2.6"
+# Signed `/play` URLs and NFKC folding for the Echo (Alexa) server — see
+# remote.rs. Both were already in the lockfile as transitive dependencies.
+hmac = "0.12"
+unicode-normalization = "0.1"
 # Track ids are SipHash-1-3 of the file path, persisted in the DB (see
 # `calculate_hash` in lib.rs). `std::hash::DefaultHasher` isn't guaranteed
 # stable across Rust releases, so ids are hashed with this crate directly

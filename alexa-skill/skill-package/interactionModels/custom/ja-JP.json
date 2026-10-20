@@ -1,0 +1,82 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "ハローテスト",
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.PauseIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.ResumeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NextIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.PreviousIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "PlayPlaylistIntent",
+          "slots": [
+            {
+              "name": "playlist",
+              "type": "PLAYLIST"
+            }
+          ],
+          "samples": [
+            "{playlist} をかけて",
+            "{playlist} を再生して",
+            "{playlist} を流して",
+            "{playlist} を聞かせて"
+          ]
+        },
+        {
+          "name": "ShufflePlaylistIntent",
+          "slots": [
+            {
+              "name": "playlist",
+              "type": "PLAYLIST"
+            }
+          ],
+          "samples": [
+            "{playlist} をシャッフルして",
+            "{playlist} をシャッフル再生して",
+            "{playlist} をシャッフルでかけて"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "PLAYLIST",
+          "values": [
+            {
+              "name": {
+                "value": "サンプルプレイリスト"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

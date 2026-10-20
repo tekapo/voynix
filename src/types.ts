@@ -209,6 +209,13 @@ export interface ServerStatus {
   transcode_available: boolean;
 }
 
+/** Live state of the Echo (Alexa) playback server — see remote.rs. */
+export interface RemoteStatus {
+  running: boolean;
+  port: number;
+  transcode_available: boolean;
+}
+
 export interface ContextMenuState {
   visible: boolean;
   x: number;

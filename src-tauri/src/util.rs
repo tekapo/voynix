@@ -10,6 +10,21 @@ pub(crate) fn sha256_hex(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
 
+/// Whether an `Authorization` header value is `Bearer <token>` for exactly
+/// `token`. `ConstantTimeEq` still short-circuits on a length mismatch (that
+/// only leaks the token's length, not its content), then compares in time
+/// independent of *where* the bytes differ. An empty `token` never matches.
+/// Shared by the LAN sync server and the remote API.
+pub(crate) fn bearer_matches(header_value: Option<&str>, token: &str) -> bool {
+    use subtle::ConstantTimeEq;
+    match header_value.and_then(|s| s.strip_prefix("Bearer ")) {
+        Some(p) => {
+            !token.is_empty() && p.len() == token.len() && bool::from(p.as_bytes().ct_eq(token.as_bytes()))
+        }
+        None => false,
+    }
+}
+
 /// Folds a free-text field (artist/album/title, …) so cosmetic differences —
 /// case, leading/trailing space, doubled internal space — collapse to the
 /// same value before it's hashed into an identity or cache key. Shared by
@@ -37,6 +52,16 @@ mod tests {
     #[test]
     fn differs_for_different_input() {
         assert_ne!(sha256_hex(b"a"), sha256_hex(b"b"));
+    }
+
+    #[test]
+    fn bearer_matches_only_the_exact_token() {
+        assert!(bearer_matches(Some("Bearer secret"), "secret"));
+        assert!(!bearer_matches(Some("Bearer secreT"), "secret"));
+        assert!(!bearer_matches(Some("Bearer secret2"), "secret"));
+        assert!(!bearer_matches(Some("secret"), "secret"));
+        assert!(!bearer_matches(None, "secret"));
+        assert!(!bearer_matches(Some("Bearer "), ""));
     }
 
     #[test]
