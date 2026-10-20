@@ -109,6 +109,18 @@ fn needs_transcode(ext: &str, is_alac: bool) -> bool {
     }
 }
 
+/// Echo (Alexa AudioPlayer) plays only MP3 and AAC. Anything else — including
+/// FLAC/OGG/WAV, which Android *does* play natively — must be converted, so
+/// this is deliberately separate from `needs_transcode` above.
+pub(crate) fn echo_needs_transcode(ext: &str, is_alac: bool) -> bool {
+    match ext.to_lowercase().as_str() {
+        "mp3" => false,
+        // An m4a/mp4 is fine if it's AAC, not if it's Apple Lossless.
+        "m4a" | "mp4" | "aac" | "m4b" => is_alac,
+        _ => true,
+    }
+}
+
 /// Whether `afconvert` is on PATH, i.e. we're actually running on a Mac. When
 /// it isn't, ALAC/AIFF/etc. sources are served as-is (see `prepare_one`'s
 /// passthrough on a failed transcode) and Android simply can't play them —
@@ -126,7 +138,7 @@ pub fn transcode_available() -> bool {
 /// to `afinfo` and scraping its "Data format: … alac …" text line — that
 /// output format isn't a stable contract, and probing works on any OS instead
 /// of only where `afinfo` happens to be installed.
-fn is_alac(path: &Path) -> bool {
+pub(crate) fn is_alac(path: &Path) -> bool {
     use symphonia::core::codecs::audio::well_known::CODEC_ID_ALAC;
     use symphonia::core::codecs::CodecParameters;
     use symphonia::core::formats::probe::Hint;
@@ -155,7 +167,7 @@ fn is_alac(path: &Path) -> bool {
 
 /// (size, mtime in nanoseconds). Sub-second precision matters: a rewrite within
 /// the same second must not reuse a stale transcode.
-fn source_fingerprint(path: &Path) -> (u64, u128) {
+pub(crate) fn source_fingerprint(path: &Path) -> (u64, u128) {
     let Ok(meta) = std::fs::metadata(path) else {
         return (0, 0);
     };
@@ -178,7 +190,7 @@ const CACHE_VERSION: u32 = 3;
 /// Cache file name: source path digest + size + mtime (ns) + content hash +
 /// target format/bitrate, so a re-tag *or* a settings change invalidates it
 /// (bitrate is folded in even for FLAC, harmlessly, to keep this simple).
-fn cache_name(
+pub(crate) fn cache_name(
     src: &Path,
     size: u64,
     mtime_nanos: u128,
@@ -249,7 +261,7 @@ fn embed_source_artwork(src: &Path, out: &Path, format: TranscodeFormat) -> Resu
         .map_err(|e| e.to_string())
 }
 
-fn transcode_one(src: &Path, dst: &Path, options: &TranscodeOptions) -> Result<(), String> {
+pub(crate) fn transcode_one(src: &Path, dst: &Path, options: &TranscodeOptions) -> Result<(), String> {
     // Per-destination `.part` name so parallel workers never collide.
     let tmp = dst.with_extension("part");
     let mut cmd = std::process::Command::new("afconvert");
@@ -440,6 +452,18 @@ pub async fn prepare_sync_media(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn echo_needs_transcode_only_passes_mp3_and_aac() {
+        assert!(!echo_needs_transcode("mp3", false));
+        assert!(!echo_needs_transcode("M4A", false));
+        assert!(echo_needs_transcode("m4a", true));
+        // FLAC/OGG/WAV play on Android as-is but not on Echo.
+        for ext in ["flac", "ogg", "opus", "wav", "aiff", "wv"] {
+            assert!(echo_needs_transcode(ext, false), "{ext}");
+        }
+        assert!(!needs_transcode("flac", false), "Android behaviour must not change");
+    }
 
     #[test]
     fn passthrough_formats_are_not_transcoded() {

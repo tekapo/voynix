@@ -23,7 +23,6 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use subtle::ConstantTimeEq;
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
@@ -656,23 +655,12 @@ pub async fn stop(state: Shared) -> Result<(), String> {
 
 async fn auth(State(state): State<Shared>, headers: HeaderMap, req: Request, next: Next) -> Response {
     let token = { state.lock().unwrap().token.clone() };
-    let provided = headers
-        .get(header::AUTHORIZATION)
-        .and_then(|v| v.to_str().ok())
-        .and_then(|s| s.strip_prefix("Bearer "));
+    let provided = headers.get(header::AUTHORIZATION).and_then(|v| v.to_str().ok());
 
-    // `ConstantTimeEq` still short-circuits on a length mismatch (that only
-    // leaks the token's length, not its content), then compares in time
-    // independent of *where* the bytes differ.
-    match provided {
-        Some(p)
-            if !token.is_empty()
-                && p.len() == token.len()
-                && bool::from(p.as_bytes().ct_eq(token.as_bytes())) =>
-        {
-            next.run(req).await
-        }
-        _ => (StatusCode::UNAUTHORIZED, "Unauthorized").into_response(),
+    if crate::util::bearer_matches(provided, &token) {
+        next.run(req).await
+    } else {
+        (StatusCode::UNAUTHORIZED, "Unauthorized").into_response()
     }
 }
 

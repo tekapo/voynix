@@ -19,6 +19,7 @@ import { useQueue } from "./hooks/useQueue";
 import { createKeyedSingleFlight } from "./lib/singleFlight";
 import { useScanFolders } from "./hooks/useScanFolders";
 import { useSyncServer } from "./hooks/useSyncServer";
+import { useRemoteServer } from "./hooks/useRemoteServer";
 import { useTauriEvent } from "./hooks/useTauriEvent";
 import { AlbumContextMenu } from "./components/AlbumContextMenu";
 import { WelcomeModal } from "./components/WelcomeModal";
@@ -316,6 +317,7 @@ function App() {
     initSyncFromDb,
     reloadSyncSettings,
   } = useSyncServer({ playlists, refreshPlaylists, setError });
+  const { remote, initRemoteFromDb } = useRemoteServer({ playlists, setError });
 
   // Lyrics panel — docked column on the right.
   // Open state is persisted to `settings` (loaded in the init effect below).
@@ -429,6 +431,7 @@ function App() {
         await refreshScanFolders(); // from useScanFolders(), declared below — safe: initialize() only runs post-commit
         reloadSettings();
         await initSyncFromDb();
+        await initRemoteFromDb();
 
         // Initial view setup
         // We can't check playlists length right here easily without waiting for state update,
@@ -1871,6 +1874,7 @@ function App() {
           onChangeLanguage={handleChangeLanguage}
           onExportBackup={handleExportBackup}
           onImportBackup={handleImportBackup}
+          remote={remote}
         />
 
         <TrackContextMenu

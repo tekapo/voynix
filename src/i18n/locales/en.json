@@ -441,7 +441,8 @@
     "languageSystem": "System",
     "languageEnglish": "English",
     "languageJapanese": "日本語",
-    "close": "Close"
+    "close": "Close",
+    "tabRemote": "Echo"
   },
   "libraryColumns": {
     "meta_one": "{{count}} song · {{minutes}} min",
@@ -488,5 +489,31 @@
       "unsupportedVersion": "That backup was made by a newer version of Voynix and can't be imported here.",
       "invalidArchive": "That file isn't a valid Voynix backup archive."
     }
+  },
+  "remote": {
+    "title": "Echo playback (advanced)",
+    "intro": "Lets an Echo play your playlists from this Mac over your home network, through your own Alexa skill. Nothing is exposed to the internet, but it needs a certificate, a DNS entry for your Echo and a port redirect (see docs/echo-lan.md in the Voynix repository). Off by default. Each request must come from your local network and carry a signature made with the shared secret below.",
+    "enable": "Enable Echo playback",
+    "running": "Running on port {{port}}",
+    "stopped": "Not running.",
+    "needCert": "Set the certificate and private key files first.",
+    "noTranscode": "This Mac has no afconvert, so FLAC/ALAC/WAV files can't be converted and won't play on Echo.",
+    "port": "Port",
+    "portHint": "Redirect your Mac's port 443 to this port (docs/echo-lan.md). Echo only connects to 443.",
+    "certPath": "Certificate file (full chain, PEM)",
+    "keyPath": "Private key file (PEM)",
+    "certHint": "A certificate from a public CA for the host name your skill uses, including the intermediate certificate. A renewed certificate is picked up automatically.",
+    "secret": "Shared secret",
+    "showSecret": "Show",
+    "hideSecret": "Hide",
+    "copySecret": "Copy",
+    "copied": "Copied",
+    "regenerate": "Regenerate",
+    "regenerateHint": "Put this secret in your skill's config.json. Regenerating invalidates the old one and every link already handed to an Echo, so update the skill afterwards.",
+    "playlistNames": "Playlist names for Alexa",
+    "playlistNamesHint": "Alexa hears a playlist name much better if the skill knows it. Copy this, paste it into the skill model's \"types\" list (replacing the PLAYLIST entry), and build the model. Do it again after adding playlists. For English names, add synonyms for how you would say them in Japanese.",
+    "copyPlaylistNames": "Copy playlist names",
+    "availability": "Works only while Voynix is running and this Mac is awake.",
+    "serverError": "Echo server error: {{error}}"
   }
 }

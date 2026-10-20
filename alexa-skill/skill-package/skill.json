@@ -1,0 +1,24 @@
+{
+  "manifest": {
+    "manifestVersion": "1.0",
+    "publishingInformation": {
+      "locales": {
+        "ja-JP": {
+          "name": "Voynix Echo",
+          "summary": "Voynix のプレイリストを、家の中の Mac から Echo で再生します",
+          "description": "自分用の非公開スキルです。公開しません。",
+          "examplePhrases": ["アレクサ、ハローテスト、ドライブをかけて"]
+        }
+      },
+      "isAvailableWorldwide": false,
+      "testingInstructions": "development only",
+      "category": "MUSIC_AND_AUDIO",
+      "distributionCountries": []
+    },
+    "apis": {
+      "custom": {
+        "interfaces": [{ "type": "AUDIO_PLAYER" }]
+      }
+    }
+  }
+}

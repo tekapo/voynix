@@ -437,7 +437,8 @@
     "languageSystem": "システムに従う",
     "languageEnglish": "English",
     "languageJapanese": "日本語",
-    "close": "閉じる"
+    "close": "閉じる",
+    "tabRemote": "Echo"
   },
   "libraryColumns": {
     "meta_other": "{{count}}曲 · {{minutes}}分",
@@ -481,5 +482,31 @@
       "unsupportedVersion": "このバックアップは新しいバージョンのVoynixで作成されたため、インポートできません。",
       "invalidArchive": "このファイルは有効なVoynixバックアップアーカイブではありません。"
     }
+  },
+  "remote": {
+    "title": "Echo 再生（上級者向け）",
+    "intro": "自作の Alexa スキルから、家庭内ネットワーク経由でこの Mac のプレイリストを Echo で再生できるようにします。インターネットには何も公開しませんが、証明書、Echo 向けの DNS、ポートの転送が必要です（Voynix リポジトリの docs/echo-lan.md を参照）。既定はオフです。リクエストは家庭内ネットワークからのものに限り、下の共有シークレットによる署名が必要です。",
+    "enable": "Echo 再生を有効にする",
+    "running": "ポート {{port}} で稼働中",
+    "stopped": "停止中です。",
+    "needCert": "先に証明書と秘密鍵のファイルを指定してください。",
+    "noTranscode": "この Mac には afconvert がないため、FLAC/ALAC/WAV は変換できず Echo では再生できません。",
+    "port": "ポート",
+    "portHint": "この Mac のポート 443 をこのポートに転送してください（docs/echo-lan.md）。Echo は 443 にしか接続しません。",
+    "certPath": "証明書ファイル（中間証明書を含むチェーン、PEM）",
+    "keyPath": "秘密鍵ファイル（PEM）",
+    "certHint": "スキルが使うホスト名に対する、公的な認証局の証明書（中間証明書を含む）。更新された証明書は自動で読み込まれます。",
+    "secret": "共有シークレット",
+    "showSecret": "表示",
+    "hideSecret": "隠す",
+    "copySecret": "コピー",
+    "copied": "コピーしました",
+    "regenerate": "再生成",
+    "regenerateHint": "このシークレットをスキルの config.json に設定します。再生成すると、古いシークレットと、すでに Echo に渡したリンクがすべて無効になるので、あとでスキル側も更新してください。",
+    "playlistNames": "Alexa に教えるプレイリスト名",
+    "playlistNamesHint": "スキルがプレイリスト名を知っていると、Alexa はずっと正確に聞き取れます。コピーして、スキルの対話モデルの \"types\"（PLAYLIST の項目を置き換え）に貼り付け、モデルをビルドしてください。プレイリストを増やしたら、もう一度行います。英語の名前には、日本語での言い方を同義語として足してください。",
+    "copyPlaylistNames": "プレイリスト名をコピー",
+    "availability": "Voynix が起動していて、この Mac がスリープしていない間だけ使えます。",
+    "serverError": "Echo サーバーのエラー: {{error}}"
   }
 }

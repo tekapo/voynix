@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.24.0 — 2026-10-20
+- Added opt-in Echo (Alexa) playback over the LAN: a signed, LAN-only `/play` HTTPS endpoint (Settings → Echo) that an Echo fetches straight from the Mac, with split DNS so nothing is exposed to the internet; includes the Alexa skill (`alexa-skill/`), host setup scripts and `docs/echo-lan.md`.
+- Playlist names are taught to Alexa through a copyable slot type ("Copy playlist names"), and queued next tracks are converted ahead for Echo.
+
 ## 0.23.1 — 2026-10-10
 - Fixed playback stalling with a pause icon and 0:00 / 0:00 when a track's file is missing (e.g. a stale library row hit during shuffle): a failed load now rejects, and the player skips to the next track (up to 5 in a row).
 - A missing gapless "next" file no longer flips the UI to paused while the current track keeps playing.

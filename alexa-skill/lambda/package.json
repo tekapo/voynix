@@ -1,0 +1,14 @@
+{
+  "name": "voynix-echo-skill",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Alexa skill that plays Voynix playlists on an Echo, from the Mac on your LAN.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "ask-sdk-core": "^2.14.0",
+    "ask-sdk-model": "^1.86.0"
+  }
+}

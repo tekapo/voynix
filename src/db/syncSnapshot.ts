@@ -3,11 +3,9 @@ import { effectiveAlbum } from "../albumName";
 import { getDb } from "./core";
 import { getDeviceId, getLibrarySyncSources, getTranscodeOptions } from "./settings";
 import { getAllAlbumCovers, getAllArtistCovers } from "./covers";
-import { playlistOrderBy } from "./playlists";
-import { getAllTracks } from "./tracks";
+import { createPlaylistKeyResolver } from "./playlistKeys";
 import { pool } from "../sync";
 import { libraryListTracks } from "../smartLists";
-import { evaluateSmartPlaylist, parseSmartRules } from "../smartPlaylist";
 import { PlayState, SyncPlayEvent, SyncSnapshot, TrackKind } from "../types";
 
 // ---- Sync ----------------------------------------------------------------
@@ -32,55 +30,18 @@ export async function buildSyncSnapshot(): Promise<SyncSnapshot> {
         "SELECT id, name, type, kind, manual_order, rules FROM playlists WHERE sync_to_device = 1 ORDER BY name"
     );
 
-    // Needed only if at least one synced playlist is smart: the whole library
-    // (for rule evaluation) and every (non-smart) playlist's membership (for
-    // the 'playlist' rule field/op — see evaluateSmartPlaylist).
-    let allTracks: Awaited<ReturnType<typeof getAllTracks>> | null = null;
-    let membership: Map<string, Set<string>> | null = null;
-    async function smartPlaylistContext() {
-        if (!allTracks) allTracks = await getAllTracks();
-        if (!membership) {
-            const rows: { playlist_id: string; track_id: string }[] = await db.select(
-                "SELECT playlist_id, track_id FROM playlist_tracks"
-            );
-            membership = new Map();
-            for (const { playlist_id, track_id } of rows) {
-                const set = membership.get(playlist_id);
-                if (set) set.add(track_id);
-                else membership.set(playlist_id, new Set([track_id]));
-            }
-        }
-        return { allTracks, membership };
-    }
+    const resolver = createPlaylistKeyResolver();
 
     const playlists: SyncSnapshot["playlists"] = [];
     const keySet = new Set<string>();
     for (const pl of playlistRows) {
-        let trackKeys: string[];
-        if (pl.type === 'smart') {
-            const { allTracks: tracks, membership: memb } = await smartPlaylistContext();
-            const rules = parseSmartRules(pl.rules);
-            trackKeys = evaluateSmartPlaylist(rules, tracks, memb, Date.now())
-                .map(t => t.track_key)
-                .filter((k): k is string => !!k);
-        } else {
-            // Same order the Mac itself shows (playlistOrderBy) so the phone
-            // mirrors it verbatim (upsertMirrorPlaylist re-numbers position from
-            // this order).
-            const rows: any[] = await db.select(
-                `SELECT t.track_key
-                 FROM tracks t
-                 JOIN playlist_tracks pt ON t.id = pt.track_id
-                 WHERE pt.playlist_id = $1 AND t.track_key IS NOT NULL
-                 ORDER BY ${playlistOrderBy(pl)}`,
-                [pl.id]
-            );
-            trackKeys = rows.map(r => r.track_key as string);
-        }
+        const trackKeys = await resolver.trackKeys(pl);
         trackKeys.forEach(k => keySet.add(k));
         // Android has no concept of a smart playlist — it only ever receives
         // the evaluated track_keys, same as any other mirror playlist (see
-        // logic/Sync.kt on the Android side).
+        // logic/Sync.kt on the Android side). Order matches what the Mac itself
+        // shows (playlistOrderBy) so the phone mirrors it verbatim
+        // (upsertMirrorPlaylist re-numbers position from this order).
         playlists.push({ id: pl.id, name: pl.name, kind: (pl.kind ?? 'music') as TrackKind, track_keys: trackKeys });
     }
 
@@ -88,7 +49,7 @@ export async function buildSyncSnapshot(): Promise<SyncSnapshot> {
     // playlist is created on the device.
     const librarySources = await getLibrarySyncSources();
     if (librarySources.length > 0) {
-        const { allTracks: tracks } = await smartPlaylistContext();
+        const tracks = await resolver.allTracks();
         for (const source of librarySources) {
             for (const t of libraryListTracks(source, tracks)) {
                 if (t.track_key) keySet.add(t.track_key);

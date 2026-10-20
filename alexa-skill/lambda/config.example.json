@@ -1,0 +1,5 @@
+{
+  "baseUrl": "https://echo.example.org",
+  "secret": "paste the shared secret from Voynix: Settings > Echo",
+  "ttlSeconds": 7200
+}
