@@ -1,5 +1,7 @@
 # Playing Voynix playlists on an Echo (Alexa), over your LAN
 
+[日本語版はこちら](./echo-lan.ja.md)
+
 An optional, advanced feature: say "Alexa, *&lt;your skill&gt;*, play *Drive*" and an Echo plays that Voynix
 playlist, fetching the audio **straight from your Mac over the home network**. Nothing is exposed to the
 internet, and the Alexa skill never talks to your Mac.
@@ -94,8 +96,15 @@ Assignment": add the Echo (pick it from the client list), its IP, and DNS Server
 the router's own upstream DNS — don't use it. Restart the Echo so it renews its lease. Other routers: look for a
 per-device DNS setting or an "override DNS for one device" option.
 
-Check that the Echo uses it: dnsmasq logs queries (`log-queries` in its config); right after the Echo restarts you
-should see `192.168.50.x` asking for Amazon names.
+Check that the Echo uses it (optional): the installed dnsmasq doesn't log queries. To watch them for a minute, stop the
+daemon, run dnsmasq in the foreground with logging, restart the Echo, and look for its IP asking for Amazon names
+(Ctrl-C, then start the daemon again):
+
+```sh
+sudo launchctl bootout system /Library/LaunchDaemons/com.voynix.echo-dns.plist
+sudo dnsmasq --no-daemon --log-queries --conf-file=/opt/homebrew/etc/voynix-echo-dnsmasq.conf   # path printed by the script
+sudo launchctl bootstrap system /Library/LaunchDaemons/com.voynix.echo-dns.plist
+```
 
 ## 3. Redirect port 443 to Voynix
 
@@ -113,48 +122,87 @@ is untouched, and re-applies it at boot. The Mac can't test its own redirect; fr
 
 ## 4. Turn it on in Voynix
 
-Settings → **Echo**: set the certificate (full chain) and private key paths, keep the port at 8443, tick
-**Enable Echo playback**. The status line should say "Running on port 8443". Use **Show / Copy** to get the shared
-secret for the skill. Regenerating it invalidates the old secret and any URLs already handed to an Echo.
+Settings → **Echo**:
+
+1. Type the certificate (full chain) and private key paths, then click **Apply** (both are applied together — a new
+   certificate with the old key would not load). Keep the port at 8443.
+2. Tick **Enable Echo playback**. Ticking it before the paths are set shows "Set the certificate and private key files
+   first" and unticks itself. The status line should say "Running on port 8443".
+3. **Show / Copy** gives you the shared secret for the skill. Regenerating it invalidates the old secret and any URLs
+   already handed to an Echo — update the skill's `config.json` afterwards.
+
+If you also run a development build of Voynix, don't run both at once: they use the same port, and each keeps its own
+secret in its own settings.
 
 ## 5. The Alexa skill
 
-Source: [`alexa-skill/`](../alexa-skill). It's an Alexa-hosted (Node.js) custom skill with the Audio Player
-interface; the invocation name in `ja-JP.json` is `ラジカセ` — change it if you like, but pick a plain word that doesn't contain
-"music"/"ミュージック"/"プレイリスト" or sound like English ("マイミュージック" is swallowed by Amazon Music).
+Source: [`alexa-skill/`](../alexa-skill) (see its README for what each file does). It's an Alexa-hosted (Node.js)
+custom skill with the Audio Player interface. The invocation name in `ja-JP.json` is `ラジカセ` — change it if you like,
+but pick a plain word that doesn't contain "music"/"ミュージック"/"プレイリスト" or sound like English
+("マイミュージック" is swallowed by Amazon Music).
 
-1. <https://developer.amazon.com/alexa/console/ask> (signed in with the Echo's Amazon account) → Create Skill →
-   name anything, locale Japanese (JP), type **Other**, model **Custom**, hosting **Alexa-hosted (Node.js)**,
-   region **US West (Oregon)** (US East has failed to provision), template **Start from scratch**.
+1. **Use the Echo's own Amazon account.** In the Alexa app, More → Settings → Account Settings shows which account the
+   Echo belongs to (in Japan usually amazon.co.jp). Open <https://developer.amazon.com/alexa/console/ask> signed in with
+   *that* account (register as a developer if asked — it's free; no certification, publishing or identity
+   verification is needed, and a development skill only works on devices of the same account). The console may sign
+   you in to a *different* Amazon account or region on its own: check the avatar menu, and sign out and in again if it
+   is the wrong one. The Alexa app's "My Skills" doesn't list development skills, so it can't tell you if you are in
+   the right place.
+   Then Create Skill → any name, locale Japanese (JP), type **Other**, model **Custom**, hosting
+   **Alexa-hosted (Node.js)**, region **US West (Oregon)** (US East has failed to provision), template
+   **Start from scratch**.
 2. Build → Interfaces → **Audio Player: on** → Save.
 3. Build → Interaction Model → JSON Editor: paste `alexa-skill/skill-package/interactionModels/custom/ja-JP.json`
-   → Save → **Build Skill**.
+   → Save → **Build Skill**, and wait until "last successful build" shows a new time (saving alone changes nothing).
 4. **Teach Alexa your playlist names.** Without this, speech recognition guesses (it heard "ヒロト＆マーシー" as
    "廣戸麻生" and nothing matched). In Voynix, Settings → Echo → **Copy playlist names**, then in the JSON Editor
    replace the `PLAYLIST` entry in the model's `"types"` list with what you copied, and **Build Skill** again.
-   For a name Alexa has trouble with — an English one like "For Drive" — add `"synonyms": ["フォードライブ", "ドライブ"]`
-   to its `"name"` (how you'd say it in Japanese). Repeat after adding or renaming playlists.
-5. Code: replace `lambda/package.json`, `lambda/index.js`, add `lambda/playback.js`, and create `lambda/config.json`
+   Repeat after adding or renaming playlists.
+   - **Synonyms are how you fix mishearings.** If Alexa returns the wrong text, add that text (and how you'd say the
+     name more simply) to the value's `"synonyms"`, e.g. `"name": {"value": "ヒロト＆マーシー", "synonyms": ["ヒロト", "廣戸麻生", "仕事マーシー"]}`.
+     To see what Alexa heard: console → Code → **CloudWatch Logs**, search `REQUEST IntentRequest`, read
+     `{"playlist":"…"}`. In the line `PLAY … list=…`, a canonical playlist name means Alexa matched it; the raw heard text
+     (often kanji) means it did not. Person names have many kanji spellings, so expect a few rounds.
+   - **An English name is not the same as its katakana.** Voynix matches case, width and kana, but not "For Drive" with
+     "フォードライブ": add the katakana reading as a synonym.
+5. Code: replace `lambda/package.json` and `lambda/index.js`, add `lambda/playback.js`, and create `lambda/config.json`
    from `config.example.json` (`baseUrl` = `https://<you>.duckdns.org`, `secret` = the one from Voynix) → **Save →
-   Deploy**.
-6. Test tab → stage **Development**. Try "open *&lt;invocation name&gt;*" in the simulator. On the Echo, say "Alexa, *&lt;invocation name&gt;* を開いて"
-   (Alexa asks which playlist), then "*&lt;playlist&gt;* をかけて" (or "…をシャッフルして" for shuffle). In Japanese the
-   invocation name must be followed by a connecting word: "…を開いて", or "…で、*&lt;playlist&gt;* をかけて".
+   Deploy**, and wait for the deploy to finish ("last deployed" updates) before testing.
+6. Test tab → stage **Development**. In the simulator, type "*&lt;invocation name&gt;* を開いて" — the reply asks which
+   playlist; then "*&lt;playlist&gt;* をかけて". The JSON output should contain an `AudioPlayer.Play` directive whose `url` is
+   `https://<you>.duckdns.org/play?list=…`. On the Echo, say "Alexa, *&lt;invocation name&gt;* を開いて", then (no wake word
+   needed for the answer) "*&lt;playlist&gt;* をかけて", or "…をシャッフルして" for shuffle. In Japanese the invocation name
+   must be followed by a connecting word: "…を開いて", or "…で、*&lt;playlist&gt;* をかけて".
 
-Copy files into the console with the clipboard so the secret never appears on screen:
-`pbcopy < alexa-skill/lambda/config.json`.
+Copy files into the console with the clipboard so the secret never appears on screen
+(`pbcopy < alexa-skill/lambda/config.json`), and clear the clipboard afterwards (`pbcopy < /dev/null`).
+
+## Pitfalls on the Alexa side
+
+- **The simulator passing proves little.** It runs the skill of the account you are signed in with in the console; the
+  Echo runs the skill of *its* account. If the simulator answers with the new reply but the Echo gives an old one (or
+  "お役に立てません"), the skill you edited belongs to a different Amazon account than the Echo's.
+- **Saving isn't deploying.** After a model change, wait for the build to finish; after a code change, Save and then
+  Deploy and wait. Trying too early runs the previous version.
+- **A name that sounds like a built-in gets taken over.** "マイミュージック" and anything with ミュージック / 音楽 /
+  プレイリスト goes to Amazon Music; a coined brand name can be misheard ("ボイニックス" became "v nex"). Use a plain
+  katakana word; test it by typing it in the Alexa app's "Ask Alexa" first.
+- **Japanese needs a connecting word after the invocation name.** "ラジカセ ヒロトをかけて" in one breath is not
+  recognized as your skill; say "ラジカセを開いて" and then the playlist, or "ラジカセで、ヒロトをかけて".
+- **The CloudWatch page's red "not authorized to perform cloudwatch:GetMetricData" banner is harmless** — the log
+  events below it are what you want.
 
 ## Checking and troubleshooting
 
 | Symptom | Look at |
 |---|---|
-| "お役に立てません" / the skill doesn't open | Wrong Amazon account (the Echo's account ≠ the developer account); the invocation name is swallowed by a built-in; the model wasn't rebuilt. Try typing the phrase into the Alexa app's "Ask Alexa". |
-| Echo opens an old version of the skill (an older reply) | The code was pasted into a skill under a different Amazon account than the Echo's. The simulator uses the console's account, so it can pass while the Echo doesn't. |
+| "お役に立てません" / the skill doesn't open | Wrong Amazon account (the Echo's account ≠ the developer account); the invocation name is swallowed by a built-in or missing its connecting word ("…を開いて"); the model wasn't rebuilt. Try typing the phrase into the Alexa app's "Ask Alexa". |
+| Echo opens an old version of the skill (an older reply) | The code was pasted into a skill under a different Amazon account than the Echo's (the simulator uses the console's account, so it can pass while the Echo doesn't), or the deploy hasn't finished. |
 | Skill opens, Echo says nothing / stops | The skill's CloudWatch log (console → Code → Logs): `SESSION ENDED` with `INVALID_RESPONSE` means Alexa's cloud rejected the URL (the host name resolves to a private IP for it — check the public record with `dig +short <host> @1.1.1.1`). `PLAYBACK FAILED` carries the error type. |
-| No lines in Voynix's output for the Echo | DNS: does dnsmasq log the Echo asking for your host name? Is the Echo's DNS setting applied (restart it)? |
+| No lines in Voynix's output for the Echo | DNS: is the Echo's per-device DNS setting applied (restart the Echo), and does dnsmasq see it asking for your host name (see step 2)? |
 | Echo connects but a TLS error | Certificate chain incomplete, or the host name differs from the certificate's. |
 | 403 in Voynix's log | Expired or wrong-secret signature (the secret in `config.json` ≠ Voynix's), or a request from a non-LAN address. |
-| Plays the "playlist not found" voice | The spoken name matched nothing, or the playlist is empty. The skill's log shows what Alexa heard (`PLAY … list=…`): if it's kanji or another spelling, add the playlist names to the model (step 4) with synonyms. |
+| Plays the "playlist not found" voice | The spoken name matched nothing, or the playlist is empty. The skill's log shows what Alexa heard (`PLAY … list=…`): if it's kanji or another spelling, add the playlist names to the model with synonyms (step 5.4). An English name needs its katakana reading as a synonym. |
 | Skips / silence on FLAC, ALAC | `afconvert` missing or the first conversion is slow; the next track is converted ahead while the current one plays. |
 
 Voynix logs one line per request to its stderr (`echo /play <ip> i=… seed=… -> <status>`); signatures are never logged.
@@ -177,8 +225,9 @@ Voynix logs one line per request to its stderr (`echo /play <ip> i=… seed=… 
 
 ## Removing it
 
-`scripts/echo-lan/echo-lan.sh uninstall` removes the DNS and port-redirect LaunchDaemons; then take the Echo's
-DNS setting out of the router, untick the setting in Voynix, and delete the skill in the Alexa console.
+`scripts/echo-lan/echo-lan.sh uninstall` removes the DNS and port-redirect LaunchDaemons and the weekly certificate
+check; then take the Echo's DNS setting out of the router, untick the setting in Voynix, and delete the skill in the
+Alexa console.
 
 ## Security notes
 
