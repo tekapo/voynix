@@ -70,17 +70,24 @@ describe("RemoteAccessSection", () => {
         expect(port).toHaveValue(8443);
     });
 
-    it("applies the certificate and key paths on blur, only when they changed", () => {
+    it("applies the certificate and key paths together, with an explicit Apply", () => {
         const remote = makeRemote({ certPath: "/c/fullchain.pem", keyPath: "/c/privkey.pem" });
         render(<RemoteAccessSection remote={remote} />);
 
+        const apply = screen.getByRole("button", { name: "Apply" });
+        expect(apply).toBeDisabled();
+
         const cert = screen.getByLabelText(/Certificate file/);
+        fireEvent.change(cert, { target: { value: "/new/fullchain.pem" } });
         fireEvent.blur(cert);
         expect(remote.changeCertPaths).not.toHaveBeenCalled();
 
-        fireEvent.change(cert, { target: { value: "/new/fullchain.pem" } });
-        fireEvent.blur(cert);
-        expect(remote.changeCertPaths).toHaveBeenCalledWith("/new/fullchain.pem", "/c/privkey.pem");
+        const key = screen.getByLabelText(/Private key file/);
+        fireEvent.change(key, { target: { value: "/new/privkey.pem" } });
+        expect(apply).toBeEnabled();
+        fireEvent.click(apply);
+        expect(remote.changeCertPaths).toHaveBeenCalledTimes(1);
+        expect(remote.changeCertPaths).toHaveBeenCalledWith("/new/fullchain.pem", "/new/privkey.pem");
     });
 
     it("copies the playlist slot type for the skill model", async () => {

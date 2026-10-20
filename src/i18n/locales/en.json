@@ -502,6 +502,7 @@
     "portHint": "Redirect your Mac's port 443 to this port (docs/echo-lan.md). Echo only connects to 443.",
     "certPath": "Certificate file (full chain, PEM)",
     "keyPath": "Private key file (PEM)",
+    "applyPaths": "Apply",
     "certHint": "A certificate from a public CA for the host name your skill uses, including the intermediate certificate. A renewed certificate is picked up automatically.",
     "secret": "Shared secret",
     "showSecret": "Show",

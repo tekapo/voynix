@@ -155,6 +155,12 @@ Voynix logs one line per request to its stderr (`echo /play <ip> i=… seed=… 
   its *other* name lookups fail too. If that bites, move the dnsmasq to an always-on device (a Raspberry Pi, a NAS)
   and point the Echo's DNS there instead; nothing else changes.
 - Only the Echo you point at the DNS can play (other Echos resolve the host name to the public IP and fail).
+- Tracks whose file is missing on disk (or on an unmounted drive) are skipped; if the same recording exists at two
+  paths, the one that exists is played. A track that can't be converted (an unsupported format) still stops the queue.
+- A link is valid for `ttlSeconds` (2 hours by default) from when the skill signs it. A single track longer than that
+  (an audiobook, a long mix) can fail if the Echo re-requests it after the link expires; raise `ttlSeconds` in the
+  skill's `config.json` if you play such files.
+- Converted files are kept in `remote-cache/` in the app's data folder and deleted after 30 days.
 - At the end of a playlist the skill's queued next track gets a 404 and the Echo stops, with a failed-playback entry in
   the log. That's expected.
 - The public DNS record and the certificate are public: the host name (not your LAN IP or music) is visible.

@@ -12,6 +12,8 @@ const Alexa = require('ask-sdk-core');
 const config = require('./config.json');
 const { playUrl, makeToken, parseToken, newSeed, playlistFromSlot } = require('./playback');
 
+const isSpoken = (h) => ['LaunchRequest', 'IntentRequest'].includes(Alexa.getRequestType(h.requestEnvelope));
+
 const isIntent = (...names) => (h) =>
   Alexa.getRequestType(h.requestEnvelope) === 'IntentRequest' &&
   names.includes(Alexa.getIntentName(h.requestEnvelope));
@@ -22,10 +24,11 @@ function play(h, { list, i, seed }, { behavior = 'REPLACE_ALL', speech, expected
   console.log(`PLAY ${behavior} i=${i} seed=${seed} list=${list}`);
   const builder = h.responseBuilder;
   if (speech) builder.speak(speech);
-  return builder
-    .addAudioPlayerPlayDirective(behavior, url, makeToken(list, i, seed), offsetMs, expectedPreviousToken)
-    .withShouldEndSession(true)
-    .getResponse();
+  builder.addAudioPlayerPlayDirective(behavior, url, makeToken(list, i, seed), offsetMs, expectedPreviousToken);
+  // Alexa only accepts shouldEndSession in replies to what the user said; replies to
+  // AudioPlayer.* and PlaybackController.* events are directives only.
+  if (isSpoken(h)) builder.withShouldEndSession(true);
+  return builder.getResponse();
 }
 
 const ASK_PLAYLIST = 'どのプレイリストをかけますか？';
@@ -67,33 +70,38 @@ const StopHandler = {
   handle: (h) => h.responseBuilder.addAudioPlayerStopDirective().getResponse(),
 };
 
-const ResumeHandler = {
-  canHandle: isIntent('AMAZON.ResumeIntent'),
-  handle: (h) => {
-    const current = nowPlaying(h);
-    if (!current) return h.responseBuilder.speak(ASK_PLAYLIST).reprompt(ASK_PLAYLIST).getResponse();
-    // The old URL may have expired while paused, so sign a fresh one for the same track.
-    return play(h, current.state, { offsetMs: current.offsetMs });
-  },
-};
+function resume(h) {
+  const current = nowPlaying(h);
+  if (!current) return askPlaylist(h);
+  // The old URL may have expired while paused, so sign a fresh one for the same track.
+  return play(h, current.state, { offsetMs: current.offsetMs });
+}
 
-const NextHandler = {
-  canHandle: isIntent('AMAZON.NextIntent'),
-  handle: (h) => {
-    const current = nowPlaying(h);
-    if (!current) return h.responseBuilder.speak(ASK_PLAYLIST).reprompt(ASK_PLAYLIST).getResponse();
-    return play(h, { ...current.state, i: current.state.i + 1 });
-  },
-};
+function skip(h, by) {
+  const current = nowPlaying(h);
+  if (!current) return askPlaylist(h);
+  return play(h, { ...current.state, i: Math.max(0, current.state.i + by) });
+}
 
-const PreviousHandler = {
-  canHandle: isIntent('AMAZON.PreviousIntent'),
-  handle: (h) => {
-    const current = nowPlaying(h);
-    if (!current) return h.responseBuilder.speak(ASK_PLAYLIST).reprompt(ASK_PLAYLIST).getResponse();
-    return play(h, { ...current.state, i: Math.max(0, current.state.i - 1) });
-  },
-};
+// Without anything playing there is nothing to resume or skip: ask, by voice.
+// (Only for spoken requests; PlaybackController events must not get speech.)
+function askPlaylist(h) {
+  if (!isSpoken(h)) return h.responseBuilder.getResponse();
+  return h.responseBuilder.speak(ASK_PLAYLIST).reprompt(ASK_PLAYLIST).getResponse();
+}
+
+const ResumeHandler = { canHandle: isIntent('AMAZON.ResumeIntent'), handle: resume };
+const NextHandler = { canHandle: isIntent('AMAZON.NextIntent'), handle: (h) => skip(h, 1) };
+const PreviousHandler = { canHandle: isIntent('AMAZON.PreviousIntent'), handle: (h) => skip(h, -1) };
+
+// The same actions from a device button, the Alexa app or an Echo Show's screen.
+const isController = (type) => (h) => Alexa.getRequestType(h.requestEnvelope) === `PlaybackController.${type}`;
+const ControllerHandlers = [
+  { canHandle: isController('PlayCommandIssued'), handle: resume },
+  { canHandle: isController('PauseCommandIssued'), handle: (h) => h.responseBuilder.addAudioPlayerStopDirective().getResponse() },
+  { canHandle: isController('NextCommandIssued'), handle: (h) => skip(h, 1) },
+  { canHandle: isController('PreviousCommandIssued'), handle: (h) => skip(h, -1) },
+];
 
 // Queue the following track a little before the current one ends so playback
 // continues without a gap. Past the last track the Mac answers 404; the Echo
@@ -132,7 +140,7 @@ const SessionEndedHandler = {
 };
 
 const FallbackHandler = {
-  canHandle: () => true,
+  canHandle: isSpoken,
   handle: (h) => h.responseBuilder.speak(`すみません、わかりませんでした。${ASK_PLAYLIST}`).reprompt(ASK_PLAYLIST).getResponse(),
 };
 
@@ -147,6 +155,17 @@ const LogRequestInterceptor = {
   },
 };
 
+// Whatever else arrives (System.ExceptionEncountered, events we don't act on) gets an
+// empty reply: speech there would be an invalid response.
+const IgnoreHandler = {
+  canHandle: () => true,
+  handle: (h) => {
+    const req = h.requestEnvelope.request;
+    if (req.type === 'System.ExceptionEncountered') console.log('EXCEPTION', JSON.stringify(req.error), JSON.stringify(req.cause));
+    return h.responseBuilder.getResponse();
+  },
+};
+
 exports.handler = Alexa.SkillBuilders.custom()
   .addRequestInterceptors(LogRequestInterceptor)
   .addRequestHandlers(
@@ -158,10 +177,12 @@ exports.handler = Alexa.SkillBuilders.custom()
     ResumeHandler,
     NextHandler,
     PreviousHandler,
+    ...ControllerHandlers,
     NearlyFinishedHandler,
     AudioPlayerEventHandler,
     SessionEndedHandler,
-    FallbackHandler
+    FallbackHandler,
+    IgnoreHandler
   )
   .addErrorHandlers({
     canHandle: () => true,

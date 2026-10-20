@@ -44,11 +44,10 @@ export const RemoteAccessSection: React.FC<{ remote: RemoteAccess }> = ({ remote
         setTimeout(() => setNamesCopied(false), 1500);
     };
 
-    const applyPaths = () => {
-        if (certDraft.trim() !== remote.certPath || keyDraft.trim() !== remote.keyPath) {
-            remote.changeCertPaths(certDraft, keyDraft);
-        }
-    };
+    // Both files are applied together: a half-edited pair (the new certificate with
+    // the old key) would fail to load and take a running server down.
+    const pathsChanged = certDraft.trim() !== remote.certPath || keyDraft.trim() !== remote.keyPath;
+    const applyPaths = () => remote.changeCertPaths(certDraft, keyDraft);
 
     const running = !!remote.status?.running;
 
@@ -109,7 +108,6 @@ export const RemoteAccessSection: React.FC<{ remote: RemoteAccess }> = ({ remote
                     placeholder="/Users/you/.lego/certificates/echo.example.org.crt"
                     value={certDraft}
                     onChange={e => setCertDraft(e.target.value)}
-                    onBlur={applyPaths}
                 />
             </label>
             <label style={{ display: 'block', marginTop: '0.75rem' }}>
@@ -121,9 +119,11 @@ export const RemoteAccessSection: React.FC<{ remote: RemoteAccess }> = ({ remote
                     placeholder="/Users/you/.lego/certificates/echo.example.org.key"
                     value={keyDraft}
                     onChange={e => setKeyDraft(e.target.value)}
-                    onBlur={applyPaths}
                 />
             </label>
+            <button type="button" className="modal-btn cancel" onClick={applyPaths} disabled={!pathsChanged} style={{ marginTop: '0.5rem' }}>
+                {t('remote.applyPaths')}
+            </button>
             <p className="settings-hint">{t('remote.certHint')}</p>
 
             <div style={{ marginTop: '0.75rem' }}>

@@ -105,8 +105,16 @@ export function useRemoteServer({ playlists, setError }: UseRemoteServerParams) 
 
   const restartIfRunning = async (nextPort: number, nextCert: string, nextKey: string) => {
     if (!status?.running) return;
-    await stop();
-    await start(nextPort, nextCert, nextKey);
+    try {
+      await stop();
+      await start(nextPort, nextCert, nextKey);
+    } catch (e) {
+      // The old server is already stopped: keep the switch honest (as setEnabled
+      // does) instead of "on" with nothing listening.
+      setEnabledState(false);
+      setRemoteEnabled(false).catch(() => {});
+      throw e;
+    }
   };
 
   const changePort = (next: number) => {
