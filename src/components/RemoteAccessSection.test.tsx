@@ -100,6 +100,16 @@ describe("RemoteAccessSection", () => {
         expect(await screen.findByRole("button", { name: "Copied" })).toBeInTheDocument();
     });
 
+    it("doesn't say Copied when the clipboard refuses", async () => {
+        const write = vi.fn(async () => { throw new Error("denied"); });
+        Object.assign(navigator, { clipboard: { writeText: write } });
+        render(<RemoteAccessSection remote={makeRemote()} />);
+        fireEvent.click(screen.getByRole("button", { name: "Copy playlist names" }));
+        await waitFor(() => expect(write).toHaveBeenCalled());
+        expect(screen.queryByRole("button", { name: "Copied" })).toBeNull();
+        expect(screen.getByRole("button", { name: "Copy playlist names" })).toBeInTheDocument();
+    });
+
     it("shows the port when running", () => {
         render(<RemoteAccessSection remote={makeRemote({
             enabled: true,

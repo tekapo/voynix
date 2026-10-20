@@ -162,8 +162,14 @@ export function useRemoteServer({ playlists, setError }: UseRemoteServerParams) 
       }
     };
 
+    // Also re-push now and then: a moved or re-tagged file changes a track's path
+    // without changing the playlists array this effect watches.
     const timer = setTimeout(push, 3000);
-    return () => clearTimeout(timer);
+    const refresh = setInterval(push, 10 * 60 * 1000);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(refresh);
+    };
   }, [playlists, status?.running]);
 
   const remote: RemoteAccess = {

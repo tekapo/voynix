@@ -87,7 +87,7 @@ ANCHOR_EOF
   <key>Label</key><string>$PF_LABEL</string>
   <key>ProgramArguments</key><array>
     <string>/bin/sh</string><string>-c</string>
-    <string>/sbin/pfctl -E; /sbin/pfctl -a $PF_ANCHOR -f $PF_ANCHOR_FILE</string>
+    <string>/sbin/pfctl -e; /sbin/pfctl -a $PF_ANCHOR -f $PF_ANCHOR_FILE</string>
   </array>
   <key>RunAtLoad</key><true/>
 </dict></plist>
@@ -114,6 +114,7 @@ PLIST_EOF
     done
     run sudo pfctl -a "$PF_ANCHOR" -F all 2>/dev/null || true
     run sudo rm -f "$PF_ANCHOR_FILE"
+    echo "pf itself is left enabled (other rules may rely on it); \`sudo pfctl -d\` turns it off if nothing else uses it."
     echo "Removed. The dnsmasq config file next to the dnsmasq binary (voynix-echo-dnsmasq.conf) is left for you to delete."
     ;;
 

@@ -26,11 +26,24 @@ export const RemoteAccessSection: React.FC<{ remote: RemoteAccess }> = ({ remote
         setSecret(await remote.revealSecret());
     };
 
+    // "Copied" only if the clipboard really took it: pasting a stale value into the
+    // skill's config would break signatures with no hint why.
+    const copyText = async (text: string, flash: (copied: boolean) => void) => {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch {
+            return;
+        }
+        flash(true);
+        setTimeout(() => flash(false), 1500);
+    };
+
     const copySecret = async () => {
-        const value = secret ?? await remote.revealSecret();
-        await navigator.clipboard.writeText(value).catch(() => {});
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
+        try {
+            await copyText(secret ?? await remote.revealSecret(), setCopied);
+        } catch {
+            // The secret couldn't be read (a database error): nothing was copied, and nothing says it was.
+        }
     };
 
     const regenerate = async () => {
@@ -38,11 +51,7 @@ export const RemoteAccessSection: React.FC<{ remote: RemoteAccess }> = ({ remote
         setSecret(null);
     };
 
-    const copyPlaylistNames = async () => {
-        await navigator.clipboard.writeText(remote.playlistSlotJson()).catch(() => {});
-        setNamesCopied(true);
-        setTimeout(() => setNamesCopied(false), 1500);
-    };
+    const copyPlaylistNames = () => copyText(remote.playlistSlotJson(), setNamesCopied);
 
     // Both files are applied together: a half-edited pair (the new certificate with
     // the old key) would fail to load and take a running server down.

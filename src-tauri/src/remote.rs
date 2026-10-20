@@ -41,7 +41,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Manager};
 use tokio::net::TcpListener;
-use tokio::sync::watch;
+use tokio::sync::{oneshot, watch};
 use tower::ServiceExt;
 use tower_http::services::ServeFile;
 use unicode_normalization::UnicodeNormalization;
@@ -109,8 +109,12 @@ impl Library {
 pub struct RemoteServer {
     /// Flips to `true` on stop: ends the accept loop and gracefully closes open connections.
     shutdown_tx: Option<watch::Sender<bool>>,
+    /// Resolves once the accept task has dropped the listener, so a restart can rebind the port.
+    closed_rx: Option<oneshot::Receiver<()>>,
     /// Same double-start guard as `SyncServer::starting`.
     starting: bool,
+    /// `stop` arrived while `start` was still in flight: `start` must not leave a server running.
+    stop_requested: bool,
     port: u16,
     secret: String,
     library: Library,
@@ -119,7 +123,7 @@ pub struct RemoteServer {
 
 impl RemoteServer {
     pub fn new() -> Self {
-        Self { shutdown_tx: None, starting: false, port: 0, secret: String::new(), library: Library::default(), app: None }
+        Self { shutdown_tx: None, closed_rx: None, starting: false, stop_requested: false, port: 0, secret: String::new(), library: Library::default(), app: None }
     }
 
     pub fn set_library(&mut self, lib: RemoteLibraryIn) {
@@ -193,15 +197,29 @@ pub async fn start(
     if cert_path.trim().is_empty() || key_path.trim().is_empty() {
         return Err("Echo playback needs a certificate and a private key".to_string());
     }
-    {
-        let mut s = state.lock().unwrap();
-        if s.shutdown_tx.is_some() {
-            return Ok(status_from(&s, true));
+    // A start still in flight (a quick off-then-on) finishes or cancels first; this
+    // one then runs normally, so the user's last choice wins.
+    let mut waited = 0;
+    loop {
+        {
+            let mut s = state.lock().unwrap();
+            if s.shutdown_tx.is_some() {
+                // Already serving (e.g. after a webview reload): the settings are the source
+                // of truth for the secret, so it follows them; the port and certificate stay.
+                s.secret = secret;
+                return Ok(status_from(&s, true));
+            }
+            if !s.starting {
+                s.starting = true;
+                s.stop_requested = false;
+                break;
+            }
         }
-        if s.starting {
-            return Err("Echo server is already starting".to_string());
+        waited += 1;
+        if waited > 250 {
+            return Err("Echo server is still starting".to_string());
         }
-        s.starting = true;
+        tokio::time::sleep(Duration::from_millis(20)).await;
     }
     let _guard = StartingGuard(state.clone());
 
@@ -212,13 +230,21 @@ pub async fn start(
     let port = listener.local_addr().map_err(|e| e.to_string())?.port();
 
     let (tx, mut rx) = watch::channel(false);
+    let (closed_tx, closed_rx) = oneshot::channel::<()>();
     let router = build_router(state.clone());
     tokio::spawn(async move {
         loop {
             tokio::select! {
                 _ = rx.changed() => break,
                 accepted = listener.accept() => {
-                    let Ok((stream, addr)) = accepted else { continue };
+                    let (stream, addr) = match accepted {
+                        Ok(conn) => conn,
+                        // E.g. out of file descriptors: retrying at once would spin a core.
+                        Err(_) => {
+                            tokio::time::sleep(Duration::from_millis(100)).await;
+                            continue;
+                        }
+                    };
                     let acceptor = acceptor.current();
                     let router = router.clone().layer(Extension(Peer(addr.ip())));
                     let stop = rx.clone();
@@ -227,13 +253,21 @@ pub async fn start(
                 }
             }
         }
+        drop(listener);
+        let _ = closed_tx.send(());
     });
     // Old converted files pile up otherwise (each re-tagged source adds another).
     let dir = cache_dir(&app);
     tokio::task::spawn_blocking(move || prune_cache(&dir, CACHE_MAX_AGE));
 
     let mut s = state.lock().unwrap();
+    if s.stop_requested {
+        // Switched off before it finished starting: shut the new listener down again.
+        let _ = tx.send(true);
+        return Ok(RemoteStatus { running: false, port: 0, transcode_available: crate::transcode::transcode_available() });
+    }
     s.shutdown_tx = Some(tx);
+    s.closed_rx = Some(closed_rx);
     s.port = port;
     s.secret = secret;
     s.app = app;
@@ -288,14 +322,25 @@ fn prune_cache(dir: &Path, max_age: Duration) {
 }
 
 pub async fn stop(state: Shared) -> Result<(), String> {
-    let mut s = state.lock().unwrap();
-    if let Some(tx) = s.shutdown_tx.take() {
-        let _ = tx.send(true);
+    let closed = {
+        let mut s = state.lock().unwrap();
+        if s.starting {
+            s.stop_requested = true;
+        }
+        if let Some(tx) = s.shutdown_tx.take() {
+            let _ = tx.send(true);
+        }
+        s.port = 0;
+        s.app = None;
+        // Don't serve a stale library after a restart.
+        s.library = Library::default();
+        s.closed_rx.take()
+    };
+    // Return only once the port is free again: a restart (new port or certificate)
+    // binds it right away.
+    if let Some(closed) = closed {
+        let _ = tokio::time::timeout(Duration::from_secs(2), closed).await;
     }
-    s.port = 0;
-    s.app = None;
-    // Don't serve a stale library after a restart.
-    s.library = Library::default();
     Ok(())
 }
 
@@ -363,6 +408,12 @@ fn match_score(query: &str, target: &str) -> f64 {
     }
     if query == target {
         return 1.0;
+    }
+    // One character can be a whole word in Japanese ("夏"), so it may still start a
+    // name — but a one-character mishearing ("の") is a substring of half the
+    // library, so it never matches in the middle.
+    if query.chars().count() < 2 {
+        return if target.starts_with(query) { 0.9 } else { 0.0 };
     }
     if target.starts_with(query) {
         return 0.9;
@@ -734,6 +785,10 @@ mod tests {
         assert!(exact > prefix && prefix > sub && sub > fuzzy && fuzzy > PLAYLIST_MIN_SCORE);
         assert!(match_score("zzz", &t) < PLAYLIST_MIN_SCORE, "an incidental shared bigram stays below the cutoff");
         assert_eq!(match_score("", &t), 0.0);
+        assert_eq!(match_score("z", &t), 0.0, "one character is never a fragment from the middle of a name");
+        assert_eq!(match_score("a", "a"), 1.0, "but it can be the name");
+        assert_eq!(match_score(&normalize_for_search("夏"), &normalize_for_search("夏の歌")), 0.9, "or its first character");
+        assert_eq!(match_score(&normalize_for_search("の"), &normalize_for_search("夏の歌")), 0.0);
     }
 
     fn order_of(keys: &[&str], seed: u64) -> Vec<String> {
@@ -949,5 +1004,55 @@ mod tests {
         tokio::time::sleep(Duration::from_millis(200)).await;
         let after = http.get(format!("https://127.0.0.1:{}{uri}", status.port)).send().await;
         assert!(after.is_err(), "a stopped server answers nothing, even on an already-open connection");
+    }
+
+    fn test_cert_files(dir: &Path) -> (String, String) {
+        let key_pair = rcgen::KeyPair::generate().unwrap();
+        let cert = rcgen::CertificateParams::new(vec!["127.0.0.1".to_string()]).unwrap().self_signed(&key_pair).unwrap();
+        let (cert_path, key_path) = (dir.join("fullchain.pem"), dir.join("privkey.pem"));
+        std::fs::write(&cert_path, cert.pem()).unwrap();
+        std::fs::write(&key_path, key_pair.serialize_pem()).unwrap();
+        (cert_path.to_string_lossy().to_string(), key_path.to_string_lossy().to_string())
+    }
+
+    #[tokio::test]
+    async fn restarting_on_the_same_port_works_and_a_running_server_takes_the_new_secret() {
+        let dir = tempfile::tempdir().unwrap();
+        let (c, k) = test_cert_files(dir.path());
+        let state = Arc::new(Mutex::new(RemoteServer::new()));
+
+        let first = start(state.clone(), 0, "old".into(), c.clone(), k.clone(), None).await.unwrap();
+        let again = start(state.clone(), 0, "new".into(), c.clone(), k.clone(), None).await.unwrap();
+        assert_eq!(again.port, first.port, "already running: same server");
+        assert_eq!(state.lock().unwrap().secret, "new", "but it follows the latest secret");
+
+        // A port or certificate change is stop + start on the same port: stop must have freed it.
+        stop(state.clone()).await.unwrap();
+        let rebound = start(state.clone(), first.port, "new".into(), c, k, None).await.unwrap();
+        assert_eq!(rebound.port, first.port);
+        stop(state).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn a_stop_during_a_start_is_remembered_and_a_second_start_waits_its_turn() {
+        let dir = tempfile::tempdir().unwrap();
+        let (c, k) = test_cert_files(dir.path());
+        let state = Arc::new(Mutex::new(RemoteServer::new()));
+
+        // Pretend a start is in flight: stop can't undo it yet, so it leaves a note.
+        state.lock().unwrap().starting = true;
+        stop(state.clone()).await.unwrap();
+        assert!(state.lock().unwrap().stop_requested);
+
+        // A new start (the user switched it on again) waits for the in-flight one instead of failing …
+        let waiting = tokio::spawn(start(state.clone(), 0, "s".into(), c, k, None));
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        assert!(!waiting.is_finished());
+        // … and once that one is done, runs normally, with the old note cleared.
+        state.lock().unwrap().starting = false;
+        let status = waiting.await.unwrap().unwrap();
+        assert!(status.running);
+        assert!(!state.lock().unwrap().stop_requested);
+        stop(state).await.unwrap();
     }
 }
