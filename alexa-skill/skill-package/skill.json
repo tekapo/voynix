@@ -7,7 +7,7 @@
           "name": "Voynix Echo",
           "summary": "Voynix のプレイリストを、家の中の Mac から Echo で再生します",
           "description": "自分用の非公開スキルです。公開しません。",
-          "examplePhrases": ["アレクサ、ハローテスト、ドライブをかけて"]
+          "examplePhrases": ["アレクサ、ラジカセで、ドライブをかけて"]
         }
       },
       "isAvailableWorldwide": false,

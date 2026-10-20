@@ -60,8 +60,18 @@ Echo ──(HTTPS, port 443)──▶ Mac ──(pf)──▶ Voynix on :8443  �
      | openssl pkcs7 -print_certs -noout | grep subject      # two or more lines
    ```
 
-3. Certificates last 90 days. Renew with `lego renew` (e.g. from a weekly `launchd` job); Voynix notices the new
-   files by itself and needs no restart.
+3. Certificates last 90 days. Install a weekly check that renews it when 30 days or less are left (a LaunchAgent, no
+   `sudo`; it needs the DuckDNS token file from step 1):
+
+   ```sh
+   scripts/echo-lan/echo-lan.sh cert <you>.duckdns.org you@example.com        # add a token file path as a last argument if it isn't ~/.duckdns-token
+   launchctl kickstart gui/$(id -u)/com.voynix.echo-cert-renew; tail ~/.lego/renew.log   # run it once now: "Skip renewal" is the expected answer
+   ```
+
+   It runs Mondays at 04:17 (when the Mac wakes, if it was asleep then) and logs to `~/.lego/renew.log`. Voynix notices
+   the rewritten files by itself within seconds and needs no restart. If a renewal ever fails, the log says why; the
+   old certificate keeps working until it expires. (Other DNS providers: use `lego run … --dns <provider> --renew-days 30`
+   from your own job instead.)
 
 ## 2. A DNS for the Echo only
 
@@ -110,8 +120,8 @@ secret for the skill. Regenerating it invalidates the old secret and any URLs al
 ## 5. The Alexa skill
 
 Source: [`alexa-skill/`](../alexa-skill). It's an Alexa-hosted (Node.js) custom skill with the Audio Player
-interface; the invocation name in `ja-JP.json` is a placeholder (`ハローテスト`) — pick one that doesn't sound like
-music or English ("マイミュージック" is swallowed by Amazon Music).
+interface; the invocation name in `ja-JP.json` is `ラジカセ` — change it if you like, but pick a plain word that doesn't contain
+"music"/"ミュージック"/"プレイリスト" or sound like English ("マイミュージック" is swallowed by Amazon Music).
 
 1. <https://developer.amazon.com/alexa/console/ask> (signed in with the Echo's Amazon account) → Create Skill →
    name anything, locale Japanese (JP), type **Other**, model **Custom**, hosting **Alexa-hosted (Node.js)**,
