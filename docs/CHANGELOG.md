@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.24.1 — 2026-10-23
+- Fixed the Mac media keys (play/pause, next, previous) not reaching Voynix while music played, which sent them to a background browser tab instead: Voynix now registers with macOS Now Playing natively, so Control Center also shows the track and its position.
+
 ## 0.24.0 — 2026-10-20
 - Added opt-in Echo (Alexa) playback over the LAN: a signed, LAN-only `/play` HTTPS endpoint (Settings → Echo) that an Echo fetches straight from the Mac, with split DNS so nothing is exposed to the internet; includes the Alexa skill (`alexa-skill/`), host setup scripts and `docs/echo-lan.md`.
 - Playlist names are taught to Alexa through a copyable slot type ("Copy playlist names"), and queued next tracks are converted ahead for Echo.

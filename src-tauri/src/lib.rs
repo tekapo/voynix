@@ -1344,6 +1344,8 @@ fn set_track_artwork(path: String, image_path: String) -> Result<(), String> {
 
 #[cfg(target_os = "macos")]
 mod dock;
+#[cfg(target_os = "macos")]
+mod now_playing;
 
 pub fn run() {
     let builder = tauri::Builder::default()
@@ -1411,13 +1413,17 @@ pub fn run() {
             compute_track_identities,
             read_track_numbers,
             read_extra_tags,
-            dock::set_dock_labels
+            dock::set_dock_labels,
+            now_playing::set_now_playing
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
 
     #[cfg(target_os = "macos")]
-    dock::install(app.handle());
+    {
+        dock::install(app.handle());
+        now_playing::install(app.handle());
+    }
 
     app.run(|app_handle, event| {
         // Withdraw the mDNS advertisement on quit — otherwise the process
