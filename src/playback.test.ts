@@ -98,8 +98,11 @@ describe("nextPlayState", () => {
     it("keeps played sticky while still at the end", () => {
         expect(nextPlayState("played", 3595, 3600)).toEqual({ state: "played", resume: 0 });
     });
-    it("scrubbing a played episode back to the start reopens it as unplayed", () => {
-        expect(nextPlayState("played", 0.5, 3600)).toEqual({ state: "unplayed", resume: 0 });
+    it("keeps played at the very start (only a manual action clears it)", () => {
+        expect(nextPlayState("played", 0.5, 3600)).toEqual({ state: "played", resume: 0 });
+    });
+    it("keeps played while re-listening mid-episode and saves the resume position", () => {
+        expect(nextPlayState("played", 300, 3600)).toEqual({ state: "played", resume: 300 });
     });
     it("scrubbing an in_progress episode back to the start stays in_progress-ish (prev)", () => {
         expect(nextPlayState("in_progress", 0.5, 3600)).toEqual({ state: "in_progress", resume: 0 });

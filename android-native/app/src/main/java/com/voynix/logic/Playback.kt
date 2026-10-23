@@ -70,12 +70,12 @@ data class NextPlayState(val state: PlayState, val resume: Double)
  * Given where playback is now, return the podcast's next status and the
  * position to persist for resuming. Reaching the end lands on PLAYED and
  * rewinds the saved position to 0 (so the next play starts fresh); PLAYED is
- * sticky unless the listener deliberately scrubs back before the end.
+ * sticky and is only cleared by hand ("mark as unplayed"), though re-listening
+ * still saves the resume position.
  */
 fun nextPlayState(prev: PlayState, position: Double, duration: Double): NextPlayState {
     if (isNearEnd(position, duration)) return NextPlayState(PlayState.PLAYED, 0.0)
-    if (position <= 1) {
-        return NextPlayState(if (prev == PlayState.PLAYED) PlayState.UNPLAYED else prev, 0.0)
-    }
+    if (prev == PlayState.PLAYED) return NextPlayState(PlayState.PLAYED, if (position <= 1) 0.0 else position)
+    if (position <= 1) return NextPlayState(prev, 0.0)
     return NextPlayState(PlayState.IN_PROGRESS, position)
 }

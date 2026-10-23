@@ -63,9 +63,17 @@ class PlaybackTest {
     }
 
     @Test
-    fun `nextPlayState at the very start resets a played track to unplayed`() {
+    fun `nextPlayState at the very start keeps a played track played`() {
         val r = nextPlayState(PlayState.PLAYED, 0.5, 100.0)
-        assertEquals(PlayState.UNPLAYED, r.state)
+        assertEquals(PlayState.PLAYED, r.state)
+        assertEquals(0.0, r.resume, 0.0001)
+    }
+
+    @Test
+    fun `nextPlayState mid-track keeps played and saves the resume position`() {
+        val r = nextPlayState(PlayState.PLAYED, 42.0, 100.0)
+        assertEquals(PlayState.PLAYED, r.state)
+        assertEquals(42.0, r.resume, 0.0001)
     }
 
     @Test

@@ -46,9 +46,9 @@ fun rootContentStyleExtras(): Bundle = Bundle().apply { putBoolean(CONTENT_STYLE
  * "played" checkmark / partial-progress ring on a playable leaf. Music
  * tracks (kind != "podcast") get none of this — null means "don't set
  * extras at all". [resumePosition]/[durationSecs] are only consulted for
- * IN_PROGRESS: nextPlayState() (logic/Playback.kt) resets resume_position to
- * 0 once a podcast is marked PLAYED, so the percentage for that state is
- * hard-coded to 1.0 rather than derived from the (stale) position.
+ * IN_PROGRESS: a PLAYED podcast's resume_position is 0 on finish but may hold
+ * a re-listen position (nextPlayState() in logic/Playback.kt), so the
+ * percentage for that state is hard-coded to 1.0 rather than derived from it.
  */
 fun completionExtras(kind: String, playState: String, resumePosition: Double, durationSecs: Double?): Bundle? {
     if (kind != "podcast") return null

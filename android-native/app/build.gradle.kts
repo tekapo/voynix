@@ -29,8 +29,8 @@ android {
         applicationId = "com.tekapo.voynix"
         minSdk = 26
         targetSdk = 36
-        versionCode = 144
-        versionName = "0.24.4"
+        versionCode = 145
+        versionName = "0.24.5"
     }
 
     signingConfigs {
