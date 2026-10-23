@@ -815,9 +815,10 @@ function App() {
 
   usePlayerBarHeight(currentTrack);
   const skipSeconds = 10;
-  useMediaSession(currentTrack, currentArtwork, isPlaying, {
-    togglePlay, handleSeek, handleSkip, playAdjacent, skipSeconds,
-  });
+  const syncNowPlayingPosition = useMediaSession(
+    currentTrack, isPlaying, effectiveSpeed(currentTrack?.kind, podcastSpeed),
+    { togglePlay, handleSeek, handleSkip, playAdjacent, skipSeconds },
+  );
 
   // Flush the playback cursor when the app goes to the background or is closing.
   useEffect(() => {
@@ -851,19 +852,8 @@ function App() {
     clock.set(time);
     listenedRef.current = accumulateListened(listenedRef.current, time);
 
-    // Keep the OS/car scrubber in step.
-    if ("mediaSession" in navigator && navigator.mediaSession.setPositionState) {
-      const dur = engine.getDuration() || currentTrack.duration || 0;
-      if (dur > 0 && time <= dur) {
-        try {
-          navigator.mediaSession.setPositionState({
-            duration: dur,
-            position: time,
-            playbackRate: effectiveSpeed(currentTrack.kind, podcastSpeed),
-          });
-        } catch { /* invalid state mid-load — ignore */ }
-      }
-    }
+    // Keep the OS Now Playing scrubber in step (re-published on a seek only).
+    syncNowPlayingPosition(time);
 
     // Podcasts: persist a resume point, throttled to once per ~5s of progress so
     // the 4×/s timeupdate doesn't hammer the DB. Optimistic local update only —

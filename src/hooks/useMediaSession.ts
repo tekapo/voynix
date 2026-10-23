@@ -1,7 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { effectiveAlbum } from "../albumName";
 import { artistOf } from "../names";
 import { Track } from "../types";
+import { useTauriEvent } from "./useTauriEvent";
 
 export interface MediaSessionActions {
     togglePlay: () => void;
@@ -11,69 +13,106 @@ export interface MediaSessionActions {
     skipSeconds: number;
 }
 
+/** Payload of the `media-action` event (see src-tauri/src/now_playing.rs). */
+type MediaAction = "play" | "pause" | "toggle" | "next" | "previous" | { seek: number };
+
+/** Re-publish the position only when it drifts this far (seconds) from what
+ *  the OS would extrapolate from the last one we sent — i.e. after a seek. */
+const POSITION_DRIFT = 2;
+
 /**
- * Publishes the now-playing track to the OS media session (macOS media
- * controls / keyboard media keys / car head units) and wires its play/pause/
- * seek/skip/previous/next actions back into the app.
+ * Publishes the now-playing track to the OS (macOS Now Playing: media keys,
+ * Control Center, headphone buttons) and wires its play/pause/seek/next/
+ * previous commands back into the app.
  *
- * Two independent effects pulled out of App.tsx:
- *   - metadata/playbackState publish, re-run whenever what it displays changes.
- *   - action handlers, registered once — same "ref holds the latest
- *     closures" pattern App.tsx already uses for the Dock menu
- *     (`dockActionsRef`) and the engine event trampoline
- *     (`engineHandlersRef`), so an OS button press always calls into
- *     whatever `actions` most recently were, without needing to re-list
- *     every piece of state those closures happen to depend on as effect deps.
+ * This goes through the native MPRemoteCommandCenter rather than
+ * `navigator.mediaSession`: music plays in the Rust engine, so WebKit never
+ * has an `<audio>` element playing and never registers the page as Now
+ * Playing — the media keys then went to whatever other app (e.g. a browser
+ * tab) was. Podcasts do use `<audio>`, but registering a second source would
+ * compete with this one, so the web API isn't used at all.
  *
- * Not included: `setPositionState()`, called from App.tsx's position-tick
- * handler (`handleTimeUpdate`) rather than from an effect here — it's driven
- * by playback progress, not by one of these values changing.
+ * Commands arrive as `media-action` events; the ref holds the latest
+ * closures — same pattern as App.tsx's `dockActionsRef` — so one long-lived
+ * listener always calls into whatever `actions` most recently were.
+ *
+ * Returns `syncPosition(seconds)`, to be called from the playback position
+ * tick: it re-publishes only on a seek, since the OS advances the scrubber
+ * itself from the last position and `rate`.
  */
 export function useMediaSession(
     currentTrack: Track | null,
-    currentArtwork: string | null,
     isPlaying: boolean,
+    rate: number,
     actions: MediaSessionActions,
-) {
+): (seconds: number) => void {
+    const positionRef = useRef(0);
+    // What the OS believes the position is: the last value sent, advanced by
+    // wall-clock time while playing.
+    const sentRef = useRef({ position: 0, at: 0, playing: false, rate: 1 });
+
+    const publish = useCallback((track: Track, playing: boolean, speed: number) => {
+        const position = positionRef.current;
+        sentRef.current = { position, at: performance.now(), playing, rate: speed };
+        invoke("set_now_playing", {
+            info: {
+                title: track.title,
+                artist: artistOf(track),
+                album: effectiveAlbum(track) ?? "",
+                duration: track.duration ?? 0,
+                position,
+                rate: speed,
+                playing,
+            },
+        }).catch(() => { /* no native layer (tests, web preview) */ });
+    }, []);
+
     useEffect(() => {
-        if (!("mediaSession" in navigator)) return;
-        const ms = navigator.mediaSession;
         if (!currentTrack) {
-            ms.metadata = null;
-            ms.playbackState = "none";
+            positionRef.current = 0;
+            invoke("set_now_playing", { info: null }).catch(() => {});
             return;
         }
-        ms.metadata = new MediaMetadata({
-            title: currentTrack.title,
-            artist: artistOf(currentTrack),
-            album: effectiveAlbum(currentTrack) ?? "",
-            artwork: currentArtwork ? [{ src: currentArtwork }] : [],
-        });
-        ms.playbackState = isPlaying ? "playing" : "paused";
-    }, [currentTrack, currentArtwork, isPlaying]);
+        publish(currentTrack, isPlaying, rate);
+        // Re-run on the track's identity and display fields, not on every
+        // object replacement (e.g. a play-count patch).
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentTrack?.id, currentTrack?.title, isPlaying, rate, publish]);
+
+    // A new track starts from 0 until its first position tick says otherwise.
+    useEffect(() => { positionRef.current = 0; }, [currentTrack?.id]);
+
+    const trackRef = useRef(currentTrack);
+    trackRef.current = currentTrack;
+    const stateRef = useRef({ isPlaying, rate });
+    stateRef.current = { isPlaying, rate };
+
+    const syncPosition = useCallback((seconds: number) => {
+        positionRef.current = seconds;
+        const track = trackRef.current;
+        if (!track) return;
+        const s = sentRef.current;
+        const expected = s.position + (s.playing ? ((performance.now() - s.at) / 1000) * s.rate : 0);
+        if (Math.abs(seconds - expected) > POSITION_DRIFT) {
+            publish(track, stateRef.current.isPlaying, stateRef.current.rate);
+        }
+    }, [publish]);
 
     const actionsRef = useRef(actions);
     actionsRef.current = actions;
-    // `isPlaying` isn't read via the ref: it decides whether "play" or
-    // "pause" is a no-op, and the ref wouldn't be current at the moment a
-    // stale closure's condition is checked the same way a fresh effect
-    // dependency is — so this one effect still re-registers on it, same as
-    // the original code.
-    useEffect(() => {
-        if (!("mediaSession" in navigator)) return;
-        const ms = navigator.mediaSession;
-        const set = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
-            try { ms.setActionHandler(action, handler); } catch { /* action unsupported on this WebView */ }
-        };
-        set("play", () => { if (!isPlaying) actionsRef.current.togglePlay(); });
-        set("pause", () => { if (isPlaying) actionsRef.current.togglePlay(); });
-        set("seekto", (d) => { if (d.seekTime != null) actionsRef.current.handleSeek(d.seekTime); });
-        set("seekbackward", (d) => actionsRef.current.handleSkip(-(d.seekOffset ?? actionsRef.current.skipSeconds)));
-        set("seekforward", (d) => actionsRef.current.handleSkip(d.seekOffset ?? actionsRef.current.skipSeconds));
-        set("previoustrack", () => actionsRef.current.playAdjacent(-1));
-        set("nexttrack", () => actionsRef.current.playAdjacent(1));
-        return () => {
-            for (const a of ["play", "pause", "seekto", "seekbackward", "seekforward", "previoustrack", "nexttrack"] as const) set(a, null);
-        };
-    }, [isPlaying]);
+    const isPlayingRef = useRef(isPlaying);
+    isPlayingRef.current = isPlaying;
+    useTauriEvent<MediaAction>("media-action", (a) => {
+        const act = actionsRef.current;
+        if (a === "toggle") act.togglePlay();
+        // play/pause are no-ops when already in that state (e.g. a headset
+        // sending "play" while playing).
+        else if (a === "play") { if (!isPlayingRef.current) act.togglePlay(); }
+        else if (a === "pause") { if (isPlayingRef.current) act.togglePlay(); }
+        else if (a === "next") act.playAdjacent(1);
+        else if (a === "previous") act.playAdjacent(-1);
+        else if (typeof a === "object" && a !== null && "seek" in a) act.handleSeek(a.seek);
+    });
+
+    return syncPosition;
 }
