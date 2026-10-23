@@ -49,8 +49,9 @@ export function isNearEnd(position: number, duration: number): boolean {
 /**
  * Given where playback is now, return the podcast's next status and the position
  * to persist for resuming. Reaching the end lands on 'played' and rewinds the
- * saved position to 0 (so the next play starts fresh); 'played' is sticky unless
- * the listener deliberately scrubs back before the end.
+ * saved position to 0 (so the next play starts fresh); 'played' is sticky and is
+ * only cleared by hand ("mark as unplayed"), though re-listening still saves the
+ * resume position.
  */
 export function nextPlayState(
     prev: PlayState,
@@ -58,7 +59,8 @@ export function nextPlayState(
     duration: number,
 ): { state: PlayState; resume: number } {
     if (isNearEnd(position, duration)) return { state: 'played', resume: 0 };
-    if (position <= 1) return { state: prev === 'played' ? 'unplayed' : prev, resume: 0 };
+    if (prev === 'played') return { state: 'played', resume: position <= 1 ? 0 : position };
+    if (position <= 1) return { state: prev, resume: 0 };
     return { state: 'in_progress', resume: position };
 }
 

@@ -17,8 +17,9 @@ fun podcastStatus(track: TrackEntity): PlayState? {
 
 /**
  * 0f..1f while in progress, else null — including for PLAYED, whose
- * resume_position is reset to 0 by nextPlayState() and would otherwise read
- * as "0% done" for a finished episode (see logic/Playback.kt:75-81).
+ * resume_position is 0 on finish (nextPlayState()) or holds a re-listen
+ * position, and would otherwise read as a bogus percentage for a finished
+ * episode (see logic/Playback.kt).
  */
 fun podcastProgress(track: TrackEntity): Float? {
     if (podcastStatus(track) != PlayState.IN_PROGRESS) return null

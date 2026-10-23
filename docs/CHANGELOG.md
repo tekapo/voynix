@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.24.5 — 2026-10-23
+- A podcast marked as played now stays played until you mark it as unplayed by hand; re-listening no longer flips it back to unplayed or in-progress (Mac and Android).
+- Re-listening a played episode still saves the resume position, which resets to 0 when it finishes.
+
 ## 0.24.4 — 2026-10-23
 - Fixed Android Auto sometimes not resuming playback when the car restarts: the "car stopped it" marker is now written whenever playback was running just before the car disconnected, not only for a noisy-audio pause.
 - A car resume that loses audio focus to the head unit right after starting is retried up to three times, and playback events are also written to `playback.log` in the app's external files dir for diagnosing real drives.
