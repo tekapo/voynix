@@ -806,7 +806,7 @@ button {
   align-items: center;
   gap: 0.35rem;
   margin-top: 0.6rem;
-  margin-bottom: calc(var(--player-height) + 0.85rem);
+  margin-bottom: 0;
   padding: 0.4rem 0.9rem;
   border: none;
   border-radius: 999px;
@@ -821,6 +821,7 @@ button {
 
 .now-playing-jump-slot.is-below .now-playing-jump {
   margin-top: 0;
+  margin-bottom: calc(var(--player-height) + 0.85rem);
 }
 
 .now-playing-jump:hover {
@@ -831,12 +832,17 @@ button {
    playing track sits in the full (unscrolled) list — a miniature "you are
    here" for the scrollbar. Only shown once the list is actually taller than
    its viewport. */
-.now-playing-rail {
-  position: sticky;
-  top: 0;
+.now-playing-rail-slot {
   width: 0;
   margin-left: auto;
   z-index: 15;
+}
+
+.now-playing-rail {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
   pointer-events: none;
 }
 

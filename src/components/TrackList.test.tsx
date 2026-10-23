@@ -385,6 +385,19 @@ describe("TrackList now-playing indicator (unvirtualized)", () => {
         expect(container.querySelector(".now-playing-jump")).toBeNull();
     });
 
+    it("renders the 'above' jump button right after the header so sticky top can pin it", () => {
+        const tracks = manySmallTracks(10);
+        const { container } = render(<TrackList {...base} tracks={tracks} loadedTrackId={tracks[1].id} />);
+        const scrollEl = makeScrollable(container);
+        const row = container.querySelector('li.track-item[data-index="1"]')!;
+        mockRect(row, { top: -100, bottom: -60 });
+        fireEvent.scroll(scrollEl);
+
+        const slot = container.querySelector(".now-playing-jump-slot.is-above");
+        expect(slot).not.toBeNull();
+        expect(slot!.previousElementSibling).toBe(container.querySelector(".track-list-header"));
+    });
+
     it("scrolls the playing row into view when the jump button is clicked", () => {
         const tracks = manySmallTracks(10);
         const { container } = render(<TrackList {...base} tracks={tracks} loadedTrackId={tracks[8].id} />);
