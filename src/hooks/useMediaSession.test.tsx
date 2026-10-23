@@ -1,14 +1,15 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createTauriTestMocks } from "../test/tauriMocks";
 import type { Track } from "../types";
 import { useMediaSession } from "./useMediaSession";
 
-const t = createTauriTestMocks();
+const t = vi.hoisted(() => ({
+    invoke: vi.fn(async (_cmd: string, _args?: unknown) => null as unknown),
+    listen: vi.fn(async (_event: string, _handler: (e: unknown) => void) => () => {}),
+}));
 vi.mock("@tauri-apps/api/core", () => ({ invoke: (...a: [string, unknown?]) => t.invoke(...a) }));
 vi.mock("@tauri-apps/api/event", () => ({
     listen: (...a: [string, (e: unknown) => void]) => t.listen(...a),
-    emit: (...a: [string, unknown?]) => t.emit(...a),
 }));
 
 const track = { id: "a", title: "Song", artist: "Artist", album: "Album", duration: 200, kind: "music" } as unknown as Track;
@@ -25,7 +26,10 @@ const mediaActionHandler = () => {
 
 const nowPlayingCalls = () => t.invoke.mock.calls.filter((c) => c[0] === "set_now_playing").map((c) => (c[1] as any).info);
 
-beforeEach(() => t.reset());
+beforeEach(() => {
+    t.invoke.mockClear();
+    t.listen.mockClear();
+});
 
 describe("useMediaSession", () => {
     it("publishes the track and playing state to the native Now Playing", () => {
