@@ -60,4 +60,32 @@ class CarResumeTest {
             foregroundTimeoutFor(listOf("com.tekapo.voynix")),
         )
     }
+
+    @Test
+    fun `marks a disconnect while playing`() {
+        assertTrue(shouldMarkCarPausedOnDisconnect(isPlaying = true, lastPlayingAt = null, now = now))
+    }
+
+    @Test
+    fun `marks a disconnect shortly after playback stopped`() {
+        assertTrue(shouldMarkCarPausedOnDisconnect(false, lastPlayingAt = now - 2000, now = now))
+        assertTrue(shouldMarkCarPausedOnDisconnect(false, lastPlayingAt = now - CAR_STOP_GRACE_MS, now = now))
+    }
+
+    @Test
+    fun `does not mark a disconnect long after playback stopped or never played`() {
+        assertFalse(shouldMarkCarPausedOnDisconnect(false, lastPlayingAt = now - CAR_STOP_GRACE_MS - 1, now = now))
+        assertFalse(shouldMarkCarPausedOnDisconnect(false, lastPlayingAt = null, now = now))
+    }
+
+    @Test
+    fun `retries a car resume only after audio focus loss while the car is connected`() {
+        val focusLoss = androidx.media3.common.Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS
+        val user = androidx.media3.common.Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST
+        assertTrue(shouldRetryCarResume(isPlaying = false, lastPauseReason = focusLoss, carConnected = true))
+        assertFalse(shouldRetryCarResume(isPlaying = true, lastPauseReason = focusLoss, carConnected = true))
+        assertFalse(shouldRetryCarResume(isPlaying = false, lastPauseReason = user, carConnected = true))
+        assertFalse(shouldRetryCarResume(isPlaying = false, lastPauseReason = null, carConnected = true))
+        assertFalse(shouldRetryCarResume(isPlaying = false, lastPauseReason = focusLoss, carConnected = false))
+    }
 }

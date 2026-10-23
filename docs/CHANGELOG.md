@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.24.4 — 2026-10-23
+- Fixed Android Auto sometimes not resuming playback when the car restarts: the "car stopped it" marker is now written whenever playback was running just before the car disconnected, not only for a noisy-audio pause.
+- A car resume that loses audio focus to the head unit right after starting is retried up to three times, and playback events are also written to `playback.log` in the app's external files dir for diagnosing real drives.
+
 ## 0.24.3 — 2026-10-23
 - Fixed the "Now playing" jump button never showing when the playing track is scrolled above the visible track list: it is now rendered right below the sticky header. The position marker on the right edge is likewise moved to the top of the list so it is always visible.
 
