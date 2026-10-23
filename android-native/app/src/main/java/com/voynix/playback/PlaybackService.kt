@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.os.Process
+import android.os.SystemClock
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -101,6 +102,13 @@ class PlaybackService : MediaLibraryService() {
     // restore has actually landed.
     private var restoreJob: Job? = null
 
+    // elapsedRealtime of the last moment playback was running (null = not
+    // since this process started), and the reason of the last
+    // playWhenReady=false. Feed the car-stop marker (shouldMarkCarPausedOnDisconnect)
+    // and the focus-loss retry of the car resume (shouldRetryCarResume).
+    private var lastPlayingAt: Long? = null
+    private var lastPauseReason: Int? = null
+
     inner class LocalBinder : android.os.Binder() {
         val service: PlaybackService get() = this@PlaybackService
     }
@@ -109,6 +117,7 @@ class PlaybackService : MediaLibraryService() {
 
     override fun onCreate() {
         super.onCreate()
+        initPlaybackLogFile(this)
         playbackLog("onCreate pid=${Process.myPid()}")
         db = VoynixDatabase.get(this)
         // AudioAttributes + handleAudioFocus=true make ExoPlayer request/react
@@ -285,7 +294,18 @@ class PlaybackService : MediaLibraryService() {
             if (exoPlayer.mediaItemCount == 0) restoreLastPlayback() // process was killed while the car was away
             delay(CAR_RESUME_DELAY_MS) // let the car's audio route finish establishing first
             playbackLog("car reconnected: resuming")
+            lastPauseReason = null
             playerController.play()
+            // A head unit that has just booted can take audio focus right
+            // after our play(); retry only for that, never for a real pause.
+            for ((i, retryDelay) in CAR_RESUME_RETRY_DELAYS_MS.withIndex()) {
+                delay(retryDelay)
+                val carConnected = mediaSession.connectedControllers.any { isCarController(it.packageName) }
+                if (!shouldRetryCarResume(exoPlayer.isPlaying, lastPauseReason, carConnected)) break
+                playbackLog("car resume lost audio focus, retry ${i + 1}")
+                lastPauseReason = null
+                playerController.play()
+            }
         }
     }
 
@@ -335,6 +355,7 @@ class PlaybackService : MediaLibraryService() {
     private inner class DiagnosticPlayerListener : Player.Listener {
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
             playbackLog("playWhenReady=$playWhenReady reason=${playWhenReadyChangeReasonName(reason)}")
+            if (!playWhenReady) lastPauseReason = reason
             // ACTION_AUDIO_BECOMING_NOISY (Bluetooth/car audio route
             // disappearing, e.g. the engine turning off) doesn't go through
             // LibrarySessionCallback.onDisconnected at all — ExoPlayer's own
@@ -352,6 +373,7 @@ class PlaybackService : MediaLibraryService() {
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             playbackLog("isPlaying=$isPlaying")
+            lastPlayingAt = SystemClock.elapsedRealtime()
             // Undo onConnect's extended foreground-service timeout once
             // there's no car controller left to resume for — otherwise a
             // phone-only listen started after a drive would keep the
@@ -377,7 +399,7 @@ class PlaybackService : MediaLibraryService() {
             controller: MediaSession.ControllerInfo,
         ): MediaSession.ConnectionResult {
             if (isCarController(controller.packageName)) {
-                playbackLog("onConnect pkg=${controller.packageName}")
+                playbackLog("onConnect pkg=${controller.packageName} others=${mediaSession.connectedControllers.map { it.packageName }}")
                 // While a car controller is connected, a pause (engine off)
                 // must not let media3 drop the foreground service before the
                 // engine comes back on — see foregroundTimeoutFor's doc
@@ -394,13 +416,20 @@ class PlaybackService : MediaLibraryService() {
                 // A car controller reconnected (e.g. the browse rebind that
                 // caused the disconnect in the first place) — cancel any
                 // pending "car went away" pause from onDisconnected below.
-                carDisconnectPauseJob?.cancel()
-                carDisconnectPauseJob = null
+                // The marker written at disconnect time was for a car that
+                // never actually left; don't let this reconnect resume on it.
+                if (carDisconnectPauseJob?.isActive == true) {
+                    serviceScope.launch { db.settingsDao().delete(CAR_PAUSED_AT_KEY) }
+                    playbackLog("onConnect: car rebind within debounce, marker cleared")
+                    carDisconnectPauseJob?.cancel()
+                    carDisconnectPauseJob = null
+                } else {
+                    resumeIfCarJustCameBack(controller.packageName)
+                }
                 // The buttons may have been pushed before media3's own
                 // notification controller connected (which the legacy Auto
                 // bridge silently drops) — retry on a schedule. See ButtonRepush.kt.
                 startAutoButtonRepush()
-                resumeIfCarJustCameBack(controller.packageName)
             }
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session, controller)
                 .setAvailableSessionCommands(
@@ -452,10 +481,15 @@ class PlaybackService : MediaLibraryService() {
         // onConnect above) a chance to cancel it before playback actually stops.
         override fun onDisconnected(session: MediaSession, controller: MediaSession.ControllerInfo) {
             val remaining = mediaSession.connectedControllers.map { it.packageName }
+            playbackLog("onDisconnected pkg=${controller.packageName} remaining=$remaining")
             if (!shouldPauseOnCarDisconnect(controller.packageName, remaining)) return
             playbackLog("car controller disconnected pkg=${controller.packageName}, debouncing pause")
             autoButtonRepushJob?.cancel()
             autoButtonRepushJob = null
+            if (shouldMarkCarPausedOnDisconnect(exoPlayer.isPlaying, lastPlayingAt, SystemClock.elapsedRealtime())) {
+                playbackLog("car disconnected: marking (isPlaying=${exoPlayer.isPlaying})")
+                markCarPaused()
+            }
             carDisconnectPauseJob?.cancel()
             carDisconnectPauseJob = serviceScope.launch {
                 delay(CAR_DISCONNECT_PAUSE_DEBOUNCE_MS)
@@ -464,6 +498,7 @@ class PlaybackService : MediaLibraryService() {
                     exoPlayer.pause()
                     markCarPaused()
                 }
+                carDisconnectPauseJob = null
             }
         }
 

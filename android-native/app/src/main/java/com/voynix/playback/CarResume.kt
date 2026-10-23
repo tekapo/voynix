@@ -55,3 +55,33 @@ fun foregroundTimeoutFor(connectedPackages: Collection<String>): Long =
     } else {
         androidx.media3.session.MediaSessionService.DEFAULT_FOREGROUND_SERVICE_TIMEOUT_MS
     }
+
+/**
+ * How recently playback must have been running for a car disconnect to count
+ * as "the car stopped it". The engine turning off can pause playback (a
+ * remote pause or audio-focus loss from the head unit) a moment *before* the
+ * car controller's onDisconnected, so by the time the disconnect debounce
+ * fires [androidx.media3.common.Player.isPlaying] is already false and the
+ * pause was never marked — the resume then silently did nothing.
+ */
+const val CAR_STOP_GRACE_MS = 10_000L
+
+/** Whether a car disconnect should write the "car went away" marker, given when playback last ran (elapsedRealtime ms, null = never). */
+fun shouldMarkCarPausedOnDisconnect(isPlaying: Boolean, lastPlayingAt: Long?, now: Long): Boolean {
+    if (isPlaying) return true
+    if (lastPlayingAt == null) return false
+    return now - lastPlayingAt in 0..CAR_STOP_GRACE_MS
+}
+
+/** Delays (ms after the first play()) at which a car-resume that lost audio focus is retried. */
+val CAR_RESUME_RETRY_DELAYS_MS = listOf(3_000L, 5_000L, 7_000L)
+
+/**
+ * Whether to call play() again after a car-resume. A head unit that has just
+ * booted can grab audio focus right after our play(), pausing us with
+ * AUDIO_FOCUS_LOSS; that is worth retrying. Any other reason (the user
+ * pausing, a remote pause) must be respected.
+ */
+fun shouldRetryCarResume(isPlaying: Boolean, lastPauseReason: Int?, carConnected: Boolean): Boolean =
+    !isPlaying && carConnected &&
+        lastPauseReason == androidx.media3.common.Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS

@@ -1,8 +1,14 @@
 package com.voynix.playback
 
+import android.content.Context
 import android.os.SystemClock
 import android.util.Log
 import androidx.media3.common.Player
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.concurrent.Executors
 
 /**
  * Diagnostic logging for everything that can pause/stop playback in the car —
@@ -16,6 +22,35 @@ private const val TAG = "VoynixPlayback"
 
 fun playbackLog(msg: String) {
     Log.i(TAG, "${SystemClock.elapsedRealtime() / 1000}s $msg")
+    appendToLogFile(msg)
+}
+
+// A drive's logcat is gone by the time the phone is next on a cable, so the
+// same lines also go to a small rotating file in the app's external files dir
+// (`adb pull /sdcard/Android/data/com.tekapo.voynix/files/playback.log`).
+// Null until PlaybackService.onCreate calls [initPlaybackLogFile] (and in unit tests).
+private const val LOG_FILE_NAME = "playback.log"
+private const val LOG_FILE_MAX_BYTES = 256 * 1024L
+
+@Volatile
+private var logFile: File? = null
+private val logExecutor = Executors.newSingleThreadExecutor()
+
+fun initPlaybackLogFile(context: Context) {
+    logFile = context.getExternalFilesDir(null)?.let { File(it, LOG_FILE_NAME) }
+}
+
+private fun appendToLogFile(msg: String) {
+    val file = logFile ?: return
+    val line = "${SimpleDateFormat("MM-dd HH:mm:ss", Locale.US).format(Date())} $msg\n"
+    logExecutor.execute {
+        try {
+            if (file.length() > LOG_FILE_MAX_BYTES) file.renameTo(File(file.parentFile, "$LOG_FILE_NAME.1"))
+            file.appendText(line)
+        } catch (_: Exception) {
+            // Diagnostics only; never let a full disk or missing dir affect playback.
+        }
+    }
 }
 
 /** Human-readable name for Player.PLAY_WHEN_READY_CHANGE_REASON_* — falls back to the raw code for anything new. */
