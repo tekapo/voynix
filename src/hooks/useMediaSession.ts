@@ -42,6 +42,7 @@ const POSITION_DRIFT = 2;
  */
 export function useMediaSession(
     currentTrack: Track | null,
+    artwork: string | null,
     isPlaying: boolean,
     rate: number,
     actions: MediaSessionActions,
@@ -67,17 +68,34 @@ export function useMediaSession(
         }).catch(() => { /* no native layer (tests, web preview) */ });
     }, []);
 
+    // The cover is a large `data:` URI, so it's sent on its own and only when
+    // it changes; the native side attaches it to every later publish.
+    const artworkRef = useRef<string | null>(null);
+
     useEffect(() => {
         if (!currentTrack) {
             positionRef.current = 0;
-            invoke("set_now_playing", { info: null }).catch(() => {});
+            artworkRef.current = null;
+            invoke("set_now_playing_artwork", { dataUri: null })
+                .then(() => invoke("set_now_playing", { info: null }))
+                .catch(() => {});
             return;
         }
-        publish(currentTrack, isPlaying, rate);
+        if (artworkRef.current === artwork) {
+            publish(currentTrack, isPlaying, rate);
+            return;
+        }
+        // Artwork first, so the publish below already carries it.
+        artworkRef.current = artwork;
+        let alive = true;
+        invoke("set_now_playing_artwork", { dataUri: artwork })
+            .catch(() => { /* no native layer (tests, web preview) */ })
+            .then(() => { if (alive) publish(currentTrack, isPlaying, rate); });
+        return () => { alive = false; };
         // Re-run on the track's identity and display fields, not on every
         // object replacement (e.g. a play-count patch).
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentTrack?.id, currentTrack?.title, isPlaying, rate, publish]);
+    }, [currentTrack?.id, currentTrack?.title, artwork, isPlaying, rate, publish]);
 
     // A new track starts from 0 until its first position tick says otherwise.
     useEffect(() => { positionRef.current = 0; }, [currentTrack?.id]);

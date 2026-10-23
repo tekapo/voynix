@@ -1414,7 +1414,8 @@ pub fn run() {
             read_track_numbers,
             read_extra_tags,
             dock::set_dock_labels,
-            now_playing::set_now_playing
+            now_playing::set_now_playing,
+            now_playing::set_now_playing_artwork
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");

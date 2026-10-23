@@ -24,6 +24,8 @@ const mediaActionHandler = () => {
     return (payload: unknown) => (call![1] as (e: unknown) => void)({ payload });
 };
 
+const artworkCalls = () => t.invoke.mock.calls.filter((c) => c[0] === "set_now_playing_artwork").map((c) => (c[1] as any).dataUri);
+
 const nowPlayingCalls = () => t.invoke.mock.calls.filter((c) => c[0] === "set_now_playing").map((c) => (c[1] as any).info);
 
 beforeEach(() => {
@@ -33,19 +35,40 @@ beforeEach(() => {
 
 describe("useMediaSession", () => {
     it("publishes the track and playing state to the native Now Playing", () => {
-        renderHook(() => useMediaSession(track, true, 1, makeActions()));
+        renderHook(() => useMediaSession(track, null, true, 1, makeActions()));
         expect(nowPlayingCalls()).toEqual([
             { title: "Song", artist: "Artist", album: "Album", duration: 200, position: 0, rate: 1, playing: true },
         ]);
     });
 
-    it("clears Now Playing when nothing is loaded", () => {
-        renderHook(() => useMediaSession(null, false, 1, makeActions()));
+    it("clears Now Playing and its artwork when nothing is loaded", async () => {
+        renderHook(() => useMediaSession(null, null, false, 1, makeActions()));
+        await act(async () => {});
+        expect(artworkCalls()).toEqual([null]);
         expect(nowPlayingCalls()).toEqual([null]);
     });
 
+    it("sends the cover before publishing, and again only when it changes", async () => {
+        const order: string[] = [];
+        t.invoke.mockImplementation(async (cmd: string) => { order.push(cmd); return null; });
+        const { rerender } = renderHook(({ art }) => useMediaSession(track, art, true, 1, makeActions()), {
+            initialProps: { art: "data:image/jpeg;base64,AQID" as string | null },
+        });
+        await act(async () => {});
+        expect(order).toEqual(["set_now_playing_artwork", "set_now_playing"]);
+
+        // An unrelated republish (pause) must not resend the image.
+        rerender({ art: "data:image/jpeg;base64,AQID" });
+        expect(artworkCalls()).toHaveLength(1);
+
+        rerender({ art: null });
+        await act(async () => {});
+        expect(artworkCalls()).toEqual(["data:image/jpeg;base64,AQID", null]);
+        expect(nowPlayingCalls()).toHaveLength(2);
+    });
+
     it("re-publishes on pause", () => {
-        const { rerender } = renderHook(({ playing }) => useMediaSession(track, playing, 1, makeActions()), {
+        const { rerender } = renderHook(({ playing }) => useMediaSession(track, null, playing, 1, makeActions()), {
             initialProps: { playing: true },
         });
         rerender({ playing: false });
@@ -54,7 +77,7 @@ describe("useMediaSession", () => {
 
     it("routes media keys to the latest actions", async () => {
         const actions = makeActions();
-        renderHook(() => useMediaSession(track, true, 1, actions));
+        renderHook(() => useMediaSession(track, null, true, 1, actions));
         await act(async () => {});
         const send = mediaActionHandler();
         send("toggle");
@@ -68,7 +91,7 @@ describe("useMediaSession", () => {
 
     it("treats play while playing and pause while paused as no-ops", async () => {
         const actions = makeActions();
-        const { rerender } = renderHook(({ playing }) => useMediaSession(track, playing, 1, actions), {
+        const { rerender } = renderHook(({ playing }) => useMediaSession(track, null, playing, 1, actions), {
             initialProps: { playing: true },
         });
         await act(async () => {});
@@ -86,7 +109,7 @@ describe("useMediaSession", () => {
 
     it("re-publishes the position only after a seek, not on ordinary ticks", () => {
         vi.spyOn(performance, "now").mockReturnValue(0);
-        const { result } = renderHook(() => useMediaSession(track, true, 1, makeActions()));
+        const { result } = renderHook(() => useMediaSession(track, null, true, 1, makeActions()));
         expect(nowPlayingCalls()).toHaveLength(1);
 
         vi.spyOn(performance, "now").mockReturnValue(1000);

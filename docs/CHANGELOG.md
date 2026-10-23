@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.24.2 — 2026-10-23
+- Added the album cover to the macOS Now Playing display (Control Center): the cover shown in the player bar is passed to the OS once per track change, not on every update.
+
 ## 0.24.1 — 2026-10-23
 - Fixed the Mac media keys (play/pause, next, previous) not reaching Voynix while music played, which sent them to a background browser tab instead: Voynix now registers with macOS Now Playing natively, so Control Center also shows the track and its position.
 

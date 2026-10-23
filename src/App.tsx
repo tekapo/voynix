@@ -816,7 +816,7 @@ function App() {
   usePlayerBarHeight(currentTrack);
   const skipSeconds = 10;
   const syncNowPlayingPosition = useMediaSession(
-    currentTrack, isPlaying, effectiveSpeed(currentTrack?.kind, podcastSpeed),
+    currentTrack, currentArtwork, isPlaying, effectiveSpeed(currentTrack?.kind, podcastSpeed),
     { togglePlay, handleSeek, handleSkip, playAdjacent, skipSeconds },
   );
 
