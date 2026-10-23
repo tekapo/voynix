@@ -227,7 +227,8 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
         direction: 'above' | 'below' | null;
         canScroll: boolean;
         containerHeight: number;
-    }>({ direction: null, canScroll: false, containerHeight: 0 });
+        headerHeight: number;
+    }>({ direction: null, canScroll: false, containerHeight: 0, headerHeight: 0 });
 
     useEffect(() => {
         const scrollEl = wrapperRef.current?.parentElement as HTMLElement | null;
@@ -240,6 +241,7 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
             // estimate instead of the real (unvirtualized) DOM height.
             const contentHeight = virtualized ? rowVirtualizer.getTotalSize() : (wrapperRef.current?.offsetHeight ?? 0);
             const canScroll = contentHeight > scrollEl.offsetHeight + 1;
+            const headerHeight = headerRef.current?.getBoundingClientRect().height ?? 0;
             let direction: 'above' | 'below' | null = null;
             // A list that fits entirely within its viewport has nothing to
             // scroll to, so skip the (comparatively expensive, and in a
@@ -257,7 +259,6 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                     ) as HTMLElement | null;
                     if (rowEl) {
                         const rowRect = rowEl.getBoundingClientRect();
-                        const headerHeight = headerRef.current?.getBoundingClientRect().height ?? 0;
                         const visibleTop = containerRect.top + headerHeight;
                         if (rowRect.bottom <= visibleTop) direction = 'above';
                         else if (rowRect.top >= containerRect.bottom) direction = 'below';
@@ -265,9 +266,10 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                 }
             }
             setNowPlaying(prev => (
-                prev.direction === direction && prev.canScroll === canScroll && prev.containerHeight === containerRect.height
+                prev.direction === direction && prev.canScroll === canScroll
+                    && prev.containerHeight === containerRect.height && prev.headerHeight === headerHeight
                     ? prev
-                    : { direction, canScroll, containerHeight: containerRect.height }
+                    : { direction, canScroll, containerHeight: containerRect.height, headerHeight }
             ));
         };
         recompute();
@@ -302,6 +304,23 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
 
     return (
         <div className={`track-list-wrapper ${showPath ? '' : 'hide-path'}`} ref={wrapperRef}>
+            {playingIndex >= 0 && nowPlaying.canScroll && (
+                // Zero-height sticky box at the very top so the rail floats over
+                // the viewport at every scroll position (a sticky box only pins
+                // once its natural position has scrolled past, so it must sit
+                // at the start of the list, not the end).
+                <div className="now-playing-rail-slot" style={{ position: 'sticky', top: 0, height: 0 }}>
+                    <div className="now-playing-rail" style={{ height: nowPlaying.containerHeight }}>
+                        <button
+                            type="button"
+                            className="now-playing-marker"
+                            style={{ top: `${nowPlayingFraction * 100}%` }}
+                            title={t('trackList.nowPlaying')}
+                            onClick={scrollToNowPlaying}
+                        />
+                    </div>
+                </div>
+            )}
             <div className="track-list-header" ref={headerRef}>
                 <div className="th-num">#</div>
                 <SortHeader col="title" className="th-title">{t('trackList.title')}</SortHeader>
@@ -312,6 +331,21 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                 <div className="cell-center th-fav"><Icon name="star" size={13} /></div>
                 <SortHeader col="duration" className="th-time">{t('trackList.time')}</SortHeader>
             </div>
+            {playingIndex >= 0 && nowPlaying.direction === 'above' && (
+                // Right after the header: sticky top pins only once this has
+                // scrolled out of view, i.e. exactly when the playing row is
+                // above the window. Placed at the end of the list it would
+                // stay below the viewport and never show.
+                <div
+                    className="now-playing-jump-slot is-above"
+                    style={{ position: 'sticky', height: 0, top: nowPlaying.headerHeight }}
+                >
+                    <button type="button" className="now-playing-jump" onClick={scrollToNowPlaying}>
+                        <Icon name="chevron-up" size={13} />
+                        {t('trackList.nowPlaying')}
+                    </button>
+                </div>
+            )}
             {virtualized ? (
                 <ul className="track-list is-virtualized" style={{ position: 'relative', height: rowVirtualizer.getTotalSize() }}>
                     {rowVirtualizer.getVirtualItems().map((item) => renderRow(tracks[item.index], item.index, {
@@ -334,37 +368,19 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                     )}
                 </ul>
             )}
-            {playingIndex >= 0 && nowPlaying.direction && (
-                // Wrapped in a height:0 sticky box so it floats at the top/bottom
+            {playingIndex >= 0 && nowPlaying.direction === 'below' && (
+                // Wrapped in a height:0 sticky box so it floats at the bottom
                 // of the scrollable viewport (App.tsx's .track-list-container)
                 // without taking up space or needing that ancestor to be
                 // position:relative — the usual "sticky overlay" trick.
                 <div
-                    className={`now-playing-jump-slot ${nowPlaying.direction === 'above' ? 'is-above' : 'is-below'}`}
-                    style={
-                        nowPlaying.direction === 'above'
-                            ? { position: 'sticky', height: 0, top: 0 }
-                            : { position: 'sticky', height: 0, bottom: 0 }
-                    }
+                    className="now-playing-jump-slot is-below"
+                    style={{ position: 'sticky', height: 0, bottom: 0 }}
                 >
                     <button type="button" className="now-playing-jump" onClick={scrollToNowPlaying}>
-                        <Icon name={nowPlaying.direction === 'above' ? 'chevron-up' : 'chevron-down'} size={13} />
+                        <Icon name="chevron-down" size={13} />
                         {t('trackList.nowPlaying')}
                     </button>
-                </div>
-            )}
-            {playingIndex >= 0 && nowPlaying.canScroll && (
-                <div
-                    className="now-playing-rail"
-                    style={{ position: 'sticky', top: 0, height: nowPlaying.containerHeight }}
-                >
-                    <button
-                        type="button"
-                        className="now-playing-marker"
-                        style={{ top: `${nowPlayingFraction * 100}%` }}
-                        title={t('trackList.nowPlaying')}
-                        onClick={scrollToNowPlaying}
-                    />
                 </div>
             )}
         </div>

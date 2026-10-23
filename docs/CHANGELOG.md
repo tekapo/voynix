@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.24.3 — 2026-10-23
+- Fixed the "Now playing" jump button never showing when the playing track is scrolled above the visible track list: it is now rendered right below the sticky header. The position marker on the right edge is likewise moved to the top of the list so it is always visible.
+
 ## 0.24.2 — 2026-10-23
 - Added the album cover to the macOS Now Playing display (Control Center): the cover shown in the player bar is passed to the OS once per track change, not on every update.
 
