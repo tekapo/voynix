@@ -7,6 +7,8 @@ import { invalidateAlbumArt, useNowPlayingArtwork } from "./albumArt";
 import { albumOf, effectiveAlbum } from "./albumName";
 import { artistOf, UNKNOWN_ARTIST } from "./names";
 import i18n, { LanguagePreference, resolveLanguage } from "./i18n";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { ThemePreference, THEME_QUERY, resolveTheme } from "./theme";
 import { invalidateArtistArt } from "./artistArt";
 import { useContextMenus } from "./hooks/useContextMenus";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -299,6 +301,27 @@ function App() {
       labels: [i18n.t('dock.playPause'), i18n.t('dock.next'), i18n.t('dock.previous')],
     }).catch(() => { /* non-macOS / dev-server: no Dock to update */ });
   }, [uiLanguage]);
+  const [uiTheme, setUiTheme, loadUiTheme] = usePersistedSetting<ThemePreference>(
+    "ui_theme", "system",
+    raw => (raw === "light" || raw === "dark" || raw === "system" ? raw : undefined),
+    v => v);
+  // Sets <html data-theme> (App.css keys its light variable set off it) and,
+  // for "system", follows the OS appearance live. The native window theme is
+  // kept in step so the title bar matches; null hands control back to the OS.
+  useEffect(() => {
+    const mq = window.matchMedia?.(THEME_QUERY);
+    const apply = () => {
+      document.documentElement.dataset.theme = resolveTheme(uiTheme, mq?.matches ?? true);
+    };
+    apply();
+    try {
+      getCurrentWindow().setTheme(uiTheme === "system" ? null : uiTheme)
+        .catch(() => { /* non-Tauri / dev-server: no native window to theme */ });
+    } catch { /* getCurrentWindow() throws outside Tauri */ }
+    if (uiTheme !== "system" || !mq) return;
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, [uiTheme]);
   // "Find Artist Image…" picker (per-artist, from ArtistContextMenu).
   const [artistImagePickerArtist, setArtistImagePickerArtist] = useState<string | null>(null);
   // "Get Info…" dialog (per-track, from TrackContextMenu).
@@ -424,6 +447,7 @@ function App() {
       loadShowPathColumn(),
       loadTrackColumnWidths(),
       loadUiLanguage(),
+      loadUiTheme(),
       getSetting("library_layout_artists").then(v => {
         if (v === "list") setLibraryLayout(l => ({ ...l, artists: 'list' }));
       }).catch(() => {}),
@@ -435,7 +459,7 @@ function App() {
       loadIsLyricsOpen(),
     ]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadShowPathColumn, loadTrackColumnWidths, loadUiLanguage, loadPodcastNoShuffle, loadPodcastSpeed, loadIsLyricsOpen]);
+  }, [loadShowPathColumn, loadTrackColumnWidths, loadUiLanguage, loadUiTheme, loadPodcastNoShuffle, loadPodcastSpeed, loadIsLyricsOpen]);
 
   // Load data on startup
   useEffect(() => {
@@ -1076,6 +1100,10 @@ function App() {
 
   const handleChangeLanguage = (next: LanguagePreference) => {
     setUiLanguage(next);
+  };
+
+  const handleChangeTheme = (next: ThemePreference) => {
+    setUiTheme(next);
   };
 
   // Artists/Albums grid<->list toggle (Header's layoutToggle). `view` is
@@ -1880,6 +1908,8 @@ function App() {
           onCancelFetchMissingArtistImages={cancelFetchMissingArtistImages}
           language={uiLanguage}
           onChangeLanguage={handleChangeLanguage}
+          theme={uiTheme}
+          onChangeTheme={handleChangeTheme}
           onExportBackup={handleExportBackup}
           onImportBackup={handleImportBackup}
           remote={remote}

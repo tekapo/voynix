@@ -41,6 +41,7 @@ function scanResult(tracks: Track[], over: Partial<ScanResult> = {}): ScanResult
 
 async function openSettingsFoldersTab(): Promise<HTMLElement> {
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    fireEvent.click(await screen.findByRole("tab", { name: "Music Folders" }));
     const heading = await screen.findByRole("heading", { name: "Music Folders" });
     return heading.closest(".modal-content") as HTMLElement;
 }

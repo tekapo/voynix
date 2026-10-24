@@ -32,6 +32,8 @@ function makeProps(over: Partial<React.ComponentProps<typeof SettingsModal>> = {
         onCancelFetchMissingArtistImages: () => {},
         language: "system" as const,
         onChangeLanguage: () => {},
+        theme: "system" as const,
+        onChangeTheme: () => {},
         onExportBackup: () => {},
         onImportBackup: () => {},
         ...over,
@@ -60,6 +62,17 @@ describe("SettingsModal backup section", () => {
 
         expect(screen.getByRole("button", { name: "Export Backup…" })).toBeDisabled();
         expect(screen.getByRole("button", { name: "Import Backup…" })).toBeDisabled();
+    });
+});
+
+describe("SettingsModal theme setting", () => {
+    it("lets the user pick a theme on the Library tab", () => {
+        const onChangeTheme = vi.fn();
+        render(<SettingsModal {...makeProps({ onChangeTheme })} />);
+        fireEvent.click(screen.getByRole("tab", { name: "General" }));
+
+        fireEvent.change(screen.getByRole("combobox", { name: "Theme" }), { target: { value: "light" } });
+        expect(onChangeTheme).toHaveBeenCalledWith("light");
     });
 });
 

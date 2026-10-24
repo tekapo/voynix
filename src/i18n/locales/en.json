@@ -385,6 +385,7 @@
   },
   "settings": {
     "title": "Settings",
+    "tabGeneral": "General",
     "tabFolders": "Music Folders",
     "tabLibrary": "Library",
     "tabSync": "Sync",
@@ -441,6 +442,10 @@
     "languageSystem": "System",
     "languageEnglish": "English",
     "languageJapanese": "日本語",
+    "theme": "Theme",
+    "themeSystem": "Follow system",
+    "themeLight": "Light",
+    "themeDark": "Dark",
     "close": "Close",
     "tabRemote": "Echo"
   },
