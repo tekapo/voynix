@@ -19,6 +19,7 @@ use local_ip_address::local_ip;
 use mdns_sd::{ServiceDaemon, ServiceInfo};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::net::IpAddr;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -175,8 +176,9 @@ pub struct IncomingStats {
 }
 
 impl IncomingStats {
+    /// Counts an empty push as 1, so a stream of them can't grow the inbox past its cap.
     fn entry_count(&self) -> usize {
-        self.events.len() + self.favorites.len() + self.play_states.len()
+        (self.events.len() + self.favorites.len() + self.play_states.len()).max(1)
     }
 }
 
@@ -354,11 +356,13 @@ impl SyncServer {
     }
 
     pub fn set_snapshot(&mut self, snapshot: SyncSnapshot) {
-        self.track_paths = snapshot
-            .tracks
-            .iter()
-            .map(|t| (t.track_key.clone(), t.file_path.clone()))
-            .collect();
+        self.track_paths.clear();
+        for t in &snapshot.tracks {
+            // First wins on a duplicate key, like the linear search this index replaced.
+            self.track_paths
+                .entry(t.track_key.clone())
+                .or_insert_with(|| t.file_path.clone());
+        }
         self.snapshot = Some(snapshot);
     }
 
@@ -563,13 +567,15 @@ pub async fn start(
         let mut ip_check = tokio::time::interval(std::time::Duration::from_secs(15));
         ip_check.tick().await; // first tick fires immediately; skip it
         let connections = Arc::new(Semaphore::new(MAX_CONNECTIONS));
+        let per_ip: IpCounts = Arc::default();
         loop {
             tokio::select! {
                 _ = rx.changed() => break,
                 accepted = listener.accept() => {
-                    let Ok((stream, _)) = accepted else { continue };
-                    // Over the cap: drop the socket instead of queueing, so idle
+                    let Ok((stream, addr)) = accepted else { continue };
+                    // Over a cap: drop the socket instead of queueing, so idle
                     // connections can't pile up; a real client just reconnects.
+                    let Some(ip_slot) = admit_ip(&per_ip, addr.ip()) else { continue };
                     let Ok(permit) = connections.clone().try_acquire_owned() else { continue };
                     let acceptor = acceptor.clone();
                     let router = router.clone();
@@ -577,7 +583,7 @@ pub async fn start(
                     // A single connection's handshake/serve failure must not
                     // kill the accept loop for every other client.
                     tokio::spawn(async move {
-                        let _permit = permit;
+                        let _held = (permit, ip_slot);
                         serve_connection(stream, acceptor, router, stop).await;
                     });
                 }
@@ -652,12 +658,45 @@ const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
 const HEADER_READ_TIMEOUT: Duration = Duration::from_secs(30);
 /// Concurrent connections the sync server serves; extra ones are dropped on accept.
 const MAX_CONNECTIONS: usize = 64;
+/// Per client address, so one device on the LAN can't use up all of `MAX_CONNECTIONS`.
+/// The Android client downloads four files at a time.
+const MAX_CONNECTIONS_PER_IP: usize = 16;
 /// Cap on queued stats entries (events + favorites + play states) awaiting the frontend.
 const MAX_INBOX_ENTRIES: usize = 500_000;
 const MAX_PEERS: usize = 32;
 const MAX_DEVICE_ID_LEN: usize = 128;
 /// How long an in-flight response (e.g. a file download) may finish after the server is stopped.
 const SHUTDOWN_GRACE: Duration = Duration::from_secs(5);
+
+type IpCounts = Arc<Mutex<HashMap<IpAddr, usize>>>;
+
+/// Holds one of an address's `MAX_CONNECTIONS_PER_IP` slots until dropped.
+struct PerIpGuard {
+    counts: IpCounts,
+    ip: IpAddr,
+}
+
+impl Drop for PerIpGuard {
+    fn drop(&mut self) {
+        let mut counts = self.counts.lock().unwrap();
+        if let Some(n) = counts.get_mut(&self.ip) {
+            *n -= 1;
+            if *n == 0 {
+                counts.remove(&self.ip);
+            }
+        }
+    }
+}
+
+fn admit_ip(counts: &IpCounts, ip: IpAddr) -> Option<PerIpGuard> {
+    let mut map = counts.lock().unwrap();
+    let n = map.entry(ip).or_insert(0);
+    if *n >= MAX_CONNECTIONS_PER_IP {
+        return None;
+    }
+    *n += 1;
+    Some(PerIpGuard { counts: counts.clone(), ip })
+}
 
 async fn serve_connection(
     stream: tokio::net::TcpStream,
@@ -1198,6 +1237,38 @@ mod tests {
         let body = format!(r#"{{"device_id":"{}","events":[]}}"#, "x".repeat(MAX_DEVICE_ID_LEN + 1));
         assert_eq!(post_stats_body(app, body).await, StatusCode::BAD_REQUEST);
         assert!(state.lock().unwrap().inbox.is_empty());
+    }
+
+    #[test]
+    fn an_empty_push_still_counts_toward_the_inbox_cap() {
+        let empty = IncomingStats { device_id: "p".into(), events: vec![], favorites: vec![], play_states: vec![] };
+        assert_eq!(empty.entry_count(), 1);
+    }
+
+    #[test]
+    fn duplicate_track_keys_serve_the_first_file() {
+        let mut snap = sample_snapshot();
+        let mut dup = snap.tracks[0].clone();
+        dup.file_path = "/other/copy.mp3".into();
+        let first = snap.tracks[0].file_path.clone();
+        snap.tracks.push(dup);
+        let mut srv = SyncServer::new();
+        srv.set_snapshot(snap);
+        assert_eq!(srv.track_paths.get("k1"), Some(&first));
+    }
+
+    #[test]
+    fn per_ip_cap_admits_up_to_the_limit_and_frees_on_drop() {
+        let counts: IpCounts = Arc::default();
+        let a: IpAddr = "192.168.0.2".parse().unwrap();
+        let b: IpAddr = "192.168.0.3".parse().unwrap();
+        let mut held: Vec<_> = (0..MAX_CONNECTIONS_PER_IP).map(|_| admit_ip(&counts, a).unwrap()).collect();
+        assert!(admit_ip(&counts, a).is_none());
+        assert!(admit_ip(&counts, b).is_some(), "another address is unaffected");
+        held.pop();
+        assert!(admit_ip(&counts, a).is_some());
+        drop(held);
+        assert!(counts.lock().unwrap().is_empty(), "released slots leave no entries behind");
     }
 
     #[test]

@@ -11,7 +11,7 @@ android-native/app/build.gradle.kts in one go.
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
 ## 0.26.2 — 2026-10-24
-- The sync server now caps concurrent connections, the queue of incoming play stats (answers 503 so the phone retries later) and the paired-device list, and looks up files by track key through an index instead of scanning every track.
+- The sync server now caps concurrent connections, the queue of incoming play stats (answers 503 so the phone retries later) and the paired-device list, and looks up files by track key through an index instead of scanning every track. One device can hold at most 16 connections, and the desktop app now checks for `afconvert` once instead of on every status poll.
 
 ## 0.26.1 — 2026-10-24
 - Adding tracks to a playlist and drag-reordering now write in batches, so large folder scans and reorders are much faster; Android sync reuses one pinned TLS client and commits its metadata/stats merges in single transactions.
