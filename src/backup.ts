@@ -17,6 +17,7 @@ export const BACKUP_VERSION = 2;
 // json_migrated). Keep this in sync with db/settings.ts's key list.
 export const BACKUP_SETTING_KEYS = [
     "ui_language",
+    "ui_theme",
     "show_path_column",
     "track_column_widths",
     "podcast_no_shuffle",

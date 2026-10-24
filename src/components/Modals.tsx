@@ -7,6 +7,7 @@ import { ScanFolder, ServerActivity, ServerStatus, TrackKind } from '../types';
 import type { TranscodeFormat } from '../db';
 import { Icon } from './Icon';
 import type { LanguagePreference } from '../i18n';
+import type { ThemePreference } from '../theme';
 import { pairingQrDataUri } from '../syncPairing';
 import type { RemoteAccess } from '../hooks/useRemoteServer';
 import { RemoteAccessSection } from './RemoteAccessSection';
@@ -202,6 +203,9 @@ interface SettingsModalProps {
     /** UI language preference: "system" follows the OS/browser language. */
     language: LanguagePreference;
     onChangeLanguage: (next: LanguagePreference) => void;
+    /** Colour theme preference: "system" follows the OS appearance. */
+    theme: ThemePreference;
+    onChangeTheme: (next: ThemePreference) => void;
     /** Export/import a single JSON snapshot of playlists/folders/settings
      *  (desktop only) — see useBackup.ts. Disabled while isScanning, same as
      *  the folder actions above (an import re-scans any new folders). */
@@ -242,6 +246,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     onCancelFetchMissingArtistImages,
     language,
     onChangeLanguage,
+    theme,
+    onChangeTheme,
     onExportBackup,
     onImportBackup,
     remote,
@@ -269,12 +275,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             .catch(() => setLicenses(t('settings.licensesLoadFailed')));
     };
 
-    type SettingsTab = 'folders' | 'library' | 'sync' | 'remote' | 'about';
-    const [activeTab, setActiveTab] = useState<SettingsTab>('folders');
+    type SettingsTab = 'general' | 'folders' | 'library' | 'sync' | 'remote' | 'about';
+    const [activeTab, setActiveTab] = useState<SettingsTab>('general');
 
     if (!isOpen) return null;
 
     const tabs: { id: SettingsTab; label: string }[] = [
+        { id: 'general', label: t('settings.tabGeneral') },
         { id: 'folders', label: t('settings.tabFolders') },
         { id: 'library', label: t('settings.tabLibrary') },
         { id: 'sync', label: t('settings.tabSync') },
@@ -301,6 +308,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         </button>
                     ))}
                 </div>
+
+                {activeTab === 'general' && <>
+                <div className="settings-section">
+                    <div className="settings-section-header">
+                        <h4>{t('settings.language')}</h4>
+                    </div>
+                    <select
+                        className="settings-folder-kind"
+                        aria-label={t('settings.language')}
+                        value={language}
+                        onChange={e => onChangeLanguage(e.target.value as LanguagePreference)}
+                    >
+                        <option value="system">{t('settings.languageSystem')}</option>
+                        <option value="en">{t('settings.languageEnglish')}</option>
+                        <option value="ja">{t('settings.languageJapanese')}</option>
+                    </select>
+                </div>
+                <div className="settings-section">
+                    <div className="settings-section-header">
+                        <h4>{t('settings.theme')}</h4>
+                    </div>
+                    <select
+                        className="settings-folder-kind"
+                        aria-label={t('settings.theme')}
+                        value={theme}
+                        onChange={e => onChangeTheme(e.target.value as ThemePreference)}
+                    >
+                        <option value="system">{t('settings.themeSystem')}</option>
+                        <option value="light">{t('settings.themeLight')}</option>
+                        <option value="dark">{t('settings.themeDark')}</option>
+                    </select>
+                </div>
+                </>}
 
                 {activeTab === 'folders' && <>
                 <div className="settings-section">
@@ -409,21 +449,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </>}
 
                 {activeTab === 'library' && <>
-                <div className="settings-section">
-                    <div className="settings-section-header">
-                        <h4>{t('settings.language')}</h4>
-                    </div>
-                    <select
-                        className="settings-folder-kind"
-                        aria-label={t('settings.language')}
-                        value={language}
-                        onChange={e => onChangeLanguage(e.target.value as LanguagePreference)}
-                    >
-                        <option value="system">{t('settings.languageSystem')}</option>
-                        <option value="en">{t('settings.languageEnglish')}</option>
-                        <option value="ja">{t('settings.languageJapanese')}</option>
-                    </select>
-                </div>
                 <div className="settings-section">
                     <div className="settings-section-header">
                         <h4>{t('settings.trackList')}</h4>

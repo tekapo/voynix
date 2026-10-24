@@ -61,7 +61,7 @@
   /* ---- Text --------------------------------------------------------- */
   --text-1: #ffffff;
   --text-2: rgba(255, 255, 255, 0.6);
-  --text-3: rgba(255, 255, 255, 0.4);
+  --text-3: rgba(255, 255, 255, 0.5);
 
   /* ---- Spacing (4px scale) ---------------------------------------- */
   --space-1: 4px;
@@ -120,6 +120,110 @@
 
   --fill-hover: rgba(255, 255, 255, 0.08);
   --fill-active: rgba(255, 255, 255, 0.12);
+
+  /* ---- Theme-dependent one-offs (overridden in the light set below) ---- */
+  --on-text-1: #000; /* text on a --text-1 filled button */
+  --confirm-hover: #fff;
+  --glow: rgba(255, 255, 255, 0.2);
+  --glow-strong: rgba(255, 255, 255, 0.4);
+  --title-gradient: linear-gradient(to right, #fff, #aaa);
+  --art-placeholder: linear-gradient(135deg, #333, #555);
+  --art-placeholder-fg: rgba(255, 255, 255, 0.5);
+  --surface-inset: rgba(0, 0, 0, 0.2);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+  --line-input: rgba(255, 255, 255, 0.2);
+  --accent-row: rgba(237, 165, 94, 0.12);
+  --accent-text: var(--accent); /* accent used as text colour: needs 4.5:1 */
+  /* Highlighted context-menu row. */
+  --menu-selection-bg: var(--accent);
+  --menu-selection-text: #000;
+}
+
+/* Light theme: App.tsx sets <html data-theme="light"> (the "ui_theme" setting,
+   or the OS appearance when it's "system"). Only colour tokens differ; the
+   amber accent is darkened so it stays legible on a pale background. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --surface-0: #f4f2ef;
+  --surface-bg: radial-gradient(circle at top left, #fbf8f4, #eeebe6);
+  --surface-sidebar: rgba(255, 255, 255, 0.6);
+  --surface-header: rgba(255, 255, 255, 0.6);
+  --surface-sticky: rgba(250, 248, 245, 0.95);
+  --surface-bar: rgba(252, 250, 247, 0.95);
+  --surface-panel: rgba(252, 250, 247, 0.98);
+  --surface-card: #ffffff;
+  --surface-menu: rgba(255, 255, 255, 0.96);
+  --scrim: rgba(0, 0, 0, 0.35);
+  --scrim-strong: rgba(0, 0, 0, 0.5);
+
+  --line: rgba(0, 0, 0, 0.1);
+  --line-soft: rgba(0, 0, 0, 0.06);
+  --line-strong: rgba(0, 0, 0, 0.18);
+  --fill-1: rgba(0, 0, 0, 0.03);
+  --fill-2: rgba(0, 0, 0, 0.05);
+  --fill-3: rgba(0, 0, 0, 0.08);
+  --fill-4: rgba(0, 0, 0, 0.12);
+  --fill-hover: rgba(0, 0, 0, 0.06);
+  --fill-active: rgba(0, 0, 0, 0.1);
+
+  --accent: #c8701f;
+  --accent-strong: #a8480a;
+  --accent-line: rgba(200, 112, 31, 0.4);
+  --accent-soft: rgba(200, 112, 31, 0.16);
+  --accent-softer: rgba(200, 112, 31, 0.08);
+  --accent-gradient: linear-gradient(135deg, #d98530, #a8480a);
+  --accent-row: rgba(200, 112, 31, 0.12);
+  --accent-text: #9a520f;
+
+  --danger: #b3263e;
+  --danger-strong: rgba(179, 38, 62, 0.92);
+  --danger-soft: rgba(179, 38, 62, 0.3);
+
+  --text-1: #1b1a1d;
+  --text-2: rgba(27, 26, 29, 0.78);
+  --text-3: rgba(27, 26, 29, 0.62);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.12);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --shadow-3: 0 24px 64px rgba(0, 0, 0, 0.25);
+
+  --on-text-1: #fff;
+  --confirm-hover: #000;
+  --glow: rgba(0, 0, 0, 0.15);
+  --glow-strong: rgba(0, 0, 0, 0.25);
+  --title-gradient: linear-gradient(to right, #1b1a1d, #6b6870);
+  --art-placeholder: linear-gradient(135deg, #d8d4cf, #c2bdb7);
+  --art-placeholder-fg: rgba(0, 0, 0, 0.4);
+  --surface-inset: rgba(0, 0, 0, 0.04);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+  --line-input: rgba(0, 0, 0, 0.25);
+  /* HIG: selected menu items are the accent colour with white text; the
+     amber is deepened so white keeps ~4.6:1 contrast. */
+  --menu-selection-bg: #b35f12;
+  --menu-selection-text: #fff;
+}
+
+/* HIG: if the default palette is under the minimum contrast, provide a higher
+   contrast scheme when the system's Increase Contrast setting is on. */
+@media (prefers-contrast: more) {
+  :root {
+    --line: rgba(255, 255, 255, 0.28);
+    --line-soft: rgba(255, 255, 255, 0.2);
+    --line-strong: rgba(255, 255, 255, 0.5);
+    --text-2: rgba(255, 255, 255, 0.85);
+    --text-3: rgba(255, 255, 255, 0.72);
+  }
+
+  :root[data-theme="light"] {
+    --line: rgba(0, 0, 0, 0.35);
+    --line-soft: rgba(0, 0, 0, 0.22);
+    --line-strong: rgba(0, 0, 0, 0.55);
+    --text-2: rgba(0, 0, 0, 0.88);
+    --text-3: rgba(0, 0, 0, 0.78);
+    --accent-text: #7a3f08;
+    --menu-selection-bg: #8f4a0c;
+  }
 }
 
 body {
@@ -180,7 +284,7 @@ textarea,
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Typography */
@@ -288,7 +392,7 @@ button {
 
 .playlist-item.active {
   background: var(--fill-active);
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 500;
 }
 
@@ -323,7 +427,7 @@ button {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .playlist-kind-badge {
@@ -347,7 +451,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-inset);
   /* Never let the playlist list push the footer buttons out of reach. */
   flex-shrink: 0;
 }
@@ -408,12 +512,12 @@ button {
 .sidebar-btn.sync-btn {
   background: linear-gradient(90deg, var(--accent-softer), var(--accent-softer));
   border-color: var(--accent-line);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .sidebar-btn.sync-btn:hover:not(:disabled) {
   background: linear-gradient(90deg, var(--accent-soft), var(--accent-soft));
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* Specificity has to beat .context-menu's `position: fixed` (same selector
@@ -561,7 +665,7 @@ button {
 .view-title {
   font-size: 1.25rem;
   font-weight: 600;
-  background: linear-gradient(to right, #fff, #aaa);
+  background: var(--title-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   white-space: nowrap;
@@ -606,7 +710,7 @@ button {
 
 .header-search:focus-within {
   background: var(--fill-3);
-  border-color: var(--accent);
+  border-color: var(--accent-text);
   width: 240px;
 }
 
@@ -822,7 +926,7 @@ button {
 
 .track-item.active {
   background: var(--fill-active);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* "Now Playing" jump button — floats at the top or bottom edge of the
@@ -944,7 +1048,7 @@ button {
 }
 
 .track-item.active .cell-title {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* Podcast status dot inside the title cell. */
@@ -1019,15 +1123,15 @@ button {
 }
 
 .star-btn.is-favorite {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .star-btn:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .player-fav-btn.is-favorite {
-  color: var(--accent);
+  color: var(--accent-text);
   opacity: 1;
 }
 
@@ -1089,7 +1193,7 @@ button {
 
 .library-list-icon {
   margin-bottom: 1rem;
-  color: var(--accent);
+  color: var(--accent-text);
   display: flex;
   filter: drop-shadow(0 0 12px var(--accent-softer));
 }
@@ -1160,7 +1264,7 @@ button {
 
 .library-col-item.active {
   background: var(--fill-active);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .library-col-art {
@@ -1387,7 +1491,7 @@ button {
 }
 
 .album-track-row.active {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .album-track-row.selected {
@@ -1479,13 +1583,13 @@ button {
 .player-art-placeholder {
   width: 50px;
   height: 50px;
-  background: linear-gradient(135deg, #333, #555);
+  background: var(--art-placeholder);
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--art-placeholder-fg);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
@@ -1556,13 +1660,13 @@ button {
 }
 
 .control-btn.icon-btn:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* Toggle-on state for shuffle / repeat. SVG icons honour `color`, so the
    amber tint plus the chip background is enough — no dot marker needed. */
 .control-btn.is-active {
-  color: var(--accent);
+  color: var(--accent-text);
   background: var(--accent-soft);
 }
 
@@ -1589,7 +1693,7 @@ button {
   height: 40px;
   border-radius: 50%;
   background: var(--text-1);
-  color: #000;
+  color: var(--on-text-1);
   border: none;
   display: flex;
   align-items: center;
@@ -1597,12 +1701,12 @@ button {
   font-size: 1.2rem;
   cursor: pointer;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 15px var(--glow);
 }
 
 .play-btn:hover:not(:disabled) {
   transform: scale(1.1);
-  box-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 25px var(--glow-strong);
 }
 
 .play-btn:disabled {
@@ -1790,7 +1894,7 @@ button {
 .modal-input {
   width: 100%;
   background: var(--fill-1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--line-input);
   color: var(--text-1);
   padding: 0.75rem 1rem;
   border-radius: var(--radius-sm);
@@ -1802,7 +1906,7 @@ button {
 }
 
 .modal-input:focus {
-  border-color: var(--accent);
+  border-color: var(--accent-text);
   background: var(--line-soft);
 }
 
@@ -1834,13 +1938,13 @@ button {
 
 .modal-btn.confirm {
   background: var(--text-1);
-  color: #000;
+  color: var(--on-text-1);
 }
 
 .modal-btn.confirm:hover {
-  background: #fff;
+  background: var(--confirm-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px var(--glow);
 }
 
 .modal-btn:disabled {
@@ -1865,16 +1969,16 @@ button {
   border: 1px solid var(--fill-3);
   box-shadow: 0 10px 30px var(--scrim);
 
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   min-width: 180px;
   z-index: 3000;
   max-height: 70dvh;
   overflow: hidden auto;
-  padding: 0.5rem 0;
+  padding: 6px;
 }
 
 .context-menu-header {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   text-transform: uppercase;
   color: var(--text-2);
@@ -1883,7 +1987,8 @@ button {
 }
 
 .context-menu-item {
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-xs);
   font-size: 0.9rem;
   cursor: pointer;
   transition: background 0.1s;
@@ -1891,8 +1996,8 @@ button {
 }
 
 .context-menu-item:hover {
-  background: var(--accent);
-  color: #000;
+  background: var(--menu-selection-bg);
+  color: var(--menu-selection-text);
 }
 
 .context-menu-item-check {
@@ -1904,11 +2009,11 @@ button {
 .context-menu-check {
   width: 14px;
   display: inline-flex;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .context-menu-item-check:hover .context-menu-check {
-  color: #000;
+  color: var(--menu-selection-text);
 }
 
 .error-banner {
@@ -2298,7 +2403,7 @@ button {
 .lyrics-body {
   flex: 1;
   overflow-y: auto;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-inset);
   border-radius: var(--radius-sm);
   padding: 1rem;
   margin-bottom: 1rem;
@@ -2770,7 +2875,7 @@ button {
 
 .settings-tab.active {
   color: var(--text-1);
-  border-bottom-color: var(--accent);
+  border-bottom-color: var(--accent-text);
 }
 
 .settings-section-header {
@@ -2797,7 +2902,7 @@ button {
   margin: 0.5rem 0 0;
   padding: 0.75rem;
   border-radius: 8px;
-  background: var(--bg-2, rgba(127, 127, 127, 0.12));
+  background: var(--fill-2);
   color: var(--text-2);
   font-size: 0.7rem;
   line-height: 1.4;
@@ -2827,7 +2932,7 @@ button {
 .settings-toggle input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  accent-color: var(--accent);
+  accent-color: var(--accent-text);
   cursor: pointer;
 }
 
@@ -2887,12 +2992,12 @@ button {
 }
 
 .settings-folder-rescan:hover:not(:disabled) {
-  color: #fff;
+  color: var(--text-1);
   background: var(--fill-hover);
 }
 
 .settings-folder-remove:hover:not(:disabled) {
-  color: #fff;
+  color: var(--text-1);
   background: var(--danger-soft);
 }
 
@@ -2959,7 +3064,7 @@ button {
 }
 
 .artist-image-candidate:hover:not(:disabled) {
-  border-color: var(--accent);
+  border-color: var(--accent-text);
 }
 
 .artist-image-candidate:disabled {
@@ -2985,7 +3090,7 @@ button {
 
 .artist-image-candidate-loading {
   font-size: 0.7rem;
-  color: var(--text-2, #999);
+  color: var(--text-2);
 }
 
 /* ==================
@@ -3096,7 +3201,7 @@ button {
 .queue-row-mark {
   width: 14px;
   flex-shrink: 0;
-  color: var(--accent);
+  color: var(--accent-text);
   display: inline-flex;
   align-items: center;
 }
@@ -3129,11 +3234,11 @@ button {
 }
 
 .queue-row.is-current {
-  background: rgba(237, 165, 94, 0.12);
+  background: var(--accent-row);
 }
 
 .queue-row.is-current .queue-row-title {
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 600;
 }
 
@@ -3185,5 +3290,5 @@ button {
 .welcome-modal { max-width: 460px; }
 .welcome-action { margin: 0.75rem 0 1rem; }
 .welcome-dots { display: flex; justify-content: center; gap: 0.4rem; margin: 0 0 1rem; }
-.welcome-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--border, #888); opacity: 0.5; }
+.welcome-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); opacity: 0.5; }
 .welcome-dots span.active { background: var(--accent, currentColor); opacity: 1; }

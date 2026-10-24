@@ -18,6 +18,7 @@
     "fs:allow-applocaldata-write",
     "fs:allow-applocaldata-read",
     "core:path:default",
+    "core:window:allow-set-theme",
     "dialog:allow-open",
     "dialog:allow-ask",
     "dialog:allow-save",

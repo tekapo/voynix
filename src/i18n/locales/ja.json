@@ -381,6 +381,7 @@
   },
   "settings": {
     "title": "設定",
+    "tabGeneral": "一般",
     "tabFolders": "ミュージックフォルダ",
     "tabLibrary": "ライブラリ",
     "tabSync": "同期",
@@ -437,6 +438,10 @@
     "languageSystem": "システムに従う",
     "languageEnglish": "English",
     "languageJapanese": "日本語",
+    "theme": "テーマ",
+    "themeSystem": "システムに従う",
+    "themeLight": "ライト",
+    "themeDark": "ダーク",
     "close": "閉じる",
     "tabRemote": "Echo"
   },

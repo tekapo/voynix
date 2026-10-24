@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.26.0 — 2026-10-24
+- Added a light theme for the desktop app. Choose System, Light or Dark in the new General tab of Settings (the language setting moved there too); System follows the macOS appearance.
+- Context menus now use an inset, rounded highlight, and low-contrast text was darkened to meet 4.5:1 contrast. A higher-contrast palette is used when macOS Increase Contrast is on.
+
 ## 0.25.0 — 2026-10-24
 - The Title, Artist and Album column widths in the desktop track list can now be changed by dragging the header dividers; double-click a divider to reset it. Widths are saved and included in backups.
 
