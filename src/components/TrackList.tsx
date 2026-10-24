@@ -33,6 +33,11 @@ const ESTIMATED_ROW_HEIGHT = 38;
 // under-space rows.
 const ROW_GAP = 2;
 
+export type ResizableColumn = 'title' | 'artist' | 'album' | 'path';
+/** Custom column widths in px, keyed by column. Absent = the CSS default (fr). */
+export type ColumnWidths = Partial<Record<ResizableColumn, number>>;
+const MIN_COLUMN_WIDTH = 60;
+
 interface TrackListProps {
     tracks: Track[];
     /** The cued/armed track — a single click sets this. Gets a selection highlight. */
@@ -61,9 +66,13 @@ interface TrackListProps {
     reorderable?: boolean;
     /** Drop `from` onto `to` (both indices into the currently rendered `tracks`). */
     onReorder?: (from: number, to: number) => void;
+    /** Custom text-column widths. Omit `onColumnWidthsChange` to disable resizing. */
+    columnWidths?: ColumnWidths;
+    /** Drag finished (called once, on release) / handle double-clicked (reset). */
+    onColumnWidthsChange?: (widths: ColumnWidths) => void;
 }
 
-const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loadedTrackId = null, showPath = false, sortState = null, onSort, onTrackClick, onTrackActivate, onContextMenu, onSelectionContextMenu, onToggleFavorite, reorderable = false, onReorder }) => {
+const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loadedTrackId = null, showPath = false, sortState = null, onSort, onTrackClick, onTrackActivate, onContextMenu, onSelectionContextMenu, onToggleFavorite, reorderable = false, onReorder, columnWidths, onColumnWidthsChange }) => {
     const { t } = useTranslation();
     // Index of the row currently being dragged, and the row currently under
     // the pointer (for a drop-position indicator). Local UI state only — the
@@ -110,18 +119,78 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
         onContextMenu(e, track);
     };
 
+    // Widths shown while a column drag is in flight; committed (one DB write)
+    // on release. Falls back to the saved widths otherwise.
+    const [liveWidths, setLiveWidths] = useState<ColumnWidths | null>(null);
+    const [dragKey, setDragKey] = useState<ResizableColumn | null>(null);
+    const widths = liveWidths ?? columnWidths ?? {};
+    // The last text column takes whatever width is left, so the row can never
+    // overflow no matter how wide the others are dragged.
+    const flexColumn: ResizableColumn = showPath ? 'path' : 'album';
+
+    // Window-level listeners rather than pointer capture: SortHeader below is
+    // re-created every render, so the handle remounts on each live update.
+    const startResize = (key: ResizableColumn, e: React.PointerEvent<HTMLElement>) => {
+        const cell = e.currentTarget.parentElement;
+        if (!cell || e.button > 0) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const startX = e.clientX;
+        const startWidth = cell.getBoundingClientRect().width;
+        const flexWidth = headerRef.current?.querySelector('.th-flex')?.getBoundingClientRect().width ?? MIN_COLUMN_WIDTH;
+        const max = Math.max(MIN_COLUMN_WIDTH, startWidth + flexWidth - MIN_COLUMN_WIDTH);
+        const base: ColumnWidths = { ...(columnWidths ?? {}) };
+        let latest = startWidth;
+        let moved = false;
+        setDragKey(key);
+        const onMove = (ev: PointerEvent) => {
+            moved = true;
+            latest = Math.min(max, Math.max(MIN_COLUMN_WIDTH, startWidth + ev.clientX - startX));
+            setLiveWidths({ ...base, [key]: latest });
+        };
+        const onUp = () => {
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+            window.removeEventListener('pointercancel', onUp);
+            setLiveWidths(null);
+            setDragKey(null);
+            if (moved) onColumnWidthsChange?.({ ...base, [key]: Math.round(latest) });
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointercancel', onUp);
+    };
+
+    const resetColumn = (key: ResizableColumn) => {
+        const next = { ...(columnWidths ?? {}) };
+        delete next[key];
+        onColumnWidthsChange?.(next);
+    };
+
+    const resizer = (key?: ResizableColumn) => (key && onColumnWidthsChange ? (
+        <div
+            className={`col-resizer ${dragKey === key ? 'is-dragging' : ''}`}
+            role="separator"
+            aria-orientation="vertical"
+            onPointerDown={(e) => startResize(key, e)}
+            onClick={(e) => e.stopPropagation()}
+            onDoubleClick={(e) => { e.stopPropagation(); resetColumn(key); }}
+        />
+    ) : null);
+
     // A header cell that sorts its column when clicked. Falls back to a plain
     // <div> when the list isn't sortable (no onSort passed).
-    const SortHeader = ({ col, className, label, children }: { col: SortKey; className: string; label?: string; children: React.ReactNode }) => {
+    const SortHeader = ({ col, className, label, resizeKey, children }: { col: SortKey; className: string; label?: string; resizeKey?: ResizableColumn; children: React.ReactNode }) => {
         const active = sortState?.key === col;
         const ariaSort = active ? (sortState!.dir === 'asc' ? 'ascending' : 'descending') : 'none';
-        if (!onSort) return <div className={className} title={label} aria-sort={ariaSort}>{children}</div>;
+        if (!onSort) return <div className={className} title={label} aria-sort={ariaSort}>{children}{resizer(resizeKey)}</div>;
         return (
             <div className={className} aria-sort={ariaSort}>
                 <button type="button" className="th-sort" title={label ? t('trackList.sortBy', { label }) : undefined} onClick={() => onSort(col)}>
                     {children}
                     {active && <Icon name={sortState!.dir === 'asc' ? 'chevron-up' : 'chevron-down'} size={11} className="th-sort-caret" />}
                 </button>
+                {resizer(resizeKey)}
             </div>
         );
     };
@@ -300,10 +369,26 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
         }
     };
 
+    const wrapperStyle = useMemo(() => {
+        const style: Record<string, string> = {};
+        let custom = false;
+        for (const k of ['title', 'artist', 'album', 'path'] as const) {
+            const w = widths[k];
+            if (k !== flexColumn && w !== undefined) {
+                style[`--col-${k}`] = `${w}px`;
+                custom = true;
+            }
+        }
+        // Only once something is custom — otherwise the flex column keeps its
+        // default fr share and the stock proportions are unchanged.
+        if (custom) style[`--col-${flexColumn}`] = `minmax(${MIN_COLUMN_WIDTH}px, 1fr)`;
+        return style as React.CSSProperties;
+    }, [widths, flexColumn]);
+
     const nowPlayingFraction = tracks.length > 1 ? playingIndex / (tracks.length - 1) : 0;
 
     return (
-        <div className={`track-list-wrapper ${showPath ? '' : 'hide-path'}`} ref={wrapperRef}>
+        <div className={`track-list-wrapper ${showPath ? '' : 'hide-path'}`} ref={wrapperRef} style={wrapperStyle}>
             {playingIndex >= 0 && nowPlaying.canScroll && (
                 // Zero-height sticky box at the very top so the rail floats over
                 // the viewport at every scroll position (a sticky box only pins
@@ -323,10 +408,10 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
             )}
             <div className="track-list-header" ref={headerRef}>
                 <div className="th-num">#</div>
-                <SortHeader col="title" className="th-title">{t('trackList.title')}</SortHeader>
-                <SortHeader col="artist" className="th-artist">{t('trackList.artist')}</SortHeader>
-                <SortHeader col="album" className="th-album">{t('trackList.album')}</SortHeader>
-                {showPath && <div className="th-path">{t('trackList.path')}</div>}
+                <SortHeader col="title" className="th-title" resizeKey="title">{t('trackList.title')}</SortHeader>
+                <SortHeader col="artist" className="th-artist" resizeKey="artist">{t('trackList.artist')}</SortHeader>
+                <SortHeader col="album" className={showPath ? 'th-album' : 'th-album th-flex'} resizeKey={showPath ? 'album' : undefined}>{t('trackList.album')}</SortHeader>
+                {showPath && <div className="th-path th-flex">{t('trackList.path')}</div>}
                 <SortHeader col="plays" className="cell-center th-plays" label={t('trackList.playCount')}><Icon name="play" size={11} /></SortHeader>
                 <div className="cell-center th-fav"><Icon name="star" size={13} /></div>
                 <SortHeader col="duration" className="th-time">{t('trackList.time')}</SortHeader>

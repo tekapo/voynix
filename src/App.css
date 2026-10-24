@@ -671,8 +671,9 @@ button {
 /* Header Row */
 .track-list-header {
   display: grid;
-  grid-template-columns: 40px 2fr 1.5fr 1.5fr 2fr 44px 32px 112px;
-  /* # Title Artist Album Path Plays Fav Duration */
+  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) var(--col-path, 2fr) 44px 32px 112px;
+  /* # Title Artist Album Path Plays Fav Duration. The --col-* vars are set by
+     TrackList.tsx once a column has been dragged to a custom width. */
   padding: 0.8rem 2rem;
   border-bottom: 1px solid var(--fill-3);
   position: sticky;
@@ -720,6 +721,49 @@ button {
   justify-content: center;
 }
 
+/* Drag handle on a header cell's right edge (TrackList.tsx ColResizer). */
+.track-list-header .th-title,
+.track-list-header .th-artist,
+.track-list-header .th-album {
+  position: relative;
+}
+
+.col-resizer {
+  position: absolute;
+  top: -0.4rem;
+  bottom: -0.4rem;
+  right: -4px;
+  width: 16px;
+  cursor: col-resize;
+  touch-action: none;
+  z-index: 1;
+}
+
+.col-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  /* Sits ~8px left of the column boundary (the handle spans 12px left of it
+     to 4px right) so the bar doesn't touch the next column's text. */
+  left: 2px;
+  width: 2px;
+  background: var(--text-3);
+}
+
+/* Brighten every handle while the header is hovered so they're easy to find
+   on the near-black background; the one under the pointer goes accent. */
+.track-list-header:hover .col-resizer::after {
+  background: var(--text-2);
+}
+
+.col-resizer:hover::after,
+.col-resizer.is-dragging::after {
+  left: 1px;
+  width: 3px;
+  background: var(--accent);
+}
+
 .th-sort-caret {
   flex-shrink: 0;
   opacity: 0.8;
@@ -733,7 +777,7 @@ button {
 
 .track-item {
   display: grid;
-  grid-template-columns: 40px 2fr 1.5fr 1.5fr 2fr 44px 32px 112px;
+  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) var(--col-path, 2fr) 44px 32px 112px;
   /* Match header */
   align-items: center;
   padding: 0.6rem 1rem;
@@ -759,7 +803,7 @@ button {
    so the mobile 4-column grid in the media query still wins. */
 :where(.hide-path) .track-list-header,
 :where(.hide-path) .track-item {
-  grid-template-columns: 40px 2fr 1.5fr 1.5fr 44px 32px 112px;
+  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) 44px 32px 112px;
 }
 
 .track-item:hover {
@@ -2014,6 +2058,7 @@ button {
   .track-list-header > .th-album,
   .track-list-header > .th-path,
   .track-list-header > .th-plays,
+  .col-resizer,
   .track-item > .cell-text,
   .track-item > .cell-playcount {
     display: none;

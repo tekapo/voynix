@@ -43,7 +43,7 @@ import { LibraryItemContextMenu } from "./components/LibraryItemContextMenu";
 import { LibrarySyncSource } from "./smartLists";
 import { QueuePanel } from "./components/QueuePanel";
 import { Sidebar } from "./components/Sidebar";
-import { TrackList } from "./components/TrackList";
+import { ColumnWidths, TrackList } from "./components/TrackList";
 import {
   addTracksToPlaylist,
   backfillExtraTags,
@@ -268,6 +268,21 @@ function App() {
   // UI language: "system" (default) follows the OS/browser language; "en"/"ja"
   // pin it. Applied to i18next (and the Dock menu, via invoke) wherever it's
   // set — see the effect below.
+  const [trackColumnWidths, setTrackColumnWidths, loadTrackColumnWidths] = usePersistedSetting<ColumnWidths>(
+    "track_column_widths", {},
+    raw => {
+      if (!raw) return undefined;
+      try {
+        const parsed = JSON.parse(raw);
+        const out: ColumnWidths = {};
+        for (const k of ["title", "artist", "album", "path"] as const) {
+          const w = parsed?.[k];
+          if (typeof w === "number" && Number.isFinite(w) && w > 0) out[k] = w;
+        }
+        return out;
+      } catch { return undefined; }
+    },
+    v => JSON.stringify(v));
   const [uiLanguage, setUiLanguage, loadUiLanguage] = usePersistedSetting<LanguagePreference>(
     "ui_language", "system",
     raw => (raw === "en" || raw === "ja" || raw === "system" ? raw : undefined),
@@ -407,6 +422,7 @@ function App() {
   const reloadSettings = useCallback(async () => {
     await Promise.all([
       loadShowPathColumn(),
+      loadTrackColumnWidths(),
       loadUiLanguage(),
       getSetting("library_layout_artists").then(v => {
         if (v === "list") setLibraryLayout(l => ({ ...l, artists: 'list' }));
@@ -419,7 +435,7 @@ function App() {
       loadIsLyricsOpen(),
     ]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadShowPathColumn, loadUiLanguage, loadPodcastNoShuffle, loadPodcastSpeed, loadIsLyricsOpen]);
+  }, [loadShowPathColumn, loadTrackColumnWidths, loadUiLanguage, loadPodcastNoShuffle, loadPodcastSpeed, loadIsLyricsOpen]);
 
   // Load data on startup
   useEffect(() => {
@@ -1680,6 +1696,8 @@ function App() {
                 currentTrack={currentTrack}
                 loadedTrackId={loadedTrackId}
                 showPath={showPathColumn}
+                columnWidths={trackColumnWidths}
+                onColumnWidthsChange={setTrackColumnWidths}
                 sortState={sortState}
                 onSort={handleSort}
                 onTrackClick={onRowClick}

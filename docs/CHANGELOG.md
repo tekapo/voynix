@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.25.0 — 2026-10-24
+- The Title, Artist and Album column widths in the desktop track list can now be changed by dragging the header dividers; double-click a divider to reset it. Widths are saved and included in backups.
+
 ## 0.24.5 — 2026-10-23
 - A podcast marked as played now stays played until you mark it as unplayed by hand; re-listening no longer flips it back to unplayed or in-progress (Mac and Android).
 - Re-listening a played episode still saves the resume position, which resets to 0 when it finishes.
