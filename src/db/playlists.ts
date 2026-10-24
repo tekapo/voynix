@@ -1,5 +1,6 @@
 import { BatchOpts, getDb } from "./core";
 import { chunk } from "../sync";
+import { batchExecute } from "./batch";
 import { TRACK_COLUMNS_WITH_STATS } from "./tracks";
 import { Playlist, SmartRules, Track, TrackKind } from "../types";
 import { parseSmartRules, serializeSmartRules } from "../smartPlaylist";
@@ -182,18 +183,45 @@ export async function deleteOrphanedTracksUnder(folderPath: string) {
 export async function addTracksToPlaylist(playlistId: string, tracks: Track[], defaultKind: TrackKind = 'music') {
     const db = await getDb();
 
-    for (const track of tracks) {
-        // Ensure track exists in DB. favorite / lyrics / kind / play_state are
-        // deliberately NOT in the DO UPDATE set — a rescan must not clobber what
-        // the user set by hand. added_at is only set on INSERT (not in the DO
-        // UPDATE SET) so a rescan of an already-known file keeps its original
-        // "Recently Added" date instead of jumping to the top on every rescan.
-        // genre/year/album_artist/composer and extra_tags_read DO update on a
-        // rescan (unlike the user-editable fields above) — they're read fresh
-        // from the file's tags every time, same as title/artist/album.
-        await db.execute(`
+    // One multi-row statement per chunk, not one IPC round-trip + fsync per track
+    // (a 3,000-track folder scan used to be 3,000 awaited executes).
+    // Ensure tracks exist in DB. favorite / lyrics / kind / play_state are
+    // deliberately NOT in the DO UPDATE set — a rescan must not clobber what
+    // the user set by hand. added_at is only set on INSERT (not in the DO
+    // UPDATE SET) so a rescan of an already-known file keeps its original
+    // "Recently Added" date instead of jumping to the top on every rescan.
+    // genre/year/album_artist/composer and extra_tags_read DO update on a
+    // rescan (unlike the user-editable fields above) — they're read fresh
+    // from the file's tags every time, same as title/artist/album.
+    const addedAt = Date.now();
+    await batchExecute(db, {
+        rows: tracks,
+        cols: 19,
+        perChunk: 50, // 50 * 19 = 950 params
+        toParams: track => [
+            track.id,
+            track.title,
+            track.artist || null,
+            track.album || null,
+            track.file_path,
+            track.file_name,
+            track.duration || null,
+            track.lyrics || null,
+            track.track_key || null,
+            track.content_hash || null,
+            track.kind || defaultKind,
+            track.disc_no ?? null,
+            track.track_no ?? null,
+            addedAt,
+            track.genre || null,
+            track.year ?? null,
+            track.album_artist || null,
+            track.composer || null,
+            track.extra_tags_read ?? 0,
+        ],
+        sql: tuples => `
           INSERT INTO tracks (id, title, artist, album, file_path, file_name, duration, lyrics, track_key, content_hash, kind, disc_no, track_no, added_at, genre, year, album_artist, composer, extra_tags_read)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+          VALUES ${tuples}
           ON CONFLICT(file_path) DO UPDATE SET
             title = excluded.title,
             artist = excluded.artist,
@@ -208,28 +236,8 @@ export async function addTracksToPlaylist(playlistId: string, tracks: Track[], d
             album_artist = excluded.album_artist,
             composer = excluded.composer,
             extra_tags_read = excluded.extra_tags_read
-        `, [
-            track.id,
-            track.title,
-            track.artist || null,
-            track.album || null,
-            track.file_path,
-            track.file_name,
-            track.duration || null,
-            track.lyrics || null,
-            track.track_key || null,
-            track.content_hash || null,
-            track.kind || defaultKind,
-            track.disc_no ?? null,
-            track.track_no ?? null,
-            Date.now(),
-            track.genre || null,
-            track.year ?? null,
-            track.album_artist || null,
-            track.composer || null,
-            track.extra_tags_read ?? 0,
-        ]);
-    }
+        `,
+    });
 
     await linkTracksToPlaylist(playlistId, tracks.map(t => t.id));
 }
@@ -246,13 +254,16 @@ export async function linkTracksToPlaylist(playlistId: string, trackIds: string[
     if (trackIds.length === 0) return;
     const db = await getDb();
     const result: any[] = await db.select("SELECT MAX(position) as max_pos FROM playlist_tracks WHERE playlist_id = $1", [playlistId]);
-    let currentPos = (result[0].max_pos ?? -1) + 1;
-    for (const trackId of trackIds) {
-        await db.execute(
-            "INSERT OR IGNORE INTO playlist_tracks (playlist_id, track_id, position) VALUES ($1, $2, $3)",
-            [playlistId, trackId, currentPos++]
-        );
-    }
+    const startPos = (result[0].max_pos ?? -1) + 1;
+    // Positions advance per input id, including ones INSERT OR IGNORE skips
+    // (already linked) — same as the old one-statement-per-id loop.
+    await batchExecute(db, {
+        rows: trackIds.map((trackId, i) => [playlistId, trackId, startPos + i]),
+        cols: 3,
+        perChunk: 300, // 300 * 3 = 900 params
+        toParams: row => row,
+        sql: tuples => `INSERT OR IGNORE INTO playlist_tracks (playlist_id, track_id, position) VALUES ${tuples}`,
+    });
 }
 
 export async function clearPlaylistTracks(playlistId: string) {
@@ -265,12 +276,16 @@ export async function clearPlaylistTracks(playlistId: string) {
 // (via playlistOrderBy) stop overriding it with the natural album order.
 export async function setPlaylistTrackOrder(playlistId: string, trackIds: string[]) {
     const db = await getDb();
-    for (let i = 0; i < trackIds.length; i++) {
-        await db.execute(
-            "UPDATE playlist_tracks SET position = $1 WHERE playlist_id = $2 AND track_id = $3",
-            [i, playlistId, trackIds[i]]
-        );
-    }
+    await batchExecute(db, {
+        rows: trackIds.map((trackId, i) => [i, playlistId, trackId]),
+        cols: 3,
+        perChunk: 300, // 300 * 3 = 900 params
+        toParams: row => row,
+        sql: tuples => `
+            UPDATE playlist_tracks SET position = v.column1
+            FROM (VALUES ${tuples}) AS v
+            WHERE playlist_tracks.playlist_id = v.column2 AND playlist_tracks.track_id = v.column3`,
+    });
     await db.execute("UPDATE playlists SET manual_order = 1 WHERE id = $1", [playlistId]);
 }
 

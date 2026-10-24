@@ -37,6 +37,20 @@ class SyncApi {
     private fun base(url: String) = url.trimEnd('/')
 
     /**
+     * The pinned client for the paired peer, built once per pin. Building one
+     * (a fresh SSLContext + socket factory) per call gave every file download
+     * its own connection pool and TLS session cache, so each of a sync's
+     * hundreds of requests paid for a full handshake. Pairing/probe calls that
+     * capture the observed fingerprint still build their own.
+     */
+    @Volatile private var cachedPinned: Pair<String?, OkHttpClient>? = null
+
+    private fun pinned(pin: String?): OkHttpClient {
+        cachedPinned?.takeIf { it.first == pin }?.let { return it.second }
+        return pinnedClient(client, pin).also { cachedPinned = pin to it }
+    }
+
+    /**
      * Cheap liveness/auth check against /api/ping, used to validate a saved peer
      * URL before falling back to mDNS rediscovery. Never throws.
      *
@@ -140,7 +154,7 @@ class SyncApi {
     /** Retries on 503 (Mac still transcoding) for up to ~60s, matching client.rs. */
     suspend fun fetchManifest(url: String, token: String, pin: String?): SyncSnapshotDto {
         val endpoint = "${base(url)}/api/manifest"
-        val pinned = pinnedClient(client, pin)
+        val pinned = pinned(pin)
         repeat(20) { attempt ->
             // The whole response — status check AND body read — must stay
             // inside withContext(IO): a suspend function resumes on its
@@ -171,7 +185,7 @@ class SyncApi {
                 .header("Authorization", "Bearer $token")
                 .post(body)
                 .build()
-            pinnedClient(client, pin).newCall(req).execute().use {
+            pinned(pin).newCall(req).execute().use {
                 if (!it.isSuccessful) throw IOException("Stats push returned ${it.code}")
             }
         }
@@ -215,7 +229,7 @@ class SyncApi {
             .header("Authorization", "Bearer $token")
         if (have > 0) reqBuilder.header("Range", "bytes=$have-")
 
-        pinnedClient(client, pin).newCall(reqBuilder.build()).execute().use { resp ->
+        pinned(pin).newCall(reqBuilder.build()).execute().use { resp ->
             if (resp.code == 416) {
                 part.delete()
                 throw StalePartialDownloadException()
@@ -273,7 +287,7 @@ class SyncApi {
                 .url("${base(url)}/api/album-art/$key")
                 .header("Authorization", "Bearer $token")
                 .build()
-            pinnedClient(client, pin).newCall(req).execute().use { resp ->
+            pinned(pin).newCall(req).execute().use { resp ->
                 if (!resp.isSuccessful) return@withContext false
                 val body = resp.body ?: return@withContext false
                 dest.outputStream().use { out -> body.byteStream().use { input -> input.copyTo(out) } }

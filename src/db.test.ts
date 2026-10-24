@@ -345,11 +345,9 @@ describe("playlist manual ordering", () => {
     it("setPlaylistTrackOrder rewrites position 0..n-1 in the given order and flips manual_order on", async () => {
         await setPlaylistTrackOrder("pl1", ["t3", "t1", "t2"]);
         const updates = fakeDb.execute.mock.calls.filter(c => String(c[0]).includes("SET position"));
-        expect(updates).toEqual([
-            ["UPDATE playlist_tracks SET position = $1 WHERE playlist_id = $2 AND track_id = $3", [0, "pl1", "t3"]],
-            ["UPDATE playlist_tracks SET position = $1 WHERE playlist_id = $2 AND track_id = $3", [1, "pl1", "t1"]],
-            ["UPDATE playlist_tracks SET position = $1 WHERE playlist_id = $2 AND track_id = $3", [2, "pl1", "t2"]],
-        ]);
+        // One batched statement, rows carrying (position, playlist_id, track_id) in the given order.
+        expect(updates).toHaveLength(1);
+        expect(updates[0][1]).toEqual([0, "pl1", "t3", 1, "pl1", "t1", 2, "pl1", "t2"]);
         const flag = fakeDb.execute.mock.calls.find(c => String(c[0]).includes("SET manual_order = 1"));
         expect(flag).toEqual(["UPDATE playlists SET manual_order = 1 WHERE id = $1", ["pl1"]]);
     });
