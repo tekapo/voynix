@@ -1,6 +1,7 @@
 package com.voynix.sync
 
 import android.content.Context
+import androidx.room.withTransaction
 import com.voynix.data.db.PlayEventEntity
 import com.voynix.data.db.SettingEntity
 import com.voynix.data.db.VoynixDatabase
@@ -62,12 +63,11 @@ class SyncEngine(
             }
         val plan = diffTracks(manifestTracks, localTracks)
 
-        var deleted = 0
-        for (t in plan.toDelete) {
-            runCatching { File(t.filePath).delete() }
-            db.trackDao().deleteMirrorTrack(t.id)
-            deleted++
+        for (t in plan.toDelete) runCatching { File(t.filePath).delete() }
+        db.withTransaction {
+            for (t in plan.toDelete) db.trackDao().deleteMirrorTrack(t.id)
         }
+        val deleted = plan.toDelete.size
 
         // One download per track key: two workers on the same key would share one `.part` file.
         val toDownload = (plan.toAdd + plan.toRefetch).distinctBy { it.trackKey }
@@ -92,8 +92,12 @@ class SyncEngine(
         errors.addAll(downloadErrors)
 
         onProgress(SyncProgress("reconcile", "Updating metadata"))
-        for (t in plan.toUpdateMeta) {
-            db.trackDao().updateMirrorTrackMeta(t.trackKey, t.title, t.artist, t.album, t.duration, t.kind.toWire(), t.discNo, t.trackNo, t.addedAt)
+        // One transaction per batch: each separate write otherwise commits (and
+        // re-triggers the library Flows' full re-query) on its own.
+        db.withTransaction {
+            for (t in plan.toUpdateMeta) {
+                db.trackDao().updateMirrorTrackMeta(t.trackKey, t.title, t.artist, t.album, t.duration, t.kind.toWire(), t.discNo, t.trackNo, t.addedAt)
+            }
         }
 
         applyManifestStats(manifestTracks, snapshot.playEvents)
@@ -182,7 +186,7 @@ class SyncEngine(
     }
 
     /** Applies the manifest's per-track favorite/play_state (LWW) and its play_events log (grow-only union). */
-    private suspend fun applyManifestStats(manifestTracks: List<ManifestTrack>, macEvents: List<PlayEventDto>) {
+    private suspend fun applyManifestStats(manifestTracks: List<ManifestTrack>, macEvents: List<PlayEventDto>) = db.withTransaction {
         for (t in manifestTracks) {
             if (t.favoriteUpdatedAt != null) {
                 db.trackDao().applyFavoriteIfNewer(t.trackKey, t.favorite, t.favoriteUpdatedAt)
@@ -199,14 +203,14 @@ class SyncEngine(
     }
 
     /** LWW merge of the manifest's per-album cover overrides — mirrors db.ts's applyAlbumCovers. */
-    private suspend fun applyAlbumCovers(covers: List<AlbumCoverDto>) {
+    private suspend fun applyAlbumCovers(covers: List<AlbumCoverDto>) = db.withTransaction {
         for (c in covers) {
             db.albumCoverDao().upsertIfNewer(c.artist, c.album, c.imageDataUri, c.updatedAt)
         }
     }
 
     /** LWW merge of the manifest's per-artist image overrides — mirrors db.ts's applyArtistCovers. */
-    private suspend fun applyArtistCovers(covers: List<ArtistCoverDto>) {
+    private suspend fun applyArtistCovers(covers: List<ArtistCoverDto>) = db.withTransaction {
         for (c in covers) {
             db.artistCoverDao().upsertIfNewer(c.artist, c.imageDataUri, c.updatedAt)
         }

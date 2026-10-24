@@ -21,7 +21,14 @@ jobs:
           cache: npm
 
       - run: npm ci
+      - run: npx tsc --noEmit
       - run: npm test
+
+      # The Echo skill's Lambda (signing / token tests); its own package, no lockfile.
+      - run: npm install --no-package-lock
+        working-directory: alexa-skill/lambda
+      - run: npm test
+        working-directory: alexa-skill/lambda
 
   rust:
     # macOS: the transcoder shells out to afconvert and the app links AppKit.

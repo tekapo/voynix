@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.26.1 — 2026-10-24
+- Adding tracks to a playlist and drag-reordering now write in batches, so large folder scans and reorders are much faster; Android sync reuses one pinned TLS client and commits its metadata/stats merges in single transactions.
+- The sync server now times out stalled TLS handshakes and closes open connections when stopped; the webview's file-system permission no longer allows writing anywhere (backup export still writes to the path picked in the save dialog). CI now also runs `tsc` and the Alexa skill tests.
+
 ## 0.26.0 — 2026-10-24
 - Added a light theme for the desktop app. Choose System, Light or Dark in the new General tab of Settings (the language setting moved there too); System follows the macOS appearance.
 - Context menus now use an inset, rounded highlight, and low-contrast text was darkened to meet 4.5:1 contrast. A higher-contrast palette is used when macOS Increase Contrast is on.

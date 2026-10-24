@@ -25,7 +25,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::net::TcpListener;
-use tokio::sync::oneshot;
+use tokio::sync::{oneshot, watch};
 use tower::ServiceExt;
 use tower_http::services::ServeFile;
 
@@ -278,7 +278,8 @@ struct PairPrompt {
 }
 
 pub struct SyncServer {
-    shutdown_tx: Option<oneshot::Sender<()>>,
+    /// Flips to `true` on stop: ends the accept loop and gracefully closes open connections.
+    shutdown_tx: Option<watch::Sender<bool>>,
     /// Set for the duration of `start()`'s async setup (socket bind, TLS,
     /// mDNS publish). `shutdown_tx.is_some()` alone can't guard against two
     /// concurrent `start()` calls (e.g. React StrictMode double-invoking the
@@ -529,7 +530,7 @@ pub async fn start(
     let identity = crate::tls::load_or_create(&tls_identity_dir(app.as_ref()), &ip)?;
     let acceptor = tokio_rustls::TlsAcceptor::from(identity.config);
 
-    let (tx, rx) = oneshot::channel();
+    let (tx, rx) = watch::channel(false);
     let router = build_router(state.clone());
     let ip_check_state = state.clone();
 
@@ -549,22 +550,15 @@ pub async fn start(
         ip_check.tick().await; // first tick fires immediately; skip it
         loop {
             tokio::select! {
-                _ = &mut rx => break,
+                _ = rx.changed() => break,
                 accepted = listener.accept() => {
                     let Ok((stream, _)) = accepted else { continue };
                     let acceptor = acceptor.clone();
                     let router = router.clone();
+                    let stop = rx.clone();
                     // A single connection's handshake/serve failure must not
                     // kill the accept loop for every other client.
-                    tokio::spawn(async move {
-                        let Ok(tls_stream) = acceptor.accept(stream).await else { return };
-                        let service = hyper_util::service::TowerToHyperService::new(router);
-                        let _ = hyper_util::server::conn::auto::Builder::new(
-                            hyper_util::rt::TokioExecutor::new(),
-                        )
-                        .serve_connection(hyper_util::rt::TokioIo::new(tls_stream), service)
-                        .await;
-                    });
+                    tokio::spawn(serve_connection(stream, acceptor, router, stop));
                 }
                 _ = ip_check.tick() => {
                     let current_ip = get_local_ip().await;
@@ -631,10 +625,42 @@ fn shutdown_mdns_blocking(daemon: ServiceDaemon) {
     }
 }
 
+/// A peer that connects and never finishes the TLS handshake, or never sends a
+/// request's headers, must not hold a task and a file descriptor forever.
+const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
+const HEADER_READ_TIMEOUT: Duration = Duration::from_secs(30);
+/// How long an in-flight response (e.g. a file download) may finish after the server is stopped.
+const SHUTDOWN_GRACE: Duration = Duration::from_secs(5);
+
+async fn serve_connection(
+    stream: tokio::net::TcpStream,
+    acceptor: tokio_rustls::TlsAcceptor,
+    router: Router,
+    mut stop: watch::Receiver<bool>,
+) {
+    let Ok(Ok(tls)) = tokio::time::timeout(HANDSHAKE_TIMEOUT, acceptor.accept(stream)).await else { return };
+    let service = hyper_util::service::TowerToHyperService::new(router);
+    let mut builder = hyper_util::server::conn::auto::Builder::new(hyper_util::rt::TokioExecutor::new());
+    builder
+        .http1()
+        .timer(hyper_util::rt::TokioTimer::new())
+        .header_read_timeout(HEADER_READ_TIMEOUT);
+    let conn = builder.serve_connection(hyper_util::rt::TokioIo::new(tls), service);
+    tokio::pin!(conn);
+    tokio::select! {
+        _ = conn.as_mut() => {}
+        // Stopping the server also ends connections a phone left open (keep-alive).
+        _ = stop.changed() => {
+            conn.as_mut().graceful_shutdown();
+            let _ = tokio::time::timeout(SHUTDOWN_GRACE, conn).await;
+        }
+    }
+}
+
 pub async fn stop(state: Shared) -> Result<(), String> {
     let mut server = state.lock().unwrap();
     if let Some(tx) = server.shutdown_tx.take() {
-        let _ = tx.send(());
+        let _ = tx.send(true);
     }
     server.port = 0;
     server.ip = String::new();
@@ -1286,17 +1312,17 @@ mod tests {
             assert_eq!(inbox[0].play_states[0].resume_position, 61.5);
         }
 
-        // After stop, the manifest is no longer served.
+        // After stop, the keep-alive connection reqwest pooled above is closed
+        // too (graceful shutdown), and the listener is gone: the request must
+        // fail outright, not be answered by a lingering connection.
         stop(state.clone()).await.unwrap();
+        tokio::time::sleep(Duration::from_millis(300)).await;
         let after = http
             .get(format!("{root}/api/manifest"))
             .bearer_auth("tok-123")
             .send()
             .await;
-        // A refused connection is also fine; only a 200 would be wrong.
-        if let Ok(r) = after {
-            assert_ne!(r.status(), reqwest::StatusCode::OK);
-        }
+        assert!(after.is_err(), "server still answered after stop(): {:?}", after.map(|r| r.status()));
     }
 
     #[tokio::test]
