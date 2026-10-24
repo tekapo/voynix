@@ -127,10 +127,19 @@ pub(crate) fn echo_needs_transcode(ext: &str, is_alac: bool) -> bool {
 /// the server surfaces this via `ServerStatus::transcode_available` so the UI
 /// can warn instead of silently producing unplayable files.
 pub fn transcode_available() -> bool {
-    std::process::Command::new("afconvert")
-        .arg("-h")
-        .output()
-        .is_ok()
+    // A success is remembered: the status endpoints call this on every poll, and
+    // each probe spawns a process. A failure is probed again next time, so a
+    // transient one doesn't stick for the life of the app. The lock is held across
+    // the probe so concurrent first callers don't each spawn one.
+    static AVAILABLE: std::sync::Mutex<bool> = std::sync::Mutex::new(false);
+    let mut available = AVAILABLE.lock().unwrap();
+    if !*available {
+        *available = std::process::Command::new("afconvert")
+            .arg("-h")
+            .output()
+            .is_ok();
+    }
+    *available
 }
 
 /// True when the file's audio codec is Apple Lossless. Probed with symphonia

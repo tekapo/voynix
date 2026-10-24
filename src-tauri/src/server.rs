@@ -19,13 +19,14 @@ use local_ip_address::local_ip;
 use mdns_sd::{ServiceDaemon, ServiceInfo};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::net::IpAddr;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::net::TcpListener;
-use tokio::sync::{oneshot, watch};
+use tokio::sync::{oneshot, watch, Semaphore};
 use tower::ServiceExt;
 use tower_http::services::ServeFile;
 
@@ -174,6 +175,13 @@ pub struct IncomingStats {
     pub play_states: Vec<PlayStateUpdate>,
 }
 
+impl IncomingStats {
+    /// Counts an empty push as 1, so a stream of them can't grow the inbox past its cap.
+    fn entry_count(&self) -> usize {
+        (self.events.len() + self.favorites.len() + self.play_states.len()).max(1)
+    }
+}
+
 /// mDNS service type the phone browses for to find a Mac without typing an IP.
 pub const MDNS_SERVICE_TYPE: &str = "_voynix._tcp.local.";
 
@@ -292,6 +300,8 @@ pub struct SyncServer {
     pub ip: String,
     token: String,
     snapshot: Option<SyncSnapshot>,
+    /// `track_key -> file_path`, rebuilt with the snapshot so file requests don't scan every track.
+    track_paths: HashMap<String, String>,
     inbox: Vec<IncomingStats>,
     activity: Activity,
     /// Live mDNS advertisement; dropped/shut down when the server stops.
@@ -334,6 +344,7 @@ impl SyncServer {
             ip: String::new(),
             token: String::new(),
             snapshot: None,
+            track_paths: HashMap::new(),
             inbox: Vec::new(),
             activity: Activity::default(),
             mdns: None,
@@ -345,6 +356,13 @@ impl SyncServer {
     }
 
     pub fn set_snapshot(&mut self, snapshot: SyncSnapshot) {
+        self.track_paths.clear();
+        for t in &snapshot.tracks {
+            // First wins on a duplicate key, like the linear search this index replaced.
+            self.track_paths
+                .entry(t.track_key.clone())
+                .or_insert_with(|| t.file_path.clone());
+        }
         self.snapshot = Some(snapshot);
     }
 
@@ -548,17 +566,26 @@ pub async fn start(
         // simplest thing that works.
         let mut ip_check = tokio::time::interval(std::time::Duration::from_secs(15));
         ip_check.tick().await; // first tick fires immediately; skip it
+        let connections = Arc::new(Semaphore::new(MAX_CONNECTIONS));
+        let per_ip: IpCounts = Arc::default();
         loop {
             tokio::select! {
                 _ = rx.changed() => break,
                 accepted = listener.accept() => {
-                    let Ok((stream, _)) = accepted else { continue };
+                    let Ok((stream, addr)) = accepted else { continue };
+                    // Over a cap: drop the socket instead of queueing, so idle
+                    // connections can't pile up; a real client just reconnects.
+                    let Some(ip_slot) = admit_ip(&per_ip, addr.ip()) else { continue };
+                    let Ok(permit) = connections.clone().try_acquire_owned() else { continue };
                     let acceptor = acceptor.clone();
                     let router = router.clone();
                     let stop = rx.clone();
                     // A single connection's handshake/serve failure must not
                     // kill the accept loop for every other client.
-                    tokio::spawn(serve_connection(stream, acceptor, router, stop));
+                    tokio::spawn(async move {
+                        let _held = (permit, ip_slot);
+                        serve_connection(stream, acceptor, router, stop).await;
+                    });
                 }
                 _ = ip_check.tick() => {
                     let current_ip = get_local_ip().await;
@@ -629,8 +656,47 @@ fn shutdown_mdns_blocking(daemon: ServiceDaemon) {
 /// request's headers, must not hold a task and a file descriptor forever.
 const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
 const HEADER_READ_TIMEOUT: Duration = Duration::from_secs(30);
+/// Concurrent connections the sync server serves; extra ones are dropped on accept.
+const MAX_CONNECTIONS: usize = 64;
+/// Per client address, so one device on the LAN can't use up all of `MAX_CONNECTIONS`.
+/// The Android client downloads four files at a time.
+const MAX_CONNECTIONS_PER_IP: usize = 16;
+/// Cap on queued stats entries (events + favorites + play states) awaiting the frontend.
+const MAX_INBOX_ENTRIES: usize = 500_000;
+const MAX_PEERS: usize = 32;
+const MAX_DEVICE_ID_LEN: usize = 128;
 /// How long an in-flight response (e.g. a file download) may finish after the server is stopped.
 const SHUTDOWN_GRACE: Duration = Duration::from_secs(5);
+
+type IpCounts = Arc<Mutex<HashMap<IpAddr, usize>>>;
+
+/// Holds one of an address's `MAX_CONNECTIONS_PER_IP` slots until dropped.
+struct PerIpGuard {
+    counts: IpCounts,
+    ip: IpAddr,
+}
+
+impl Drop for PerIpGuard {
+    fn drop(&mut self) {
+        let mut counts = self.counts.lock().unwrap();
+        if let Some(n) = counts.get_mut(&self.ip) {
+            *n -= 1;
+            if *n == 0 {
+                counts.remove(&self.ip);
+            }
+        }
+    }
+}
+
+fn admit_ip(counts: &IpCounts, ip: IpAddr) -> Option<PerIpGuard> {
+    let mut map = counts.lock().unwrap();
+    let n = map.entry(ip).or_insert(0);
+    if *n >= MAX_CONNECTIONS_PER_IP {
+        return None;
+    }
+    *n += 1;
+    Some(PerIpGuard { counts: counts.clone(), ip })
+}
 
 async fn serve_connection(
     stream: tokio::net::TcpStream,
@@ -674,6 +740,7 @@ pub async fn stop(state: Shared) -> Result<(), String> {
     server.fingerprint = String::new();
     // Don't serve a stale manifest or replay stale inbox items after a restart.
     server.snapshot = None;
+    server.track_paths.clear();
     server.inbox.clear();
     server.activity = Activity::default();
     Ok(())
@@ -734,13 +801,7 @@ async fn get_manifest(State(state): State<Shared>) -> Response {
 }
 
 fn file_path_for(state: &Shared, key: &str) -> Option<String> {
-    let s = state.lock().unwrap();
-    s.snapshot.as_ref().and_then(|snap| {
-        snap.tracks
-            .iter()
-            .find(|t| t.track_key == key)
-            .map(|t| t.file_path.clone())
-    })
+    state.lock().unwrap().track_paths.get(key).cloned()
 }
 
 async fn get_file(
@@ -804,9 +865,23 @@ async fn get_album_art(State(state): State<Shared>, AxumPath(key): AxumPath<Stri
 }
 
 async fn post_stats(State(state): State<Shared>, Json(payload): Json<IncomingStats>) -> Response {
+    if payload.device_id.len() > MAX_DEVICE_ID_LEN {
+        return (StatusCode::BAD_REQUEST, "device_id too long").into_response();
+    }
     let mut s = state.lock().unwrap();
+    // The phone keeps its un-acked events and resends them on a later sync, so
+    // refusing here defers the data rather than losing it.
+    let queued: usize = s.inbox.iter().map(IncomingStats::entry_count).sum();
+    if queued + payload.entry_count() > MAX_INBOX_ENTRIES {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            [(header::RETRY_AFTER, "5")],
+            "Inbox full",
+        )
+            .into_response();
+    }
     s.activity.last_stats_at = Some(now_ms());
-    if !s.activity.peers.contains(&payload.device_id) {
+    if s.activity.peers.len() < MAX_PEERS && !s.activity.peers.contains(&payload.device_id) {
         s.activity.peers.push(payload.device_id.clone());
     }
     s.inbox.push(payload);
@@ -1112,6 +1187,97 @@ mod tests {
         assert_eq!(g.activity.peers, vec!["phone-1".to_string()]);
         assert!(g.activity.last_stats_at.is_some());
         assert_eq!(g.take_inbox().len(), 1);
+    }
+
+    async fn post_stats_body(app: Router, body: String) -> StatusCode {
+        app.oneshot(
+            Request::post("/api/sync/stats")
+                .header("authorization", "Bearer secret")
+                .header("content-type", "application/json")
+                .body(Body::from(body))
+                .unwrap(),
+        )
+        .await
+        .unwrap()
+        .status()
+    }
+
+    #[tokio::test]
+    async fn stats_endpoint_rejects_when_inbox_is_full() {
+        let state = serving("secret", sample_snapshot());
+        state.lock().unwrap().inbox.push(IncomingStats {
+            device_id: "phone-1".into(),
+            events: vec![IncomingEvent { track_key: "k".into(), played_at: 1 }; MAX_INBOX_ENTRIES],
+            favorites: vec![],
+            play_states: vec![],
+        });
+        let app = build_router(state.clone());
+        let body = r#"{"device_id":"phone-1","events":[{"track_key":"k1","played_at":9}]}"#;
+        assert_eq!(post_stats_body(app, body.into()).await, StatusCode::SERVICE_UNAVAILABLE);
+        assert_eq!(state.lock().unwrap().inbox.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn peers_list_is_capped_but_stats_still_queue() {
+        let state = serving("secret", sample_snapshot());
+        for i in 0..=MAX_PEERS {
+            let app = build_router(state.clone());
+            let body = format!(r#"{{"device_id":"phone-{i}","events":[]}}"#);
+            assert_eq!(post_stats_body(app, body).await, StatusCode::OK);
+        }
+        let mut g = state.lock().unwrap();
+        assert_eq!(g.activity.peers.len(), MAX_PEERS);
+        assert_eq!(g.take_inbox().len(), MAX_PEERS + 1);
+    }
+
+    #[tokio::test]
+    async fn stats_rejects_an_overlong_device_id() {
+        let state = serving("secret", sample_snapshot());
+        let app = build_router(state.clone());
+        let body = format!(r#"{{"device_id":"{}","events":[]}}"#, "x".repeat(MAX_DEVICE_ID_LEN + 1));
+        assert_eq!(post_stats_body(app, body).await, StatusCode::BAD_REQUEST);
+        assert!(state.lock().unwrap().inbox.is_empty());
+    }
+
+    #[test]
+    fn an_empty_push_still_counts_toward_the_inbox_cap() {
+        let empty = IncomingStats { device_id: "p".into(), events: vec![], favorites: vec![], play_states: vec![] };
+        assert_eq!(empty.entry_count(), 1);
+    }
+
+    #[test]
+    fn duplicate_track_keys_serve_the_first_file() {
+        let mut snap = sample_snapshot();
+        let mut dup = snap.tracks[0].clone();
+        dup.file_path = "/other/copy.mp3".into();
+        let first = snap.tracks[0].file_path.clone();
+        snap.tracks.push(dup);
+        let mut srv = SyncServer::new();
+        srv.set_snapshot(snap);
+        assert_eq!(srv.track_paths.get("k1"), Some(&first));
+    }
+
+    #[test]
+    fn per_ip_cap_admits_up_to_the_limit_and_frees_on_drop() {
+        let counts: IpCounts = Arc::default();
+        let a: IpAddr = "192.168.0.2".parse().unwrap();
+        let b: IpAddr = "192.168.0.3".parse().unwrap();
+        let mut held: Vec<_> = (0..MAX_CONNECTIONS_PER_IP).map(|_| admit_ip(&counts, a).unwrap()).collect();
+        assert!(admit_ip(&counts, a).is_none());
+        assert!(admit_ip(&counts, b).is_some(), "another address is unaffected");
+        held.pop();
+        assert!(admit_ip(&counts, a).is_some());
+        drop(held);
+        assert!(counts.lock().unwrap().is_empty(), "released slots leave no entries behind");
+    }
+
+    #[test]
+    fn replacing_the_snapshot_replaces_the_path_index() {
+        let mut srv = SyncServer::new();
+        srv.set_snapshot(sample_snapshot());
+        assert!(srv.track_paths.contains_key("k1"));
+        srv.set_snapshot(SyncSnapshot::default());
+        assert!(srv.track_paths.is_empty());
     }
 
     /// Full round-trip over a real TCP socket: start the server, then drive it
