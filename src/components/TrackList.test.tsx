@@ -429,3 +429,99 @@ describe("TrackList now-playing indicator (unvirtualized)", () => {
         expect(container.querySelector(".now-playing-rail")).toBeNull();
     });
 });
+
+describe("TrackList column resizing", () => {
+    // jsdom has no PointerEvent, and testing-library's fallback Event drops
+    // clientX/button — a MouseEvent subclass keeps them.
+    const OriginalPointerEvent = globalThis.PointerEvent;
+    beforeEach(() => {
+        class FakePointerEvent extends MouseEvent {}
+        globalThis.PointerEvent = FakePointerEvent as unknown as typeof PointerEvent;
+    });
+    afterEach(() => {
+        globalThis.PointerEvent = OriginalPointerEvent;
+    });
+
+    const widthOf = (el: Element, w: number) => {
+        el.getBoundingClientRect = () => ({ width: w, height: 20, top: 0, left: 0, right: w, bottom: 20, x: 0, y: 0, toJSON: () => ({}) });
+    };
+    const drag = (handle: Element, from: number, to: number) => {
+        fireEvent.pointerDown(handle, { clientX: from, button: 0 });
+        fireEvent.pointerMove(window, { clientX: to });
+        fireEvent.pointerUp(window);
+    };
+
+    it("shows no handles unless onColumnWidthsChange is given", () => {
+        const { container } = render(<TrackList {...base} />);
+        expect(container.querySelector(".col-resizer")).toBeNull();
+    });
+
+    it("has handles on title and artist, and on album only when Path is shown", () => {
+        const { container, rerender } = render(<TrackList {...base} onColumnWidthsChange={noop} />);
+        expect(container.querySelectorAll(".col-resizer")).toHaveLength(2);
+        rerender(<TrackList {...base} showPath onColumnWidthsChange={noop} />);
+        expect(container.querySelectorAll(".col-resizer")).toHaveLength(3);
+    });
+
+    it("commits the dragged width once on release and shows it live", () => {
+        const onChange = vi.fn();
+        const { container } = render(<TrackList {...base} onColumnWidthsChange={onChange} />);
+        widthOf(container.querySelector(".th-title")!, 300);
+        widthOf(container.querySelector(".th-flex")!, 200);
+        const handle = container.querySelector(".th-title .col-resizer")!;
+        fireEvent.pointerDown(handle, { clientX: 100, button: 0 });
+        fireEvent.pointerMove(window, { clientX: 150 });
+        expect((container.firstChild as HTMLElement).style.getPropertyValue("--col-title")).toBe("350px");
+        expect(onChange).not.toHaveBeenCalled();
+        fireEvent.pointerUp(window);
+        expect(onChange).toHaveBeenCalledTimes(1);
+        expect(onChange).toHaveBeenCalledWith({ title: 350 });
+    });
+
+    it("clamps to the minimum and to what leaves the flex column its minimum", () => {
+        const onChange = vi.fn();
+        const { container } = render(<TrackList {...base} onColumnWidthsChange={onChange} />);
+        widthOf(container.querySelector(".th-title")!, 300);
+        widthOf(container.querySelector(".th-flex")!, 200);
+        const handle = container.querySelector(".th-title .col-resizer")!;
+        drag(handle, 100, -1000);
+        expect(onChange).toHaveBeenLastCalledWith({ title: 60 });
+        // The header cells remount on each render (SortHeader is re-created), so re-mock.
+        widthOf(container.querySelector(".th-title")!, 300);
+        widthOf(container.querySelector(".th-flex")!, 200);
+        drag(container.querySelector(".th-title .col-resizer")!, 100, 5000);
+        expect(onChange).toHaveBeenLastCalledWith({ title: 440 });
+    });
+
+    it("does not commit a plain click", () => {
+        const onChange = vi.fn();
+        const { container } = render(<TrackList {...base} onColumnWidthsChange={onChange} />);
+        const handle = container.querySelector(".th-title .col-resizer")!;
+        fireEvent.pointerDown(handle, { clientX: 10, button: 0 });
+        fireEvent.pointerUp(window);
+        expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it("resets a column on double-click without triggering sort", () => {
+        const onChange = vi.fn();
+        const onSort = vi.fn();
+        const { container } = render(<TrackList {...base} columnWidths={{ title: 300, artist: 120 }} onSort={onSort} onColumnWidthsChange={onChange} />);
+        const handle = container.querySelector(".th-title .col-resizer")!;
+        fireEvent.click(handle);
+        fireEvent.doubleClick(handle);
+        expect(onSort).not.toHaveBeenCalled();
+        expect(onChange).toHaveBeenCalledWith({ artist: 120 });
+    });
+
+    it("applies saved widths as CSS variables, with the flex column as minmax", () => {
+        const { container } = render(<TrackList {...base} columnWidths={{ title: 300, album: 999 }} onColumnWidthsChange={noop} />);
+        const style = (container.firstChild as HTMLElement).style;
+        expect(style.getPropertyValue("--col-title")).toBe("300px");
+        expect(style.getPropertyValue("--col-album")).toBe("minmax(60px, 1fr)");
+    });
+
+    it("leaves the default proportions alone when nothing is customised", () => {
+        const { container } = render(<TrackList {...base} columnWidths={{}} onColumnWidthsChange={noop} />);
+        expect((container.firstChild as HTMLElement).getAttribute("style")).toBeNull();
+    });
+});

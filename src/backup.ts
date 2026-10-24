@@ -18,6 +18,7 @@ export const BACKUP_VERSION = 2;
 export const BACKUP_SETTING_KEYS = [
     "ui_language",
     "show_path_column",
+    "track_column_widths",
     "podcast_no_shuffle",
     "podcast_speed",
     "lyrics_panel_open",
