@@ -18,9 +18,18 @@ import com.voynix.data.db.VoynixDatabase
 import com.voynix.library.LibraryViewModel
 import com.voynix.library.ViewMode
 import com.voynix.lyrics.LrclibApi
+import com.voynix.playback.ALL_SONGS_ID
+import com.voynix.playback.FAVORITES_ID
+import com.voynix.playback.MOST_PLAYED_ID
 import com.voynix.playback.PlayerController
+import com.voynix.playback.RECENTLY_ADDED_ID
+import com.voynix.playback.RECENTLY_PLAYED_ID
+import com.voynix.playback.albumFolderId
+import com.voynix.playback.artistFolderId
+import com.voynix.playback.playlistFolderId
 import com.voynix.playback.PlayerUiState
 import com.voynix.sync.SyncViewModel
+import com.voynix.ui.components.playSourceLabel
 import com.voynix.ui.home.HomeScreen
 import com.voynix.ui.library.NameListScreen
 import com.voynix.ui.lyrics.LyricsScreen
@@ -82,6 +91,7 @@ fun VoynixNavGraph(
                 vm = vm, player = player, playerUiState = playerUiState, albumArt = albumArt,
                 onBack = back,
                 onSelectLibrary = { vm.selectLibrary(ViewMode.ALL_SONGS) },
+                sourceId = ALL_SONGS_ID,
             )
         }
 
@@ -103,6 +113,7 @@ fun VoynixNavGraph(
                 vm = vm, player = player, playerUiState = playerUiState, albumArt = albumArt,
                 onBack = back,
                 onSelectLibrary = { vm.selectLibrary(ViewMode.ARTISTS); vm.selectFilter(route.name) },
+                sourceId = artistFolderId(route.name),
                 collectionMeta = { tracks -> collectionMeta(tracks, metaTemplate) },
             )
         }
@@ -124,6 +135,7 @@ fun VoynixNavGraph(
                 vm = vm, player = player, playerUiState = playerUiState, albumArt = albumArt,
                 onBack = back,
                 onSelectLibrary = { vm.selectLibrary(ViewMode.ALBUMS); vm.selectFilter(route.name) },
+                sourceId = albumFolderId(route.name),
                 collectionMeta = { tracks -> collectionMeta(tracks, metaTemplate) },
             )
         }
@@ -134,6 +146,7 @@ fun VoynixNavGraph(
                 vm = vm, player = player, playerUiState = playerUiState, albumArt = albumArt,
                 onBack = back,
                 onSelectLibrary = { vm.selectLibrary(ViewMode.FAVORITES) },
+                sourceId = FAVORITES_ID,
             )
         }
 
@@ -143,6 +156,7 @@ fun VoynixNavGraph(
                 vm = vm, player = player, playerUiState = playerUiState, albumArt = albumArt,
                 onBack = back,
                 onSelectLibrary = { vm.selectLibrary(ViewMode.MOST_PLAYED) },
+                sourceId = MOST_PLAYED_ID,
             )
         }
 
@@ -152,6 +166,7 @@ fun VoynixNavGraph(
                 vm = vm, player = player, playerUiState = playerUiState, albumArt = albumArt,
                 onBack = back,
                 onSelectLibrary = { vm.selectLibrary(ViewMode.RECENTLY_ADDED) },
+                sourceId = RECENTLY_ADDED_ID,
             )
         }
 
@@ -161,6 +176,7 @@ fun VoynixNavGraph(
                 vm = vm, player = player, playerUiState = playerUiState, albumArt = albumArt,
                 onBack = back,
                 onSelectLibrary = { vm.selectLibrary(ViewMode.RECENTLY_PLAYED) },
+                sourceId = RECENTLY_PLAYED_ID,
             )
         }
 
@@ -173,6 +189,7 @@ fun VoynixNavGraph(
                 vm = vm, player = player, playerUiState = playerUiState, albumArt = albumArt,
                 onBack = back,
                 onSelectLibrary = { vm.selectPlaylist(route.id) },
+                sourceId = playlistFolderId(route.id),
                 collectionMeta = { tracks -> collectionMeta(tracks, metaTemplate) },
             )
         }
@@ -184,8 +201,14 @@ fun VoynixNavGraph(
             val freshTrack = playerUiState.currentTrack?.let { c ->
                 allTracks.find { it.track.id == c.id }?.track ?: c
             }
+            val playlists by vm.playlists.collectAsState()
+            val sourceRoute = routeOfSource(playerUiState.sourceId)
             NowPlayingScreen(
                 state = playerUiState.copy(currentTrack = freshTrack),
+                sourceLabel = playSourceLabel(playerUiState.sourceId, playlists),
+                onOpenSource = sourceRoute?.let { route ->
+                    { navController.navigate(route) { launchSingleTop = true } }
+                },
                 player = player,
                 albumArt = albumArt,
                 onBack = back,

@@ -1,5 +1,6 @@
 package com.voynix.ui.nowplaying
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -83,6 +84,10 @@ fun NowPlayingScreen(
     state: PlayerUiState,
     player: PlayerController,
     albumArt: AlbumArtResolver,
+    // Where the queue came from ("playing from …"); null hides it. Tapping it
+    // opens that list when [onOpenSource] is non-null.
+    sourceLabel: String?,
+    onOpenSource: (() -> Unit)?,
     onBack: () -> Unit,
     onOpenLyrics: () -> Unit,
     onToggleFavorite: () -> Unit,
@@ -119,12 +124,30 @@ fun NowPlayingScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    if (sleepTimerDeadline != null) {
-                        Text(
-                            formatSleepTimerRemaining(remainingMs),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                    Column(
+                        modifier = Modifier.clickable(enabled = onOpenSource != null && sourceLabel != null) { onOpenSource?.invoke() },
+                    ) {
+                        if (sourceLabel != null) {
+                            Text(
+                                stringResource(R.string.now_playing_source),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                sourceLabel,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        if (sleepTimerDeadline != null) {
+                            Text(
+                                formatSleepTimerRemaining(remainingMs),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 },
                 navigationIcon = {

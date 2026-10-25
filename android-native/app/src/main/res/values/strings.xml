@@ -199,4 +199,8 @@
     <string name="welcome_later">Later</string>
     <string name="welcome_open_sync">Open Wi-Fi Sync</string>
     <string name="settings_welcome_guide">Show welcome guide</string>
+    <string name="now_playing_source">Playing from</string>
+    <string name="auto_now_playing_tile">Now playing: %1$s</string>
+    <string name="mini_player_source_format">%1$s · %2$s</string>
+    <string name="track_list_playing_here">Playing</string>
 </resources>

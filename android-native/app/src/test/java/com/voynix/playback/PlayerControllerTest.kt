@@ -139,6 +139,33 @@ class PlayerControllerTest {
     }
 
     @Test
+    fun `sourceId is set by setQueueAndPlay, kept by enqueue and persisted`() = runTest {
+        val controller = newController(this)
+        controller.setQueueAndPlay(listOf(track("a"), track("b")), 0, sourceId = playlistFolderId("p1"))
+        advanceUntilIdle()
+        assertEquals("playlist/p1", controller.uiState.value.sourceId)
+        assertEquals("playlist/p1", db.settingsDao().get(LAST_SOURCE_KEY))
+
+        controller.enqueue(track("c"))
+        advanceUntilIdle()
+        assertEquals("playlist/p1", controller.uiState.value.sourceId)
+
+        // A queue started without a source (e.g. from search) clears it.
+        controller.setQueueAndPlay(listOf(track("d")), 0)
+        advanceUntilIdle()
+        assertNull(controller.uiState.value.sourceId)
+        assertNull(db.settingsDao().get(LAST_SOURCE_KEY))
+    }
+
+    @Test
+    fun `the Android Auto browse folder is the source unless one is given`() = runTest {
+        val controller = newController(this)
+        controller.setQueueAndPlay(listOf(track("a")), 0, browseParentId = ALL_SONGS_ID)
+        advanceUntilIdle()
+        assertEquals(ALL_SONGS_ID, controller.uiState.value.sourceId)
+    }
+
+    @Test
     fun `next steps forward through the play order`() = runTest {
         val controller = newController(this)
         val tracks = listOf(track("t1"), track("t2"), track("t3"))

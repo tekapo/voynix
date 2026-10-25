@@ -197,6 +197,18 @@ class PlaybackService : MediaLibraryService() {
             pushAutoButtons()
         }
 
+        // Publishes where the queue came from as the playlist title: media3
+        // bridges it to the legacy queueTitle, which Android Auto shows on the
+        // playback screen.
+        serviceScope.launch {
+            playerController.uiState
+                .map { it.sourceId }
+                .distinctUntilChanged()
+                .collect { id ->
+                    exoPlayer.playlistMetadata = MediaMetadata.Builder().setTitle(sourceLabelFor(id)).build()
+                }
+        }
+
         // Keeps the home-screen widget's track/artwork and play/pause icon in
         // sync with actual playback — keyed on track id + isPlaying (not
         // positionSecs) so this doesn't redraw the widget every second.
@@ -206,6 +218,22 @@ class PlaybackService : MediaLibraryService() {
                 .distinctUntilChanged()
                 .collect { (trackId, isPlaying) -> pushWidgetState(this@PlaybackService, trackId, isPlaying) }
         }
+    }
+
+    private fun sourceNames() = SourceNames(
+        allSongs = getString(R.string.auto_songs),
+        favorites = getString(R.string.auto_favorites),
+        mostPlayed = getString(R.string.auto_most_played),
+        recentlyAdded = getString(R.string.auto_recently_added),
+        recentlyPlayed = getString(R.string.auto_recently_played),
+    )
+
+    private suspend fun sourceLabelFor(sourceId: String?): String? {
+        if (sourceId == null) return null
+        val playlistNames = if (playlistIdOfFolder(sourceId) != null) {
+            db.playlistDao().observeAll().first().associate { it.id to it.name }
+        } else emptyMap()
+        return sourceLabel(sourceId, sourceNames()) { playlistNames[it] }
     }
 
     /** Records that playback just stopped because the car went away (see onConnect's resume). */
@@ -244,6 +272,7 @@ class PlaybackService : MediaLibraryService() {
         val lastTrackId = db.settingsDao().get("last_track_id") ?: return
         val lastPosition = db.settingsDao().get("last_position")?.toDoubleOrNull() ?: 0.0
         val lastBrowseParentId = db.settingsDao().get(LAST_BROWSE_PARENT_KEY)
+        val lastSourceId = db.settingsDao().get(LAST_SOURCE_KEY) ?: lastBrowseParentId
 
         // Prefer the exact queue (playlist/search/shuffle pass) that was playing.
         loadSavedQueue()?.let { saved ->
@@ -255,6 +284,7 @@ class PlaybackService : MediaLibraryService() {
                 // removed the cursor moved on to a different one.
                 if (current.id == lastTrackId) lastPosition else 0.0,
                 lastBrowseParentId,
+                lastSourceId,
             )
             return
         }
@@ -271,7 +301,7 @@ class PlaybackService : MediaLibraryService() {
             allTracksSorted() to null
         }
         if (tracks.isEmpty()) return
-        playerController.restoreQueueAt(tracks.map { it.track }, lastTrackId, lastPosition, browseParentId)
+        playerController.restoreQueueAt(tracks.map { it.track }, lastTrackId, lastPosition, browseParentId, lastSourceId)
     }
 
     /**
@@ -555,15 +585,26 @@ class PlaybackService : MediaLibraryService() {
                         // each tile also carries a decoded Bitmap over the
                         // Binder (see tileArtworkData), so a large playlist
                         // count needs this even more than a plain text list.
-                        val playlists = pageSlice(db.playlistDao().observeAll().first(), page, pageSize)
-                        playlists.map { playlist ->
+                        val allPlaylists = db.playlistDao().observeAll().first()
+                        val sourceId = playerController.uiState.value.sourceId
+                        // The queue's source goes first as "再生中: …" (page 0
+                        // only). A playlist source moves its own tile there
+                        // instead of listing the same mediaId twice.
+                        val sourcePlaylist = playlistIdOfFolder(sourceId ?: "")?.let { id -> allPlaylists.find { it.id == id } }
+                        val ordered = if (sourcePlaylist != null) listOf(sourcePlaylist) + (allPlaylists - sourcePlaylist) else allPlaylists
+                        val tiles = pageSlice(ordered, page, pageSize).map { playlist ->
                             val tracks = db.playlistDao().observePlaylistTracks(playlist.id).first()
+                            val title = if (playlist == sourcePlaylist) getString(R.string.auto_now_playing_tile, playlist.name) else playlist.name
                             browsableFolder(
-                                playlistFolderId(playlist.id), playlist.name,
+                                playlistFolderId(playlist.id), title,
                                 subtitle = playlistSubtitle(playlist.kind, tracks),
                                 artworkData = tileArtworkData(tracks, params),
                             )
                         }
+                        val label = if (sourcePlaylist == null && page == 0) sourceLabelFor(sourceId) else null
+                        if (label != null) {
+                            listOf(browsableFolder(sourceId!!, getString(R.string.auto_now_playing_tile, label))) + tiles
+                        } else tiles
                     }
                     parentId == LIBRARY_ID -> listOf(
                         browsableFolder(ALL_SONGS_ID, getString(R.string.auto_songs)),
@@ -714,7 +755,10 @@ class PlaybackService : MediaLibraryService() {
                     // playOrderPos, so uiState.currentTrack — and the
                     // home-screen widget reading it — would otherwise stay
                     // stale despite playback genuinely resuming.
-                    playerController.adoptResumedQueue(tracks.map { it.track }, startIndex, startSecs, saved?.snapshot)
+                    playerController.adoptResumedQueue(
+                        tracks.map { it.track }, startIndex, startSecs, saved?.snapshot,
+                        db.settingsDao().get(LAST_SOURCE_KEY),
+                    )
                     future.set(
                         MediaSession.MediaItemsWithStartPosition(
                             tracks.map { playableItem(null, it) },

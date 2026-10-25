@@ -199,4 +199,8 @@
     <string name="welcome_later">あとで</string>
     <string name="welcome_open_sync">Wi-Fi同期を開く</string>
     <string name="settings_welcome_guide">使い方ガイドを表示</string>
+    <string name="now_playing_source">再生元</string>
+    <string name="auto_now_playing_tile">再生中: %1$s</string>
+    <string name="mini_player_source_format">%1$s · %2$s</string>
+    <string name="track_list_playing_here">再生中</string>
 </resources>
