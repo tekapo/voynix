@@ -385,6 +385,15 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
         return style as React.CSSProperties;
     }, [widths, flexColumn]);
 
+    // Both jump buttons sit at the vertical centre of the visible rows (between
+    // the header and the player bar); App.css turns these into top/bottom.
+    const jumpSlotStyle = {
+        position: 'sticky',
+        height: 0,
+        '--np-container': `${nowPlaying.containerHeight}px`,
+        '--np-header': `${nowPlaying.headerHeight}px`,
+    } as React.CSSProperties;
+
     const nowPlayingFraction = tracks.length > 1 ? playingIndex / (tracks.length - 1) : 0;
 
     return (
@@ -423,7 +432,7 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                 // stay below the viewport and never show.
                 <div
                     className="now-playing-jump-slot is-above"
-                    style={{ position: 'sticky', height: 0, top: nowPlaying.headerHeight }}
+                    style={jumpSlotStyle}
                 >
                     <button type="button" className="now-playing-jump" onClick={scrollToNowPlaying}>
                         <Icon name="chevron-up" size={13} />
@@ -460,7 +469,7 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                 // position:relative — the usual "sticky overlay" trick.
                 <div
                     className="now-playing-jump-slot is-below"
-                    style={{ position: 'sticky', height: 0, bottom: 0 }}
+                    style={jumpSlotStyle}
                 >
                     <button type="button" className="now-playing-jump" onClick={scrollToNowPlaying}>
                         <Icon name="chevron-down" size={13} />
