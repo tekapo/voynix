@@ -42,6 +42,8 @@ Download the Mac `.dmg` or the Android `.apk` from [Releases](https://github.com
 > in Settings → Security & privacy before installing. You also need to allow "Install unknown apps" for the app you
 > install from (browser, file manager or Obtainium). The same applies to **updates**: with Advanced Protection on,
 > Android refuses to let Obtainium install apps, so turn it off for each update too (you can turn it back on afterwards).
+>
+> None of this applies if you install from Google Play as a closed-test tester: Advanced Protection can stay on, and Play updates the app for you.
 
 **Install with Homebrew (Mac, Apple Silicon):**
 
