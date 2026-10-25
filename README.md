@@ -17,8 +17,11 @@ Voynix is a local-first music player for Mac and Android.
 - **Playlists**: Regular and smart playlists (smart playlists are created on Mac and sync to Android as regular playlists)
 - **Editing track info**: Edit titles and tags per track, album, or artist
 - **Podcasts**: Playback speed, ±10-second skip, and optional exclusion from shuffle
+- **Lyrics**: View lyrics for the playing track on Mac and Android (looked up online from LRCLIB when you open the lyrics view)
+- **Themes (Mac)**: System, Light or Dark, chosen in Settings → General
 - **Sync to Android**: Mirrors the playlists and Library lists you mark for sync to Android devices on the same Wi-Fi network; play history and favorites sync both ways
 - **Android Auto**: Browse and play your library and playlists from the car head unit
+- **Now playing source (Android)**: Shows which playlist, artist, album or library list the queue is playing from, in the Now Playing screen, the mini player and Android Auto
 
 ## Requirements
 

@@ -21,7 +21,7 @@
 <div class="layout">
 <main>
 <h1>Voynix Privacy Policy</h1>
-<p class="lead">Last updated: October 7, 2026</p>
+<p class="lead">Last updated: October 25, 2026</p>
 
 <p>Voynix is a local-first music player for Mac and Android, developed by an individual (<a href="https://github.com/tekapo">tekapo</a>). This policy explains what data the Voynix apps handle. In short: <strong>the developer does not collect your data.</strong> There are no accounts, no analytics, no advertising and no developer-run servers.</p>
 
@@ -41,6 +41,9 @@
 </table>
 <p>Those services' own privacy policies apply to the requests they receive. Voynix does not send your music files, your library as a whole or your play history to them.</p>
 
+<h2 id="echo">Echo (Alexa) playback, optional</h2>
+<p>Echo playback is off by default and needs your own setup (see the <a href="https://github.com/tekapo/voynix/blob/main/docs/echo-lan.md">setup guide</a>). When you turn it on, the Mac serves music files only to devices on your home network, and only for links signed with a secret that you share between Voynix and your own Alexa skill. The skill is one you create under your own Amazon account; the developer has no access to it. What you say to Alexa is handled by Amazon under its own policies, and the skill passes the playlist name you said to Voynix's signed link. Your music is fetched by the Echo directly from your Mac over your local network and is not sent to the developer or uploaded to the internet.</p>
+
 <h2 id="android">Android permissions and the camera</h2>
 <ul>
   <li><strong>Network access</strong> (internet, network and Wi-Fi state, multicast): sync with your Mac, discovering the Mac on your network, and the lyrics lookup above</li>
@@ -52,7 +55,7 @@
 <ul>
   <li>Voynix does not send crash reports or usage statistics.</li>
   <li>Voynix does not knowingly collect any information from children, and it has no accounts or sign-in.</li>
-  <li>Downloading the app from GitHub Releases or Homebrew is handled by those services under their own policies.</li>
+  <li>Downloading the app from GitHub Releases, Homebrew or Google Play is handled by those services under their own policies.</li>
 </ul>
 
 <h2 id="changes">Changes and contact</h2>
