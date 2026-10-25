@@ -775,7 +775,7 @@ button {
 /* Header Row */
 .track-list-header {
   display: grid;
-  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) var(--col-path, 2fr) 44px 32px 112px;
+  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) var(--col-path, 2fr) 44px 32px var(--col-time, 112px);
   /* # Title Artist Album Path Plays Fav Duration. The --col-* vars are set by
      TrackList.tsx once a column has been dragged to a custom width. */
   padding: 0.8rem 2rem;
@@ -828,8 +828,16 @@ button {
 /* Drag handle on a header cell's right edge (TrackList.tsx ColResizer). */
 .track-list-header .th-title,
 .track-list-header .th-artist,
-.track-list-header .th-album {
+.track-list-header .th-album,
+.track-list-header .th-time {
   position: relative;
+}
+
+/* Measures the widest HH:MM:SS for the Time column's default width. */
+.time-sizer {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .col-resizer {
@@ -841,6 +849,11 @@ button {
   cursor: col-resize;
   touch-action: none;
   z-index: 1;
+}
+
+.col-resizer.is-left {
+  left: -8px;
+  right: auto;
 }
 
 .col-resizer::after {
@@ -881,7 +894,7 @@ button {
 
 .track-item {
   display: grid;
-  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) var(--col-path, 2fr) 44px 32px 112px;
+  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) var(--col-path, 2fr) 44px 32px var(--col-time, 112px);
   /* Match header */
   align-items: center;
   padding: 0.6rem 1rem;
@@ -907,7 +920,7 @@ button {
    so the mobile 4-column grid in the media query still wins. */
 :where(.hide-path) .track-list-header,
 :where(.hide-path) .track-item {
-  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) 44px 32px 112px;
+  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) 44px 32px var(--col-time, 112px);
 }
 
 .track-item:hover {
@@ -1106,6 +1119,8 @@ button {
 
 .cell-duration {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-align: right;
   font-variant-numeric: tabular-nums;
   font-size: 0.85rem;

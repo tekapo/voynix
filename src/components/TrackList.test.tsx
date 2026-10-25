@@ -458,9 +458,37 @@ describe("TrackList column resizing", () => {
 
     it("has handles on title and artist, and on album only when Path is shown", () => {
         const { container, rerender } = render(<TrackList {...base} onColumnWidthsChange={noop} />);
-        expect(container.querySelectorAll(".col-resizer")).toHaveLength(2);
-        rerender(<TrackList {...base} showPath onColumnWidthsChange={noop} />);
         expect(container.querySelectorAll(".col-resizer")).toHaveLength(3);
+        rerender(<TrackList {...base} showPath onColumnWidthsChange={noop} />);
+        expect(container.querySelectorAll(".col-resizer")).toHaveLength(4);
+    });
+
+    it("widens the Time column when its left-edge handle is dragged left", () => {
+        const onChange = vi.fn();
+        const { container } = render(<TrackList {...base} onColumnWidthsChange={onChange} />);
+        widthOf(container.querySelector(".th-time")!, 70);
+        widthOf(container.querySelector(".th-flex")!, 200);
+        drag(container.querySelector(".th-time .col-resizer")!, 500, 470);
+        expect(onChange).toHaveBeenLastCalledWith({ time: 100 });
+        // The header cells remount on each render, so re-mock.
+        widthOf(container.querySelector(".th-time")!, 70);
+        widthOf(container.querySelector(".th-flex")!, 200);
+        drag(container.querySelector(".th-time .col-resizer")!, 500, 5000);
+        expect(onChange).toHaveBeenLastCalledWith({ time: 40 });
+        widthOf(container.querySelector(".th-time")!, 70);
+        widthOf(container.querySelector(".th-flex")!, 200);
+        drag(container.querySelector(".th-time .col-resizer")!, 500, -5000);
+        expect(onChange).toHaveBeenLastCalledWith({ time: 210 });
+    });
+
+    it("applies a saved Time width and resets it on double-click", () => {
+        const onChange = vi.fn();
+        const { container } = render(<TrackList {...base} columnWidths={{ time: 90, artist: 120 }} onColumnWidthsChange={onChange} />);
+        expect((container.firstChild as HTMLElement).style.getPropertyValue("--col-time")).toBe("90px");
+        // A fixed-width Time column doesn't turn the flex column into minmax().
+        expect((container.firstChild as HTMLElement).style.getPropertyValue("--col-album")).toBe("minmax(60px, 1fr)");
+        fireEvent.doubleClick(container.querySelector(".th-time .col-resizer")!);
+        expect(onChange).toHaveBeenCalledWith({ artist: 120 });
     });
 
     it("commits the dragged width once on release and shows it live", () => {

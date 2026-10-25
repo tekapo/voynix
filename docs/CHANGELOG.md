@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.27.3 — 2026-10-25
+- The desktop track list's Time column can now be resized like the other columns (drag its left edge, double-click to reset). Its default width is now just wide enough for HH:MM:SS, leaving more room for the text columns.
+- An in-progress podcast's "position / duration" text is truncated with an ellipsis when it doesn't fit; hover to see it in full.
+
 ## 0.27.2 — 2026-10-25
 - The desktop track list's "Now playing" jump button now appears at the vertical centre of the visible rows, for both the up and down directions.
 
