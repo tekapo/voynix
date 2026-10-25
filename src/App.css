@@ -953,7 +953,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  margin-top: 0.6rem;
+  margin-top: 12px;
   margin-bottom: 0;
   padding: 0.4rem 0.9rem;
   border: none;
@@ -969,7 +969,7 @@ button {
 
 .now-playing-jump-slot.is-below .now-playing-jump {
   margin-top: 0;
-  margin-bottom: calc(var(--player-height) + 0.85rem);
+  margin-bottom: 0;
 }
 
 .now-playing-jump:hover {
