@@ -934,6 +934,13 @@ button {
    the playing row has scrolled out of view. Disappears once it's visible
    again (TrackList.tsx recomputes this on scroll/resize). */
 .now-playing-jump-slot {
+  /* Mirror .track-list-container's padding: a sticky offset is measured from
+     the padding edge, and the player bar overlays the container's bottom. */
+  --np-player: var(--player-height);
+  --np-pad-top: 0px;
+  --np-pad-bottom: calc(var(--player-height) + 12px);
+  /* Centre of the visible rows, measured from the container's top edge. */
+  --np-center: calc((var(--np-header) + var(--np-container) - var(--np-player)) / 2);
   z-index: 15;
   display: flex;
   justify-content: center;
@@ -942,10 +949,20 @@ button {
 
 .now-playing-jump-slot.is-above {
   align-items: flex-start;
+  top: calc(var(--np-center) - var(--np-pad-top));
 }
 
 .now-playing-jump-slot.is-below {
   align-items: flex-end;
+  bottom: calc(var(--np-container) - var(--np-pad-bottom) - var(--np-center));
+}
+
+@media (max-width: 768px) {
+  .now-playing-jump-slot {
+    --np-player: var(--player-height-mobile);
+    --np-pad-top: 1rem;
+    --np-pad-bottom: var(--player-height-mobile);
+  }
 }
 
 .now-playing-jump {
@@ -953,8 +970,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  margin-top: 12px;
-  margin-bottom: 0;
+  margin: 0;
   padding: 0.4rem 0.9rem;
   border: none;
   border-radius: 999px;
@@ -967,9 +983,12 @@ button {
   transition: transform var(--transition-fast);
 }
 
+.now-playing-jump-slot.is-above .now-playing-jump {
+  translate: 0 -50%;
+}
+
 .now-playing-jump-slot.is-below .now-playing-jump {
-  margin-top: 0;
-  margin-bottom: 0;
+  translate: 0 50%;
 }
 
 .now-playing-jump:hover {

@@ -1,7 +1,7 @@
 {
   "name": "voynix",
   "private": true,
-  "version": "0.27.1",
+  "version": "0.27.2",
   "license": "MIT",
   "repository": {
     "type": "git",

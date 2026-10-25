@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.27.2 — 2026-10-25
+- The desktop track list's "Now playing" jump button now appears at the vertical centre of the visible rows, for both the up and down directions.
+
 ## 0.27.1 — 2026-10-25
 - Fixed the "Now playing" jump button in the desktop track list floating far above the player bar; it now sits the same distance from the player bar as it does from the header when pointing up.
 
