@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTranslation } from 'react-i18next';
 import { albumOf } from '../albumName';
@@ -33,10 +33,13 @@ const ESTIMATED_ROW_HEIGHT = 38;
 // under-space rows.
 const ROW_GAP = 2;
 
-export type ResizableColumn = 'title' | 'artist' | 'album' | 'path';
+export type ResizableColumn = 'title' | 'artist' | 'album' | 'path' | 'time';
 /** Custom column widths in px, keyed by column. Absent = the CSS default (fr). */
 export type ColumnWidths = Partial<Record<ResizableColumn, number>>;
 const MIN_COLUMN_WIDTH = 60;
+// The Time column's default is the measured width of "00:00:00", which can be
+// narrower than MIN_COLUMN_WIDTH, so it gets its own floor.
+const MIN_TIME_COLUMN_WIDTH = 40;
 
 interface TrackListProps {
     tracks: Track[];
@@ -126,7 +129,23 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
     const widths = liveWidths ?? columnWidths ?? {};
     // The last text column takes whatever width is left, so the row can never
     // overflow no matter how wide the others are dragged.
-    const flexColumn: ResizableColumn = showPath ? 'path' : 'album';
+    const flexColumn: 'path' | 'album' = showPath ? 'path' : 'album';
+
+    // Default Time width: just wide enough for the widest HH:MM:SS (tabular
+    // digits), measured from a hidden cell styled like a real one. Stays null
+    // until measured (and where nothing lays out, e.g. jsdom) so the CSS
+    // fallback applies.
+    const timeSizerRef = useRef<HTMLSpanElement>(null);
+    const [timeDefaultWidth, setTimeDefaultWidth] = useState<number | null>(null);
+    useLayoutEffect(() => {
+        const measure = () => {
+            const w = timeSizerRef.current?.getBoundingClientRect().width ?? 0;
+            if (w > 0) setTimeDefaultWidth(Math.ceil(w));
+        };
+        measure();
+        // Web fonts can change the digit width after first paint.
+        void document.fonts?.ready.then(measure);
+    }, []);
 
     // Window-level listeners rather than pointer capture: SortHeader below is
     // re-created every render, so the handle remounts on each live update.
@@ -138,14 +157,18 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
         const startX = e.clientX;
         const startWidth = cell.getBoundingClientRect().width;
         const flexWidth = headerRef.current?.querySelector('.th-flex')?.getBoundingClientRect().width ?? MIN_COLUMN_WIDTH;
-        const max = Math.max(MIN_COLUMN_WIDTH, startWidth + flexWidth - MIN_COLUMN_WIDTH);
+        // Time is the last column, so its handle is on the left edge and
+        // dragging left widens it.
+        const dir = key === 'time' ? -1 : 1;
+        const min = key === 'time' ? MIN_TIME_COLUMN_WIDTH : MIN_COLUMN_WIDTH;
+        const max = Math.max(min, startWidth + flexWidth - MIN_COLUMN_WIDTH);
         const base: ColumnWidths = { ...(columnWidths ?? {}) };
         let latest = startWidth;
         let moved = false;
         setDragKey(key);
         const onMove = (ev: PointerEvent) => {
             moved = true;
-            latest = Math.min(max, Math.max(MIN_COLUMN_WIDTH, startWidth + ev.clientX - startX));
+            latest = Math.min(max, Math.max(min, startWidth + dir * (ev.clientX - startX)));
             setLiveWidths({ ...base, [key]: latest });
         };
         const onUp = () => {
@@ -169,7 +192,7 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
 
     const resizer = (key?: ResizableColumn) => (key && onColumnWidthsChange ? (
         <div
-            className={`col-resizer ${dragKey === key ? 'is-dragging' : ''}`}
+            className={`col-resizer ${key === 'time' ? 'is-left' : ''} ${dragKey === key ? 'is-dragging' : ''}`}
             role="separator"
             aria-orientation="vertical"
             onPointerDown={(e) => startResize(key, e)}
@@ -255,7 +278,7 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                 >
                     {track.favorite ? STAR_ON : STAR_OFF}
                 </button>
-                <div className="cell-duration">{podcastDurationText(track)}</div>
+                <div className="cell-duration" title={podcastDurationText(track)}>{podcastDurationText(track)}</div>
             </li>
         );
     };
@@ -379,11 +402,15 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                 custom = true;
             }
         }
+        // Time is always px (the fr columns absorb the difference), so it never
+        // counts as "custom" for the flex column below.
+        const timeWidth = widths.time ?? timeDefaultWidth;
+        if (timeWidth !== null && timeWidth !== undefined) style['--col-time'] = `${timeWidth}px`;
         // Only once something is custom — otherwise the flex column keeps its
         // default fr share and the stock proportions are unchanged.
         if (custom) style[`--col-${flexColumn}`] = `minmax(${MIN_COLUMN_WIDTH}px, 1fr)`;
         return style as React.CSSProperties;
-    }, [widths, flexColumn]);
+    }, [widths, flexColumn, timeDefaultWidth]);
 
     // Both jump buttons sit at the vertical centre of the visible rows (between
     // the header and the player bar); App.css turns these into top/bottom.
@@ -415,6 +442,7 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                     </div>
                 </div>
             )}
+            <span className="cell-duration time-sizer" ref={timeSizerRef} aria-hidden="true">00:00:00</span>
             <div className="track-list-header" ref={headerRef}>
                 <div className="th-num">#</div>
                 <SortHeader col="title" className="th-title" resizeKey="title">{t('trackList.title')}</SortHeader>
@@ -423,7 +451,7 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                 {showPath && <div className="th-path th-flex">{t('trackList.path')}</div>}
                 <SortHeader col="plays" className="cell-center th-plays" label={t('trackList.playCount')}><Icon name="play" size={11} /></SortHeader>
                 <div className="cell-center th-fav"><Icon name="star" size={13} /></div>
-                <SortHeader col="duration" className="th-time">{t('trackList.time')}</SortHeader>
+                <SortHeader col="duration" className="th-time" resizeKey="time">{t('trackList.time')}</SortHeader>
             </div>
             {playingIndex >= 0 && nowPlaying.direction === 'above' && (
                 // Right after the header: sticky top pins only once this has

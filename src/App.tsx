@@ -277,7 +277,7 @@ function App() {
       try {
         const parsed = JSON.parse(raw);
         const out: ColumnWidths = {};
-        for (const k of ["title", "artist", "album", "path"] as const) {
+        for (const k of ["title", "artist", "album", "path", "time"] as const) {
           const w = parsed?.[k];
           if (typeof w === "number" && Number.isFinite(w) && w > 0) out[k] = w;
         }
