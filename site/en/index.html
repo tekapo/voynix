@@ -58,7 +58,7 @@
 <h2 id="install">Installation</h2>
 <h3>Mac</h3>
 <p>Download the <code>.dmg</code> from <a href="https://github.com/tekapo/voynix/releases">Releases</a> and drag the app to Applications.</p>
-<p>With Homebrew (Apple Silicon), run <code>brew install --cask tekapo/voynix/voynix</code>. The warning below does not appear in that case, and <code>brew upgrade --cask voynix</code> updates the app. If Homebrew 7 refuses to load the cask from an untrusted tap, run <code>brew trust tekapo/voynix</code> once.</p>
+<p>With Homebrew (Apple Silicon), run <code>brew install --cask tekapo/voynix/voynix</code>. The warning below does not appear in that case, and <code>brew update &amp;&amp; brew upgrade --cask voynix</code> updates the app (run <code>brew update</code> first, or a just-released version may not show up yet). If Homebrew 7 refuses to load the cask from an untrusted tap, run <code>brew trust tekapo/voynix</code> once.</p>
 <div class="note"><strong>Important:</strong> the app is not signed or notarized by Apple. macOS blocks it on first launch. Press "Done" (not "Move to Trash"), then open System Settings → Privacy &amp; Security and click <strong>"Open Anyway"</strong> next to the Voynix message. You can also run <code>xattr -cr /Applications/Voynix.app</code> in Terminal and open the app again. This is needed only once.</div>
 <h3>Android</h3>
 <p><strong>Testers wanted:</strong> Voynix is in a closed test on Google Play. If you have an Android phone and a Mac and can stay enrolled for 14 days, <a href="https://forms.gle/xiyXpZgHMHdR313h8">sign up here</a>.</p>
@@ -142,7 +142,7 @@
 <h3>My Mac's IP address changed and Android says it can't reach the Mac.</h3>
 <p>Automatic recovery can fail on some networks. Open the Wi-Fi sync window on the Mac and pair again by scanning the QR code.</p>
 <h3>How do I update the app?</h3>
-<p>Mac: download the new <code>.dmg</code> and replace the app in Applications, or run <code>brew upgrade --cask voynix</code> if you installed with Homebrew. Android: Obtainium updates it for you (turn off Advanced Protection first; see Installation); otherwise install the new <code>.apk</code> over the old one. Your data is kept. If you installed from Google Play as a closed-test tester, Play updates the app.</p>
+<p>Mac: download the new <code>.dmg</code> and replace the app in Applications, or run <code>brew update &amp;&amp; brew upgrade --cask voynix</code> if you installed with Homebrew. Android: Obtainium updates it for you (turn off Advanced Protection first; see Installation); otherwise install the new <code>.apk</code> over the old one. Your data is kept. If you installed from Google Play as a closed-test tester, Play updates the app.</p>
 <h3>How do I uninstall the app?</h3>
 <p>Mac: drag Voynix from Applications to the Trash (or run <code>brew uninstall --cask voynix</code> if you installed with Homebrew; add <code>--zap</code> to remove the data as well). The data folder stays behind; delete <code>~/Library/Application Support/com.tekapo.voynix</code> if you no longer need it. Your music files are never removed. Android: uninstall as usual; the data on the device is deleted with it.</p>
 <h3>Where is my data stored?</h3>
