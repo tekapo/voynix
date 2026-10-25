@@ -45,6 +45,9 @@
   <li><strong>音楽再生</strong>: ローカルの音楽ファイル（mp3, m4a, flac）をスキャンしてライブラリ管理（アーティスト、アルバム、プレイリスト）。Mac・Android とも曲間の無音を挟まないギャップレス再生に対応</li>
   <li><strong>プレイリスト</strong>: 通常のプレイリストに加え、ジャンル・アーティスト・再生回数・追加日・お気に入りなどの条件で自動的に曲を集めるスマートプレイリスト。Most Played / Recently Added / Recently Played も用意</li>
   <li><strong>曲情報の編集</strong>: 「情報を見る…」から曲・アルバム・アーティスト単位でタイトルやタグを編集可能。アーティスト画像は自動取得できます</li>
+  <li><strong>歌詞</strong>: 再生中の曲の歌詞を Mac・Android で表示。歌詞の画面を開いたとき、LRCLIB からオンラインで取得します</li>
+  <li><strong>テーマ（Mac）</strong>: 設定 → 一般で「システムに従う」「ライト」「ダーク」を選べます</li>
+  <li><strong>再生元の表示（Android）</strong>: キューをどのプレイリスト・アーティスト・アルバム・ライブラリ項目から再生しているかを、再生画面、ミニプレイヤー、Android Auto に表示します</li>
   <li><strong>ポッドキャスト</strong>: 再生速度の変更（0.8〜2.0倍）、±10秒スキップ、シャッフル対象からの除外（設定）</li>
   <li><strong>iTunes 連携</strong>: iTunes のライブラリ XML からプレイリストをインポート</li>
 </ul>
@@ -55,7 +58,7 @@
 <h2 id="install">インストール</h2>
 <h3>Mac</h3>
 <p><a href="https://github.com/tekapo/voynix/releases">Releases</a> から <code>.dmg</code> をダウンロードして Applications にドラッグします。</p>
-<p>Homebrew（Apple Silicon）では <code>brew install --cask tekapo/voynix/voynix</code> を実行します。この場合は下の警告は出ません。更新は <code>brew upgrade --cask voynix</code> です。Homebrew 7 で「信頼されていない tap」として読み込みを拒否されたら、一度だけ <code>brew trust tekapo/voynix</code> を実行してください。</p>
+<p>Homebrew（Apple Silicon）では <code>brew install --cask tekapo/voynix/voynix</code> を実行します。この場合は下の警告は出ません。更新は <code>brew update &amp;&amp; brew upgrade --cask voynix</code> です（先に <code>brew update</code> をしないと、出たばかりの新バージョンが見えないことがあります）。Homebrew 7 で「信頼されていない tap」として読み込みを拒否されたら、一度だけ <code>brew trust tekapo/voynix</code> を実行してください。</p>
 <div class="note"><strong>重要:</strong> アプリは Apple の署名・公証を受けていません。初回は macOS にブロックされます。警告で「ゴミ箱に入れる」ではなく「完了」を押し、システム設定 →「プライバシーとセキュリティ」で Voynix の項目の横にある「<strong>このまま開く</strong>」を押してください。ターミナルで <code>xattr -cr /Applications/Voynix.app</code> を実行してから開き直す方法もあります。初回だけ必要です。</div>
 <h3>Android</h3>
 <p><strong>テスター募集中:</strong> Google Play でクローズド テストを実施中です。Android 端末と Mac をお持ちで、14日間参加したままにできる方は、<a href="https://forms.gle/5WoQn1y3orfDcVB67">こちらのフォーム</a>からお申し込みください。</p>
@@ -139,7 +142,7 @@
 <h3>Mac の IP アドレスが変わって、Android が Mac に接続できません。</h3>
 <p>ネットワークによっては自動復旧できないことがあります。Mac の Wi-Fi 同期画面を開き、QR コードを読み取って再ペアリングしてください。</p>
 <h3>アプリのアップデート方法は？</h3>
-<p>Mac は、新しい <code>.dmg</code> をダウンロードして「アプリケーション」内のアプリを置き換えます（Homebrew で入れた場合は <code>brew upgrade --cask voynix</code>）。Android は Obtainium で更新します（先に高度な保護機能をオフにしてください。インストールの項を参照）。使っていない場合は、新しい <code>.apk</code> を上書きインストールしてください。データは保持されます。Google Play のクローズド テストから入れた場合は、Play が更新します。</p>
+<p>Mac は、新しい <code>.dmg</code> をダウンロードして「アプリケーション」内のアプリを置き換えます（Homebrew で入れた場合は <code>brew update &amp;&amp; brew upgrade --cask voynix</code>）。Android は Obtainium で更新します（先に高度な保護機能をオフにしてください。インストールの項を参照）。使っていない場合は、新しい <code>.apk</code> を上書きインストールしてください。データは保持されます。Google Play のクローズド テストから入れた場合は、Play が更新します。</p>
 <h3>アンインストールするには？</h3>
 <p>Mac は、「アプリケーション」から Voynix をゴミ箱に入れます（Homebrew で入れた場合は <code>brew uninstall --cask voynix</code>。<code>--zap</code> を付けるとデータも削除します）。データのフォルダは残るので、不要なら <code>~/Library/Application Support/com.tekapo.voynix</code> を削除してください。音楽ファイルが削除されることはありません。Android は通常どおりアンインストールします。端末内のデータも一緒に消えます。</p>
 <h3>データはどこに保存されますか？</h3>

@@ -17,8 +17,11 @@ Voynix は、Mac と Android 向けのローカルファーストな音楽プレ
 - **プレイリスト**: 通常のプレイリストとスマートプレイリスト（スマートプレイリストは Mac で作成し、Android へは通常プレイリストとして同期）
 - **曲情報の編集**: 曲・アルバム・アーティスト単位でタイトルやタグを編集可能
 - **ポッドキャスト**: 再生速度の変更、±10秒スキップ、シャッフル対象からの除外（設定）
+- **歌詞**: 再生中の曲の歌詞を Mac・Android で表示（歌詞の画面を開いたとき、LRCLIB からオンラインで取得）
+- **テーマ（Mac）**: 設定 → 一般で「システムに従う」「ライト」「ダーク」を選択
 - **Android への同期**: 同期対象に指定したプレイリスト・ライブラリ項目を、同じ Wi-Fi ネットワーク上の Android 端末へミラー同期。再生履歴とお気に入りは双方向で反映
 - **Android Auto**: 車載機からもライブラリ・プレイリストを操作・再生可能
+- **再生元の表示（Android）**: キューをどのプレイリスト・アーティスト・アルバム・ライブラリ項目から再生しているかを、再生画面、ミニプレイヤー、Android Auto に表示
 
 ## 動作環境
 
@@ -52,7 +55,7 @@ brew install --cask tekapo/voynix/voynix
 ```
 
 Cask がインストール後に quarantine 属性を外すため、上記の Gatekeeper の警告は出ません。
-更新は `brew upgrade --cask voynix` です。Homebrew 7 で「信頼されていない tap」として読み込みを拒否されたら、
+更新は `brew update && brew upgrade --cask voynix` です（先に `brew update` をしないと、出たばかりの新バージョンが見えないことがあります）。Homebrew 7 で「信頼されていない tap」として読み込みを拒否されたら、
 一度だけ `brew trust tekapo/voynix` を実行してください。
 
 Android は [Obtainium](https://obtainium.imranr.dev/) に `https://github.com/tekapo/voynix` を登録すると、更新を自動で受け取れます。

@@ -17,8 +17,11 @@ Voynix is a local-first music player for Mac and Android.
 - **Playlists**: Regular and smart playlists (smart playlists are created on Mac and sync to Android as regular playlists)
 - **Editing track info**: Edit titles and tags per track, album, or artist
 - **Podcasts**: Playback speed, ±10-second skip, and optional exclusion from shuffle
+- **Lyrics**: View lyrics for the playing track on Mac and Android (looked up online from LRCLIB when you open the lyrics view)
+- **Themes (Mac)**: System, Light or Dark, chosen in Settings → General
 - **Sync to Android**: Mirrors the playlists and Library lists you mark for sync to Android devices on the same Wi-Fi network; play history and favorites sync both ways
 - **Android Auto**: Browse and play your library and playlists from the car head unit
+- **Now playing source (Android)**: Shows which playlist, artist, album or library list the queue is playing from, in the Now Playing screen, the mini player and Android Auto
 
 ## Requirements
 
@@ -53,7 +56,7 @@ brew install --cask tekapo/voynix/voynix
 ```
 
 The cask removes the quarantine flag after installing, so the Gatekeeper warning above does not appear.
-Upgrade with `brew upgrade --cask voynix`. If Homebrew 7 refuses to load the cask because the tap is untrusted,
+Upgrade with `brew update && brew upgrade --cask voynix` (`brew update` first, or a just-released version may not show up yet). If Homebrew 7 refuses to load the cask because the tap is untrusted,
 run `brew trust tekapo/voynix` once.
 
 On Android you can get automatic updates with [Obtainium](https://obtainium.imranr.dev/) by adding
