@@ -56,6 +56,33 @@ Android は [Obtainium](https://obtainium.imranr.dev/) に `https://github.com/t
 音楽の取り込み、Android との同期、Android Auto の設定など、詳しくは
 [ユーザーマニュアル](https://tekapo.github.io/voynix/ja/)を参照してください。
 
+## クイックスタート
+
+先にアプリをインストールしてください（[インストール](#インストール)）。各手順の詳細は[ユーザーマニュアル](https://tekapo.github.io/voynix/ja/)にあります。
+
+### Mac
+
+1. Voynix を起動します。
+2. サイドバーの **＋ New → Add Music Folder…** から音楽フォルダを追加します。スキャンがすぐに始まります。
+3. スマホに入れたいプレイリスト（または「すべての曲」などのライブラリ項目）を右クリックして**「デバイスと同期」**を選びます。横に同期マークが付きます。何も選ばないと Android には曲が届きません。
+4. サイドバー左下の同期ボタンを押すと QR コードが表示されます。同期サーバーは Voynix の起動時に自動で始まります。
+
+### Android
+
+1. APK をインストールして開きます。通知の許可を求められたら許可します。
+2. Mac と同じ Wi-Fi に接続し、**設定 →「Wi-Fi同期」**を開いて、Mac に表示された QR コードを読み取ります。
+3. 同期対象の曲・プレイリスト、再生履歴、お気に入りが取り込まれます。以降は**「今すぐ同期」**を押すか、Mac と同じ Wi-Fi で約6時間ごとの自動同期に任せられます。
+
+### Android Auto
+
+Google Play 以外から入れたアプリは、Android Auto 側で「提供元不明のアプリ」を有効にしないと表示されません（初回のみ）。
+
+1. 端末で Android Auto アプリを開き、設定の一番下の「バージョン」を約10回タップします。
+2. 設定画面から戻り、左上のメニュー（≡）から**「デベロッパー向け設定」**を開いて、**「提供元不明のアプリ」**を ON にします。
+3. Android Auto を強制停止（または端末を再起動）して、車に再接続します。一覧に Voynix が表示されます。
+
+うまくいかないときは、[マニュアルの Android Auto](https://tekapo.github.io/voynix/ja/#auto) と [android-native/README.ja.md](./android-native/README.ja.md) を参照してください。
+
 ## ドキュメント
 
 - [ユーザーマニュアル](https://tekapo.github.io/voynix/ja/)（使い方、Wi-Fi 同期、Android Auto、キーボードショートカット、バックアップ、FAQ と既知の制限）

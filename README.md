@@ -57,6 +57,33 @@ On Android you can get automatic updates with [Obtainium](https://obtainium.imra
 See the [user manual](https://tekapo.github.io/voynix/) for details, including how to add music, sync with
 Android, and set up Android Auto.
 
+## Quick start
+
+Install the app first (see [Installation](#installation)). Details for each step are in the [user manual](https://tekapo.github.io/voynix/).
+
+### Mac
+
+1. Launch Voynix.
+2. In the sidebar, choose **＋ New → Add Music Folder…** and pick your music folder. Scanning starts right away.
+3. Right-click each playlist (or a Library item such as All Songs) you want on your phone and choose **Sync to Device**. A sync mark appears. If nothing is marked, Android receives no songs.
+4. Click the sync button at the bottom left of the sidebar to show the QR code. The sync server starts automatically when Voynix launches.
+
+### Android
+
+1. Install the APK and open it. Allow notifications if asked.
+2. Connect to the same Wi-Fi network as the Mac, open **Settings → Wi-Fi Sync**, and scan the QR code shown on the Mac.
+3. The marked songs, playlists, play history and favorites are imported. After that, tap **Sync now**, or let it sync automatically about every 6 hours on the Mac's Wi-Fi.
+
+### Android Auto
+
+The app is installed outside Google Play, so Android Auto hides it until you enable "Unknown sources" (one time only).
+
+1. Open the Android Auto app on the phone, go to Settings, and tap "Version" at the bottom about 10 times.
+2. Go back, open the menu (≡) at the top left, and choose **Developer settings**. Turn on **Unknown sources**.
+3. Force-stop Android Auto (or restart the phone) and reconnect to the car. Voynix now appears in the app list.
+
+See the [Android Auto section of the manual](https://tekapo.github.io/voynix/en/#auto) and [android-native/README.md](./android-native/README.md) for troubleshooting.
+
 ## Documentation
 
 - [User manual](https://tekapo.github.io/voynix/) (usage, Wi-Fi sync, Android Auto, keyboard shortcuts, backup, FAQ and known limitations)
