@@ -8,7 +8,7 @@
 
 Voynix は、Mac と Android 向けのローカルファーストな音楽プレーヤーです。
 
-- Mac のライブラリを Wi-Fi 経由で Android に同期します。再生履歴やお気に入りも、Android から Mac に反映されます
+- Mac のライブラリを Wi-Fi 経由で Android に同期します。Androidでの再生履歴やお気に入りも、Android から Mac に反映されます
 - Android Auto に対応しています
 
 ## 主な機能
