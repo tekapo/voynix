@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
@@ -33,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -89,6 +93,10 @@ fun TrackListScreen(
     onBack: () -> Unit,
     onSelectLibrary: () -> Unit,
     collectionMeta: ((List<TrackWithStats>) -> String)? = null,
+    // The browse-tree folder id of this list (see playback/BrowseTree.kt): what
+    // a queue started here is labelled with, and how this screen knows the
+    // player is currently playing from it.
+    sourceId: String? = null,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var searchOpen by rememberSaveable { mutableStateOf(false) }
@@ -113,12 +121,39 @@ fun TrackListScreen(
     val headerOffset = if (collectionMeta != null) 1 else 0
     val playingTrackIndex = displayTracks.indexOfFirst { it.track.id == playerUiState.currentTrack?.id }
     val nowPlayingItemIndex = if (playingTrackIndex >= 0) playingTrackIndex + headerOffset else -1
+    val isPlayingFromHere = sourceId != null && playerUiState.sourceId == sourceId && playerUiState.currentTrack != null
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                        if (isPlayingFromHere) {
+                            Spacer(Modifier.width(8.dp))
+                            Surface(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.primaryContainer) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                ) {
+                                    Icon(
+                                        Icons.Filled.GraphicEq,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    )
+                                    Text(
+                                        stringResource(R.string.track_list_playing_here),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.padding(start = 4.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.track_list_back))
@@ -160,12 +195,12 @@ fun TrackListScreen(
                                     meta = collectionMeta(displayTracks),
                                     tracks = displayTracks.map { it.track },
                                     albumArt = albumArt,
-                                    isPlaying = playingTrackIndex >= 0 && playerUiState.isPlaying,
+                                    isPlaying = isPlayingFromHere && playingTrackIndex >= 0 && playerUiState.isPlaying,
                                     onPlay = {
-                                        if (playingTrackIndex >= 0) {
+                                        if (isPlayingFromHere && playingTrackIndex >= 0) {
                                             player.togglePlayPause()
                                         } else {
-                                            player.setQueueAndPlay(displayTracks.map { it.track }, 0)
+                                            player.setQueueAndPlay(displayTracks.map { it.track }, 0, sourceId = sourceId)
                                         }
                                     },
                                     onToggleShuffle = { player.toggleShuffle() },
@@ -182,7 +217,7 @@ fun TrackListScreen(
                                 onClick = {
                                     val all = displayTracks.map { it.track }
                                     val index = all.indexOfFirst { it.id == item.track.id }
-                                    if (index >= 0) player.setQueueAndPlay(all, index)
+                                    if (index >= 0) player.setQueueAndPlay(all, index, sourceId = sourceId)
                                 },
                                 onLongClick = { actionsFor = item },
                             )

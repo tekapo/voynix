@@ -48,6 +48,8 @@ private const val REPEAT_KEY = "repeat"
 
 /** Shared with PlaybackService.restoreLastPlayback, which reads it directly. */
 const val LAST_BROWSE_PARENT_KEY = "last_browse_parent_id"
+/** The folder id the current queue was started from (PlayerUiState.sourceId); PlaybackService reads it on restore. */
+const val LAST_SOURCE_KEY = "last_play_source"
 /** The persisted play queue (QueueSnapshot JSON); PlaybackService.restoreLastPlayback reads it directly. */
 const val LAST_QUEUE_KEY = "last_queue"
 
@@ -61,6 +63,8 @@ data class PlayerUiState(
     val durationSecs: Double = 0.0,
     val shuffle: Boolean = false,
     val repeat: RepeatMode = RepeatMode.OFF,
+    /** Browse-tree folder id the queue was started from (see sourceLabel), or null when unknown / a mixed queue. */
+    val sourceId: String? = null,
 )
 
 /**
@@ -388,7 +392,9 @@ class PlayerController(
      * this queue came from (see BrowseTree.kt's leafMediaId) — carried through
      * to the MediaItem built for the player so the session's "now playing"
      * mediaId matches the id the browse tree used for that same track,
-     * letting the head unit highlight the right row.
+     * letting the head unit highlight the right row. [sourceId] is what the
+     * UI labels the queue with ("playing from …"); it defaults to the browse
+     * folder, and the phone UI passes its own list's folder id.
      */
     fun setQueueAndPlay(
         tracks: List<TrackEntity>,
@@ -396,12 +402,14 @@ class PlayerController(
         playWhenReady: Boolean = true,
         startPositionSecs: Double? = null,
         browseParentId: String? = null,
+        sourceId: String? = browseParentId,
     ) {
         val s = _uiState.value
         val order = buildOrder(tracks.size, BuildOrderOpts(shuffle = shuffleFor(tracks, s.shuffle), first = startIndex))
         val orderPos = order.indexOf(startIndex).coerceAtLeast(0)
         _uiState.value = s.copy(queue = tracks, order = order, orderPos = orderPos)
         this.browseParentId = browseParentId
+        setSource(sourceId)
         playOrderPos(orderPos, playWhenReady, startPositionSecs)
     }
 
@@ -521,16 +529,28 @@ class PlayerController(
         }
     }
 
+    private fun setSource(sourceId: String?) {
+        _uiState.value = _uiState.value.copy(sourceId = sourceId)
+        scope.launch {
+            val dao = db.settingsDao()
+            if (sourceId != null) dao.set(SettingEntity(LAST_SOURCE_KEY, sourceId)) else dao.delete(LAST_SOURCE_KEY)
+        }
+    }
+
     /** Resume a track at a saved position without immediately playing (session restore). */
     fun restoreQueueAt(
         tracks: List<TrackEntity>,
         trackId: String,
         positionSecs: Double,
         browseParentId: String? = null,
+        sourceId: String? = browseParentId,
     ) {
         val index = tracks.indexOfFirst { it.id == trackId }
         if (index < 0) return
-        setQueueAndPlay(tracks, index, playWhenReady = false, startPositionSecs = positionSecs, browseParentId = browseParentId)
+        setQueueAndPlay(
+            tracks, index, playWhenReady = false, startPositionSecs = positionSecs,
+            browseParentId = browseParentId, sourceId = sourceId,
+        )
     }
 
     /**
@@ -543,9 +563,11 @@ class PlayerController(
         snapshot: QueueSnapshot,
         positionSecs: Double,
         browseParentId: String? = null,
+        sourceId: String? = browseParentId,
     ) {
         _uiState.value = _uiState.value.copy(queue = tracks, order = snapshot.order, orderPos = snapshot.pos)
         this.browseParentId = browseParentId
+        setSource(sourceId)
         playOrderPos(snapshot.pos, playWhenReady = false, startPositionSecs = positionSecs)
     }
 
@@ -572,6 +594,7 @@ class PlayerController(
         startIndex: Int,
         positionSecs: Double,
         snapshot: QueueSnapshot? = null,
+        sourceId: String? = null,
     ) {
         val track = tracks.getOrNull(startIndex) ?: return
         val order = snapshot?.order
@@ -584,6 +607,7 @@ class PlayerController(
         ++playToken
         nextQueuedTrackId = null
         browseParentId = null
+        setSource(sourceId)
         currentIsPodcast = track.kind == "podcast"
         currentPlayState = playStateFromDb(track.playState)
         listenProgress = ListenProgress(last = positionSecs, secs = 0.0)

@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: after bumping the version and committing, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
 
+## 0.27.0 — 2026-10-25
+- Android now shows where the queue is playing from (a playlist, artist, album or library list): in the Now Playing app bar (tap to open that list), under the artist in the mini player, as a "Playing" chip on that list's app bar, and in Android Auto as a "Now playing" tile at the top of Home plus the playback screen's queue title.
+- The collection header's play button now reflects only the list the queue was started from, not any list that happens to contain the current track.
+
 ## 0.26.2 — 2026-10-24
 - The sync server now caps concurrent connections, the queue of incoming play stats (answers 503 so the phone retries later) and the paired-device list, and looks up files by track key through an index instead of scanning every track. One device can hold at most 16 connections, and the desktop app now checks for `afconvert` once instead of on every status poll.
 

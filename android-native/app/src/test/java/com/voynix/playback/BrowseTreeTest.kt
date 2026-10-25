@@ -390,4 +390,27 @@ class BrowseTreeTest {
         assertEquals(names.sorted(), merged.flatMap { it.second }.sorted())
         assertTrue(merged.any { " – " in it.first })
     }
+
+    private val names = SourceNames("All", "Fav", "Most", "Added", "Played")
+
+    @Test
+    fun `sourceLabel names fixed folders, artists, albums and playlists`() {
+        val playlistName = { id: String -> if (id == "p1") "Drive" else null }
+        assertEquals("All", sourceLabel(ALL_SONGS_ID, names, playlistName))
+        assertEquals("Fav", sourceLabel(FAVORITES_ID, names, playlistName))
+        assertEquals("Most", sourceLabel(MOST_PLAYED_ID, names, playlistName))
+        assertEquals("Added", sourceLabel(RECENTLY_ADDED_ID, names, playlistName))
+        assertEquals("Played", sourceLabel(RECENTLY_PLAYED_ID, names, playlistName))
+        assertEquals("AC/DC", sourceLabel(artistFolderId("AC/DC"), names, playlistName))
+        assertEquals("日本語 | 盤", sourceLabel(albumFolderId("日本語 | 盤"), names, playlistName))
+        assertEquals("Drive", sourceLabel(playlistFolderId("p1"), names, playlistName))
+    }
+
+    @Test
+    fun `sourceLabel is null for no source, a deleted playlist or an unknown id`() {
+        val playlistName = { _: String -> null }
+        assertNull(sourceLabel(null, names, playlistName))
+        assertNull(sourceLabel(playlistFolderId("gone"), names, playlistName))
+        assertNull(sourceLabel(HOME_ID, names, playlistName))
+    }
 }

@@ -39,6 +39,7 @@ fun MiniPlayer(
     state: PlayerUiState,
     albumArt: AlbumArtResolver,
     shuffleOn: Boolean,
+    sourceLabel: String?,
     onTogglePlayPause: () -> Unit,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
@@ -82,8 +83,9 @@ fun MiniPlayer(
                                 modifier = Modifier.padding(end = 4.dp).size(14.dp),
                             )
                         }
+                        val artist = track.artist ?: ""
                         Text(
-                            track.artist ?: "",
+                            if (sourceLabel != null) stringResource(R.string.mini_player_source_format, artist, sourceLabel) else artist,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,

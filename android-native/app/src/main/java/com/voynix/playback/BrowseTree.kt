@@ -170,6 +170,35 @@ fun albumFolderId(album: String): String = "$ALBUM_FOLDER_PREFIX${encodeFolderNa
 fun albumNameOfFolder(mediaId: String): String? =
     mediaId.takeIf { it.startsWith(ALBUM_FOLDER_PREFIX) }?.removePrefix(ALBUM_FOLDER_PREFIX)?.let(::decodeFolderName)
 
+/** Display names for the fixed library folders; the caller supplies them since this file has no Context. */
+data class SourceNames(
+    val allSongs: String,
+    val favorites: String,
+    val mostPlayed: String,
+    val recentlyAdded: String,
+    val recentlyPlayed: String,
+)
+
+/**
+ * What to call the folder a queue was started from ("playing from …"), or null
+ * for an unknown / missing id — including a playlist that no longer exists, so
+ * the UI shows nothing rather than a stale name.
+ */
+fun sourceLabel(sourceId: String?, names: SourceNames, playlistName: (String) -> String?): String? {
+    if (sourceId == null) return null
+    return when {
+        sourceId == ALL_SONGS_ID -> names.allSongs
+        sourceId == FAVORITES_ID -> names.favorites
+        sourceId == MOST_PLAYED_ID -> names.mostPlayed
+        sourceId == RECENTLY_ADDED_ID -> names.recentlyAdded
+        sourceId == RECENTLY_PLAYED_ID -> names.recentlyPlayed
+        artistNameOfFolder(sourceId) != null -> artistNameOfFolder(sourceId)
+        albumNameOfFolder(sourceId) != null -> albumNameOfFolder(sourceId)
+        playlistIdOfFolder(sourceId) != null -> playlistName(playlistIdOfFolder(sourceId)!!)
+        else -> null
+    }
+}
+
 /** A playable leaf's mediaId, tagged with the folder it was browsed from. */
 fun leafMediaId(parentId: String, trackId: String): String = "$parentId|$trackId"
 

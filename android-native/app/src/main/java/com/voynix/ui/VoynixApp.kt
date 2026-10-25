@@ -25,6 +25,7 @@ import com.voynix.playback.PlayerController
 import com.voynix.sync.SyncPeerStore
 import com.voynix.sync.SyncViewModel
 import com.voynix.ui.components.MiniPlayer
+import com.voynix.ui.components.playSourceLabel
 import com.voynix.library.LibraryViewModel
 
 /** App root: hosts the [VoynixNavGraph] plus a [MiniPlayer] that hides itself on Now Playing / Lyrics. */
@@ -43,6 +44,8 @@ fun VoynixApp(
     val podcastNoShuffle by player.podcastNoShuffle.collectAsState()
     val shuffleOn = effectiveShuffle(playerUiState.shuffle, podcastNoShuffle, playerUiState.queue.map { it.kind })
     val navController = rememberNavController()
+    val playlists by vm.playlists.collectAsState()
+    val sourceLabel = playSourceLabel(playerUiState.sourceId, playlists)
 
     // First launch: show the welcome guide once, unless a Mac is already paired.
     // Marked seen as soon as it opens so quitting mid-guide doesn't bring it back.
@@ -71,6 +74,7 @@ fun VoynixApp(
                     state = playerUiState,
                     albumArt = albumArt,
                     shuffleOn = shuffleOn,
+                    sourceLabel = sourceLabel,
                     onTogglePlayPause = { player.togglePlayPause() },
                     onPrevious = { player.previous() },
                     onNext = { player.next() },
