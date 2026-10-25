@@ -30,6 +30,8 @@ Voynix は、Mac と Android 向けのローカルファーストな音楽プレ
 
 [Releases](https://github.com/tekapo/voynix/releases) から、Mac 用の `.dmg` または Android 用の `.apk` をダウンロードします。
 
+**Android のテスター募集中:** Google Play でクローズド テストを実施中です。Android 端末と Mac をお持ちで、14日間参加したままにできる方は、[こちらのフォーム](https://forms.gle/5WoQn1y3orfDcVB67)からお申し込みください。
+
 > [!WARNING]
 > **Mac:** アプリは Apple の署名・公証を受けていないため、初回は macOS にブロックされます。警告で「ゴミ箱に入れる」ではなく
 > 「完了」を押し、システム設定 →「プライバシーとセキュリティ」で Voynix の項目の横にある**「このまま開く」**を押してください。

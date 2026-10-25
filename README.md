@@ -30,6 +30,8 @@ Voynix is a local-first music player for Mac and Android.
 
 Download the Mac `.dmg` or the Android `.apk` from [Releases](https://github.com/tekapo/voynix/releases).
 
+**Android testers wanted:** Voynix is in a closed test on Google Play. If you have an Android phone and a Mac and can stay enrolled for 14 days, [sign up here](https://forms.gle/5WoQn1y3orfDcVB67).
+
 > [!WARNING]
 > **Mac:** the app is not signed or notarized by Apple, so macOS blocks it on first launch. Press "Done" (not
 > "Move to Trash"), then open System Settings → Privacy & Security and click **"Open Anyway"** next to the
