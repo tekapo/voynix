@@ -25,7 +25,7 @@ Android app (Kotlin + Jetpack Compose, `android-native/`), see
 ## Prerequisites
 
 - **macOS** (the app is macOS-only; it relies on macOS features such as `afconvert` and the Dock menu)
-- **Node.js 22** (the version CI uses): [download](https://nodejs.org/)
+- **Node.js 26** (the version CI uses): [download](https://nodejs.org/)
 - **Rust**: install via [rustup](https://rustup.rs/)
 - **Xcode Command Line Tools**:
 
@@ -103,7 +103,7 @@ After adding or updating a dependency, run `npm run licenses:generate` and commi
 
 `.github/workflows/build-macos.yml` builds the macOS desktop app (Apple Silicon / arm64 only) on GitHub
 Actions (`macos-latest`). The build is unsigned, so opening it triggers Gatekeeper's "cannot verify the
-developer" warning (work around it with right-click → Open, or `xattr -cr`).
+developer" warning (work around it with System Settings → Privacy & Security → "Open Anyway", or `xattr -cr`).
 
 There are two triggers:
 
@@ -124,7 +124,8 @@ Release by hand, so the key never sits on GitHub. For preparing the release key,
 [android-native/README.md](../android-native/README.md#release-key-once-per-machine).
 
 `npm run release` does all of it in one go: it pushes the tag, waits for the Build macOS workflow, attaches
-the APK, updates the Homebrew cask, then uploads to Google Play (use `-- --no-android` to push the tag only). To attach the APK on its own:
+the APK, updates the Homebrew cask, then uploads to Google Play (use `-- --no-android` to push the tag only).
+To attach the APK on its own:
 
 1. Push the `v<version>` tag (e.g. `npm run release -- --no-android`) and wait for the Build macOS workflow to
    create the Release
@@ -174,7 +175,7 @@ warning on every install.
 | `npm run version:bump` | Update the version number (applied to both Mac and Android) |
 | `npm run release` | Create and push the `v<version>` tag for the current version, wait for the macOS build on GitHub Actions, then attach the signed APK to the Release, update the Homebrew cask and upload the AAB to Google Play internal testing (`-- --no-android` pushes the tag only, `-- --no-play` skips Play) |
 | `npm run release:cask` | Update `version` / `sha256` of the cask in the `tekapo/homebrew-voynix` tap to the current version's DMG (run by `npm run release`; the Release must already exist) |
-| `npm run build:android-aab` | Build the signed release App Bundle (`voynix-<version>.aab`) for Google Play and print its path, for a manual upload in Play Console (`npm run release:play` uploads it automatically) |
+| `npm run build:android-aab` | Build the signed release App Bundle (`voynix-<version>.aab`) for Google Play and print its path, for a manual upload in Play Console (`npm run release:play` uploads it automatically; it is not attached to the GitHub Release) |
 | `npm run release:play` | Build the signed AAB and upload it to Google Play internal testing with this version's CHANGELOG entry as release notes (`-- --dry-run` prints the notes only) |
 | `npm run release:android` | Build the signed APK and attach it to the GitHub Release for the current version (the Release must already exist) |
 | `npm run install:android-native` | Install the Android debug build on a device |

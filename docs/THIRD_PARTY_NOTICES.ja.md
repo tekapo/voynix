@@ -11,7 +11,7 @@ Rust・npm・Android（Gradle）の依存ライブラリの著作権表示とラ
 `npm run licenses:generate`（`scripts/generate-licenses.mjs`）で自動生成し、
 アプリ内の「オープンソースライセンス」から見られるようにしています。
 
-- Mac: `public/licenses.txt`（設定 → About から表示）
+- Mac: `public/licenses.txt`（設定 → 情報から表示）
 - Android: `android-native/app/src/main/assets/licenses.txt`（設定 → オープンソースライセンス）
 
 ## Outfit フォント

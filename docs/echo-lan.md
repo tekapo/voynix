@@ -138,7 +138,7 @@ secret in its own settings.
 
 Source: [`alexa-skill/`](../alexa-skill) (see its README for what each file does). It's an Alexa-hosted (Node.js)
 custom skill with the Audio Player interface. The invocation name in `ja-JP.json` is `ラジカセ` — change it if you like,
-but pick a plain word that doesn't contain "music"/"ミュージック"/"プレイリスト" or sound like English
+but pick a plain word that doesn't contain "music"/"ミュージック"/"音楽"/"プレイリスト" or sound like English
 ("マイミュージック" is swallowed by Amazon Music).
 
 1. **Use the Echo's own Amazon account.** In the Alexa app, More → Settings → Account Settings shows which account the
@@ -163,7 +163,7 @@ but pick a plain word that doesn't contain "music"/"ミュージック"/"プレ�
      To see what Alexa heard: console → Code → **CloudWatch Logs**, search `REQUEST IntentRequest`, read
      `{"playlist":"…"}`. In the line `PLAY … list=…`, a canonical playlist name means Alexa matched it; the raw heard text
      (often kanji) means it did not. Person names have many kanji spellings, so expect a few rounds.
-   - **An English name is not the same as its katakana.** Voynix matches case, width and kana, but not "For Drive" with
+   - **An English name is not the same as its katakana.** Voynix ignores differences in case, width and kana, but doesn't treat "For Drive" as the same as
      "フォードライブ": add the katakana reading as a synonym.
 5. Code: replace `lambda/package.json` and `lambda/index.js`, add `lambda/playback.js`, and create `lambda/config.json`
    from `config.example.json` (`baseUrl` = `https://<you>.duckdns.org`, `secret` = the one from Voynix) → **Save →
@@ -212,7 +212,7 @@ Voynix logs one line per request to its stderr (`echo /play <ip> i=… seed=… 
 - **The Mac must be awake.** If it sleeps or quits, the Echo can't reach it — and since the Echo uses the Mac's DNS,
   its *other* name lookups fail too. If that bites, move the dnsmasq to an always-on device (a Raspberry Pi, a NAS)
   and point the Echo's DNS there instead; nothing else changes.
-- Only the Echo you point at the DNS can play (other Echos resolve the host name to the public IP and fail).
+- Only the Echo you point at the DNS can play (other Echo devices resolve the host name to the public IP and fail).
 - Tracks whose file is missing on disk (or on an unmounted drive) are skipped; if the same recording exists at two
   paths, the one that exists is played. A track that can't be converted (an unsupported format) still stops the queue.
 - A link is valid for `ttlSeconds` (2 hours by default) from when the skill signs it. A single track longer than that
@@ -231,9 +231,9 @@ Alexa console.
 
 ## Security notes
 
-- The server only accepts connections from private addresses and only serves `/play`. A URL is valid for 2 hours
-  (set by the skill) and is bound to one playlist, track number and shuffle seed.
-- The shared secret lets anyone who has it make Voynix play your music from your network, nothing more; it is kept in
-  Voynix's local settings, never in backups, and in the skill's `config.json` (git-ignored). Treat it like a password
+- The server only accepts connections from private addresses and only serves `/play`. A URL is valid for 2 hours by
+  default (`ttlSeconds` in the skill) and is bound to one playlist, track number and shuffle seed.
+- The shared secret lets anyone who has it make Voynix play your music from your network, nothing more. It is kept in
+  Voynix's local settings (never in backups) and in the skill's git-ignored `config.json`. Treat it like a password
   and don't paste it into chats.
 - Don't forward port 443 on your router; this feature is meant to stay inside your home network.

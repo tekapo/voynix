@@ -7,15 +7,15 @@ The version number is bumped with `npm run version:bump -- <patch|minor|major|x.
 src-tauri/tauri.conf.json / src-tauri/Cargo.toml / src-tauri/Cargo.lock /
 android-native/app/build.gradle.kts in one go.
 
-**Rule**: after bumping the version and committing, add one entry at the top of this file
-(`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English.
+**Rule**: when you bump the version, add one entry at the top of this file
+(`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
 ## 0.27.3 — 2026-10-25
 - The desktop track list's Time column can now be resized like the other columns (drag its left edge, double-click to reset). Its default width is now just wide enough for HH:MM:SS, leaving more room for the text columns.
 - An in-progress podcast's "position / duration" text is truncated with an ellipsis when it doesn't fit; hover to see it in full.
 
 ## 0.27.2 — 2026-10-25
-- The desktop track list's "Now playing" jump button now appears at the vertical centre of the visible rows, for both the up and down directions.
+- The desktop track list's "Now playing" jump button now appears at the vertical center of the visible rows, for both the up and down directions.
 
 ## 0.27.1 — 2026-10-25
 - Fixed the "Now playing" jump button in the desktop track list floating far above the player bar; it now sits the same distance from the player bar as it does from the header when pointing up.
