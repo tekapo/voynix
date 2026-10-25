@@ -45,10 +45,10 @@
   <li><strong>Playback</strong>: scans local music files (mp3, m4a, flac) into a library of artists, albums and playlists. Gapless playback on both Mac and Android</li>
   <li><strong>Playlists</strong>: regular playlists, plus smart playlists that collect tracks by genre, artist, play count, date added, favorites and more. Most Played, Recently Added and Recently Played are built in</li>
   <li><strong>Editing track info</strong>: "Get Info…" edits titles and tags per track, album or artist. Artist images can be fetched automatically</li>
-  <li><strong>Podcasts</strong>: playback speed (0.8–2.0x), ±10-second skip, excluded from shuffle</li>
+  <li><strong>Podcasts</strong>: playback speed (0.8–2.0x), ±10-second skip, optional exclusion from shuffle</li>
   <li><strong>iTunes import</strong>: import playlists from an iTunes library XML</li>
 </ul>
-<p><strong>Requirements:</strong> macOS (the DMG is Apple Silicon only) and/or Android 8.0 (API 26) or later. Android Auto is optional. Sync needs both devices on the same Wi-Fi network.</p>
+<p><strong>Requirements:</strong> macOS (the DMG is Apple Silicon only) and Android 8.0 (API 26) or later. Android Auto is optional. Sync needs both devices on the same Wi-Fi network.</p>
 
 <figure><img src="../img/en-library-dark.png" alt="The library on Mac: all songs with artist, album and duration" loading="lazy"><figcaption>The library on Mac: all songs with artist, album and duration</figcaption></figure>
 
@@ -62,7 +62,7 @@
 <div class="note"><strong>Before installing:</strong> if Android's <strong>Advanced Protection</strong> is on, installing the APK (including through Obtainium) is blocked with "restricted by Advanced Protection". Turn it off in Settings → Security &amp; privacy first. You also need to allow "Install unknown apps" for the app you install from. <strong>Updates are blocked too:</strong> with Advanced Protection on, Android refuses to let Obtainium install apps, so turn it off for each update (you can turn it back on afterwards). <strong>None of this applies if you install from Google Play as a closed-test tester:</strong> Advanced Protection can stay on, and Play updates the app for you.</div>
 <p>Download <code>voynix-&lt;version&gt;.apk</code> from <a href="https://github.com/tekapo/voynix/releases">Releases</a> and open it on the device. The first time, Android asks you to allow installing apps from your browser or file manager ("Install unknown apps").</p>
 <p>To get updates automatically, use <a href="https://obtainium.imranr.dev/">Obtainium</a>: choose "Add App", enter <code>https://github.com/tekapo/voynix</code>, and install. Obtainium picks the <code>.apk</code> from each Release and notifies you of new versions.</p>
-<p>The APK is not distributed through Google Play. On first launch, Android 13 and later ask for the notification permission.</p>
+<p>The APK from Releases is installed outside Google Play; closed-test testers get the app from Google Play instead. On first launch, Android 13 and later ask for the notification permission.</p>
 
 <h2 id="start">Getting started</h2>
 <h3>Adding music (Mac)</h3>
@@ -70,9 +70,9 @@
 <h3>Library, playlists and podcasts</h3>
 <p>Browse by artist, album or playlist. Create playlists from the sidebar; smart playlists are created and edited on the Mac only and reach Android as regular playlists.</p>
 <h3>Podcasts</h3>
-<p>To treat tracks as podcasts, right-click a playlist or music folder in the sidebar and choose <strong>Kind → Podcast</strong> (other choices: Music, Other). Podcasts offer speed control (0.8–2.0x) and ±10-second skip, and are left out of shuffle. On Android, the "Don't shuffle podcasts" setting does the same for podcast playlists.</p>
+<p>To treat tracks as podcasts, right-click a playlist or music folder in the sidebar and choose <strong>Kind → Podcast</strong> (other choices: Music, Other). Podcasts offer speed control (0.8–2.0x) and ±10-second skip. With the "Don't shuffle Podcast playlists" setting on the Mac (and "Don't shuffle podcasts" on Android), podcast playlists play in order instead of being shuffled.</p>
 <figure><img src="../img/en-albums-dark.png" alt="Browsing albums on Mac" loading="lazy"><figcaption>Browsing albums on Mac</figcaption></figure>
-<p> Android is a client that mirrors the Mac library, so add and manage music on the Mac.</p>
+<p>Android is a client that mirrors the Mac library, so add and manage music on the Mac.</p>
 <figure class="phone"><img src="../img/en-android-songs.png" alt="All songs on Android, synced from the Mac" loading="lazy"><figcaption>All songs on Android, synced from the Mac</figcaption></figure>
 
 <h2 id="sync">Wi-Fi sync between Mac and Android</h2>
@@ -104,7 +104,7 @@
 
 <h2 id="auto">Android Auto</h2>
 <p>Connected to a head unit, you can browse and play tracks, playlists and podcasts from the home screen, with shuffle/repeat and ±10-second podcast skip.</p>
-<p>Because the app is installed outside Google Play, it won't appear in Android Auto's app list unless "Unknown sources" is enabled. This one-time setup is needed:</p>
+<p>If you installed the APK from outside Google Play, the app won't appear in Android Auto's app list unless "Unknown sources" is enabled. This one-time setup is needed (skip it if you installed from Google Play as a closed-test tester):</p>
 <ol>
   <li>Open the Android Auto app on the phone.</li>
   <li>Go to Settings and tap "Version" at the bottom about 10 times (a message says you're now a developer).</li>
@@ -127,7 +127,7 @@
 
 <h2 id="backup">Backup and restore</h2>
 <p>On the Mac, <strong>Settings → Library → Export Backup…</strong> saves your playlists (regular and smart), registered music folders, settings, artist images and album covers to a single ZIP file, and <strong>Import Backup…</strong> merges one into the library. Importing never overwrites an existing playlist or folder; it only adds what is missing. Your music files are not included; keep them in your own backups.</p>
-<figure><img src="../img/en-settings-library-dark.png" alt="Settings → Library, with the language setting and backup buttons" loading="lazy"><figcaption>Settings → Library, with the language setting and backup buttons</figcaption></figure>
+<figure><img src="../img/en-settings-library-dark.png" alt="Settings → Library, with the backup buttons" loading="lazy"><figcaption>Settings → Library, with the backup buttons</figcaption></figure>
 
 <p>Android backup is disabled on purpose so the pairing token is never restored on another device. After changing phones, install the app, pair again and sync.</p>
 
@@ -139,7 +139,7 @@
 <h3>My Mac's IP address changed and Android says it can't reach the Mac.</h3>
 <p>Automatic recovery can fail on some networks. Open the Wi-Fi sync window on the Mac and pair again by scanning the QR code.</p>
 <h3>How do I update the app?</h3>
-<p>Mac: download the new <code>.dmg</code> and replace the app in Applications, or run <code>brew upgrade --cask voynix</code> if you installed with Homebrew. Android: Obtainium updates it for you (turn off Advanced Protection first; see Installation); otherwise install the new <code>.apk</code> over the old one. Your data is kept.</p>
+<p>Mac: download the new <code>.dmg</code> and replace the app in Applications, or run <code>brew upgrade --cask voynix</code> if you installed with Homebrew. Android: Obtainium updates it for you (turn off Advanced Protection first; see Installation); otherwise install the new <code>.apk</code> over the old one. Your data is kept. If you installed from Google Play as a closed-test tester, Play updates the app.</p>
 <h3>How do I uninstall the app?</h3>
 <p>Mac: drag Voynix from Applications to the Trash (or run <code>brew uninstall --cask voynix</code> if you installed with Homebrew; add <code>--zap</code> to remove the data as well). The data folder stays behind; delete <code>~/Library/Application Support/com.tekapo.voynix</code> if you no longer need it. Your music files are never removed. Android: uninstall as usual; the data on the device is deleted with it.</p>
 <h3>Where is my data stored?</h3>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Voynix ユーザーマニュアル</title>
-<meta name="description" content="Mac と Android 向けのローカルファーストな音楽プレーヤー Voynix のインストール方法と使い方。">
+<meta name="description" content="Mac と Android 向けのローカルファーストな音楽プレイヤー Voynix のインストール方法と使い方。">
 <link rel="icon" href="../favicon.svg">
 <link rel="alternate" hreflang="en" href="../en/">
 <link rel="stylesheet" href="../style.css">
@@ -34,7 +34,7 @@
 </aside>
 <main>
 <h1>Voynix ユーザーマニュアル</h1>
-<p class="lead">Voynix は、Mac と Android 向けのローカルファーストな音楽プレーヤーです。</p>
+<p class="lead">Voynix は、Mac と Android 向けのローカルファーストな音楽プレイヤーです。</p>
 
 <h2 id="overview">概要</h2>
 <ul>
@@ -44,8 +44,8 @@
 <ul>
   <li><strong>音楽再生</strong>: ローカルの音楽ファイル（mp3, m4a, flac）をスキャンしてライブラリ管理（アーティスト、アルバム、プレイリスト）。Mac・Android とも曲間の無音を挟まないギャップレス再生に対応</li>
   <li><strong>プレイリスト</strong>: 通常のプレイリストに加え、ジャンル・アーティスト・再生回数・追加日・お気に入りなどの条件で自動的に曲を集めるスマートプレイリスト。Most Played / Recently Added / Recently Played も用意</li>
-  <li><strong>曲情報の編集</strong>: 「Get Info…」から曲・アルバム・アーティスト単位でタイトルやタグを編集可能。アーティスト画像は自動取得できます</li>
-  <li><strong>Podcast</strong>: 再生速度の変更（0.8〜2.0x）、±10秒スキップ、シャッフル対象外</li>
+  <li><strong>曲情報の編集</strong>: 「情報を見る…」から曲・アルバム・アーティスト単位でタイトルやタグを編集可能。アーティスト画像は自動取得できます</li>
+  <li><strong>ポッドキャスト</strong>: 再生速度の変更（0.8〜2.0倍）、±10秒スキップ、シャッフル対象からの除外（設定）</li>
   <li><strong>iTunes 連携</strong>: iTunes のライブラリ XML からプレイリストをインポート</li>
 </ul>
 <p><strong>動作環境:</strong> macOS（配布している DMG は Apple Silicon 専用）、Android 8.0（API 26）以上。Android Auto は任意です。同期には Mac と Android が同じ Wi-Fi ネットワーク上にあることが必要です。</p>
@@ -56,21 +56,21 @@
 <h3>Mac</h3>
 <p><a href="https://github.com/tekapo/voynix/releases">Releases</a> から <code>.dmg</code> をダウンロードして Applications にドラッグします。</p>
 <p>Homebrew（Apple Silicon）では <code>brew install --cask tekapo/voynix/voynix</code> を実行します。この場合は下の警告は出ません。更新は <code>brew upgrade --cask voynix</code> です。Homebrew 7 で「信頼されていない tap」として読み込みを拒否されたら、一度だけ <code>brew trust tekapo/voynix</code> を実行してください。</p>
-<div class="note"><strong>重要:</strong> アプリは Apple の署名・公証を受けていません。初回は macOS にブロックされます。警告で「ゴミ箱に入れる」ではなく「完了」を押し、システム設定 →「プライバシーとセキュリティ」で Voynix の項目の横にある<strong>「このまま開く」</strong>を押してください。ターミナルで <code>xattr -cr /Applications/Voynix.app</code> を実行してから開き直す方法もあります。初回だけ必要です。</div>
+<div class="note"><strong>重要:</strong> アプリは Apple の署名・公証を受けていません。初回は macOS にブロックされます。警告で「ゴミ箱に入れる」ではなく「完了」を押し、システム設定 →「プライバシーとセキュリティ」で Voynix の項目の横にある「<strong>このまま開く</strong>」を押してください。ターミナルで <code>xattr -cr /Applications/Voynix.app</code> を実行してから開き直す方法もあります。初回だけ必要です。</div>
 <h3>Android</h3>
 <p><strong>テスター募集中:</strong> Google Play でクローズド テストを実施中です。Android 端末と Mac をお持ちで、14日間参加したままにできる方は、<a href="https://forms.gle/5WoQn1y3orfDcVB67">こちらのフォーム</a>からお申し込みください。</p>
-<div class="note"><strong>インストール前に:</strong> Android の<strong>「高度な保護機能」</strong>がオンだと、「高度な保護機能により制限されています」と表示され、APK をインストールできません（Obtainium 経由も同様）。先に設定 → セキュリティとプライバシーでオフにしてください。インストール元のアプリには「提供元不明のアプリ」の許可も必要です。<strong>更新も同様にブロックされます。</strong>オンのままだと Obtainium に「この提供元のアプリを許可」を設定できないため、更新のたびにオフにしてください（更新後にオンへ戻せます）。<strong>クローズド テストのテスターとして Google Play から入れる場合は、これらは不要です。</strong>高度な保護機能をオンのままインストールでき、更新も Play が行います。</div>
-<p><a href="https://github.com/tekapo/voynix/releases">Releases</a> から <code>voynix-&lt;バージョン&gt;.apk</code> をダウンロードして端末で開きます。初回は、ブラウザやファイルアプリに「提供元不明のアプリ」のインストールを許可するよう求められます。</p>
+<div class="note"><strong>インストール前に:</strong> Android の<strong>「高度な保護機能」</strong>がオンだと、「高度な保護機能により制限されています」と表示され、APK をインストールできません（Obtainium 経由も同様）。先に設定 → セキュリティとプライバシーでオフにしてください。インストール元のアプリには「不明なアプリのインストール」の許可も必要です。<strong>更新も同様にブロックされます。</strong>オンのままだと Obtainium に「この提供元のアプリを許可」を設定できないため、更新のたびにオフにしてください（更新後にオンへ戻せます）。<strong>クローズド テストのテスターとして Google Play から入れる場合は、これらは不要です。</strong>高度な保護機能をオンのままインストールでき、更新も Play が行います。</div>
+<p><a href="https://github.com/tekapo/voynix/releases">Releases</a> から <code>voynix-&lt;バージョン&gt;.apk</code> をダウンロードして端末で開きます。初回は、ブラウザやファイルアプリに「不明なアプリのインストール」を許可するよう求められます。</p>
 <p>更新を自動で受け取りたい場合は <a href="https://obtainium.imranr.dev/">Obtainium</a> に登録します。「アプリを追加」→ <code>https://github.com/tekapo/voynix</code> を入力してインストールすると、各 Release の <code>.apk</code> を取得し、新しいバージョンが出たときに通知してくれます。</p>
-<p>APK は Google Play では配布していません。初回起動時、Android 13 以上では通知権限の許可を求められます。</p>
+<p>Releases の APK は Google Play の外からインストールするものです。クローズド テストのテスターは Google Play から入れられます。初回起動時、Android 13 以上では通知権限の許可を求められます。</p>
 
 <h2 id="start">はじめに</h2>
 <h3>音楽を取り込む（Mac）</h3>
-<p>サイドバーの <strong>「＋ New」→「Add Music Folder…」</strong>から音楽フォルダを追加するとスキャンが始まります。<strong>Settings → Music Folders</strong> からは再スキャン（Rescan All）や iTunes ライブラリの読み込み（Import iTunes Library…）も行えます。</p>
-<h3>ライブラリ、プレイリスト、Podcast</h3>
+<p>サイドバーの <strong>「＋ 新規」→「ミュージックフォルダを追加…」</strong>から音楽フォルダを追加するとスキャンが始まります。<strong>設定 → ミュージックフォルダ</strong>からは再スキャン（すべて再スキャン）や iTunes ライブラリの読み込み（iTunesライブラリをインポート…）も行えます。</p>
+<h3>ライブラリ、プレイリスト、ポッドキャスト</h3>
 <p>アーティスト・アルバム・プレイリストから曲を探せます。プレイリストはサイドバーから作成します。スマートプレイリストの作成・編集は Mac のみで、Android へは通常プレイリストとして同期されます。</p>
-<h3>Podcast</h3>
-<p>曲を Podcast として扱うには、サイドバーでプレイリストやミュージックフォルダを右クリックし、<strong>「種類 → ポッドキャスト」</strong>を選びます（ほかに「音楽」「その他」）。Podcast は再生速度の変更（0.8〜2.0倍）と ±10秒スキップに対応し、シャッフルの対象外になります。Android では、設定の「ポッドキャストをシャッフルしない」で、Podcast プレイリストに同じ動作を設定できます。</p>
+<h3>ポッドキャスト</h3>
+<p>曲をポッドキャストとして扱うには、サイドバーでプレイリストやミュージックフォルダを右クリックし、<strong>「種類 → ポッドキャスト」</strong>を選びます（ほかに「音楽」「その他」）。ポッドキャストは再生速度の変更（0.8〜2.0倍）と ±10秒スキップに対応します。Mac の設定「ポッドキャストプレイリストをシャッフルしない」（Android では「ポッドキャストをシャッフルしない」）をオンにすると、ポッドキャストのプレイリストはシャッフルされず順番に再生されます。</p>
 <figure><img src="../img/ja-albums-dark.png" alt="Mac のアルバム一覧" loading="lazy"><figcaption>Mac のアルバム一覧</figcaption></figure>
 <p>Android は Mac のライブラリをミラーする専用クライアントなので、曲の追加・管理は Mac で行ってください。</p>
 <figure class="phone"><img src="../img/ja-android-songs.png" alt="Mac から同期された Android の「すべての曲」画面" loading="lazy"><figcaption>Mac から同期された Android の「すべての曲」画面</figcaption></figure>
@@ -103,13 +103,13 @@
 </ul>
 
 <h2 id="auto">Android Auto</h2>
-<p>車載機に接続すると、ホーム画面から曲・プレイリスト・Podcast をブラウズして再生できます。シャッフル/リピート、Podcast の ±10秒スキップにも対応しています。</p>
-<p>Google Play 以外から入れたアプリは、Android Auto 側で「提供元不明のアプリ」を有効にしないとアプリ一覧に出てきません。初回のみ以下の設定が必要です。</p>
+<p>車載機に接続すると、ホーム画面から曲・プレイリスト・ポッドキャストをブラウズして再生できます。シャッフル/リピート、ポッドキャストの ±10秒スキップにも対応しています。</p>
+<p>APK を Google Play 以外から入れた場合は、Android Auto 側で「提供元不明のアプリ」を有効にしないとアプリ一覧に出てきません。初回のみ以下の設定が必要です（Google Play のクローズド テストから入れた場合は不要です）。</p>
 <ol>
   <li>端末で Android Auto アプリを開く</li>
   <li>設定 → 一番下の「バージョン」を約10回タップする（デベロッパーになった旨のメッセージが表示される）</li>
   <li>設定画面から戻り、左上のメニュー（≡）を開くと「デベロッパー向け設定」が増えている</li>
-  <li>デベロッパー向け設定 →「提供元不明のアプリ」を ON にする</li>
+  <li>デベロッパー向け設定 →「提供元不明のアプリ」をオンにする</li>
   <li>Android Auto を強制停止するか端末を再起動し、車に再接続する</li>
 </ol>
 <p>これで一覧に「Voynix」が表示されます。詳しい確認方法は <a href="https://github.com/tekapo/voynix/blob/main/android-native/README.ja.md">android-native/README.ja.md</a> を参照してください。</p>
@@ -126,8 +126,8 @@
 <p>Dock の右クリックメニューにも対応しています。</p>
 
 <h2 id="backup">バックアップと復元</h2>
-<p>Mac では <strong>Settings → Library → Export Backup…</strong> で、プレイリスト（通常・スマート）、登録済みの音楽フォルダ、設定、アーティスト画像、アルバムカバーを 1 つの ZIP ファイルに書き出せます。<strong>Import Backup…</strong> で、ライブラリにマージできます。インポートしても既存のプレイリストやフォルダは上書きされず、不足しているものだけが追加されます。音楽ファイル自体は含まれないため、別途バックアップしてください。</p>
-<figure><img src="../img/ja-settings-library-dark.png" alt="設定 → ライブラリ（言語設定とバックアップのボタン）" loading="lazy"><figcaption>設定 → ライブラリ（言語設定とバックアップのボタン）</figcaption></figure>
+<p>Mac では<strong>設定 → ライブラリ → バックアップをエクスポート…</strong>で、プレイリスト（通常・スマート）、登録済みの音楽フォルダ、設定、アーティスト画像、アルバムカバーを 1 つの ZIP ファイルに書き出せます。<strong>バックアップをインポート…</strong>で、ライブラリにマージできます。インポートしても既存のプレイリストやフォルダは上書きされず、不足しているものだけが追加されます。音楽ファイル自体は含まれないため、別途バックアップしてください。</p>
+<figure><img src="../img/ja-settings-library-dark.png" alt="設定 → ライブラリ（バックアップのボタン）" loading="lazy"><figcaption>設定 → ライブラリ（バックアップのボタン）</figcaption></figure>
 
 <p>Android のバックアップは、ペアリング情報を別端末に復元させないため意図的に無効です。機種変更後はアプリを入れ直し、再ペアリングして同期してください。</p>
 
@@ -139,7 +139,7 @@
 <h3>Mac の IP アドレスが変わって、Android が Mac に接続できません。</h3>
 <p>ネットワークによっては自動復旧できないことがあります。Mac の Wi-Fi 同期画面を開き、QR コードを読み取って再ペアリングしてください。</p>
 <h3>アプリのアップデート方法は？</h3>
-<p>Mac は、新しい <code>.dmg</code> をダウンロードして「アプリケーション」内のアプリを置き換えます（Homebrew で入れた場合は <code>brew upgrade --cask voynix</code>）。Android は Obtainium で更新します（先に高度な保護機能をオフにしてください。インストールの項を参照）。使っていない場合は、新しい <code>.apk</code> を上書きインストールしてください。データは保持されます。</p>
+<p>Mac は、新しい <code>.dmg</code> をダウンロードして「アプリケーション」内のアプリを置き換えます（Homebrew で入れた場合は <code>brew upgrade --cask voynix</code>）。Android は Obtainium で更新します（先に高度な保護機能をオフにしてください。インストールの項を参照）。使っていない場合は、新しい <code>.apk</code> を上書きインストールしてください。データは保持されます。Google Play のクローズド テストから入れた場合は、Play が更新します。</p>
 <h3>アンインストールするには？</h3>
 <p>Mac は、「アプリケーション」から Voynix をゴミ箱に入れます（Homebrew で入れた場合は <code>brew uninstall --cask voynix</code>。<code>--zap</code> を付けるとデータも削除します）。データのフォルダは残るので、不要なら <code>~/Library/Application Support/com.tekapo.voynix</code> を削除してください。音楽ファイルが削除されることはありません。Android は通常どおりアンインストールします。端末内のデータも一緒に消えます。</p>
 <h3>データはどこに保存されますか？</h3>

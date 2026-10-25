@@ -25,7 +25,7 @@ Android 版（Kotlin + Jetpack Compose、`android-native/`）の開発につい�
 ## 前提条件
 
 - **macOS**（アプリ自体が macOS 専用で、`afconvert` や Dock メニューなど macOS の機能を使います）
-- **Node.js 22**（CI と同じバージョン）: [ダウンロード](https://nodejs.org/)
+- **Node.js 26**（CI と同じバージョン）: [ダウンロード](https://nodejs.org/)
 - **Rust**: [rustup](https://rustup.rs/) 経由でインストール
 - **Xcode Command Line Tools**:
 
@@ -103,7 +103,7 @@ npm run version:bump -- <patch|minor|major|x.y.z>
 
 `.github/workflows/build-macos.yml` により、GitHub Actions 上（`macos-latest`）で macOS 版デスクトップ
 アプリ（Apple Silicon / arm64 のみ）をビルドできます。未署名ビルドのため、配布物を開く際は Gatekeeper の
-「開発元を確認できません」警告が出ます（右クリック → 開く、または `xattr -cr` で回避）。
+「開発元を確認できません」警告が出ます（システム設定 → プライバシーとセキュリティ →「このまま開く」、または `xattr -cr` で回避）。
 
 トリガーは以下の2通りです:
 
