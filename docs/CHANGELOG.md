@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.28.0 — 2026-10-27
+- The Mac app can now update itself: it checks GitHub Releases at launch (Settings → General turns this off, Settings → About has a manual check) and asks before downloading, installing and restarting.
+- Release builds now publish a signed updater bundle and `latest.json` alongside the DMG.
+
 ## 0.27.3 — 2026-10-25
 - The desktop track list's Time column can now be resized like the other columns (drag its left edge, double-click to reset). Its default width is now just wide enough for HH:MM:SS, leaving more room for the text columns.
 - An in-progress podcast's "position / duration" text is truncated with an ellipsis when it doesn't fit; hover to see it in full.

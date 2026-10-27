@@ -365,6 +365,13 @@
     "startServer": "Start Server",
     "never": "never"
   },
+  "update": {
+    "title": "Voynix {{version}} is available",
+    "install": "Update and Restart",
+    "later": "Later",
+    "downloading": "Downloading… {{percent}}%",
+    "downloadingUnknown": "Downloading…"
+  },
   "welcome": {
     "step1Title": "Welcome to Voynix",
     "step1Body": "A local-first music player for your Mac, with Wi-Fi sync to your Android phone. Two quick steps to get started.",
@@ -446,6 +453,12 @@
     "themeSystem": "Follow system",
     "themeLight": "Light",
     "themeDark": "Dark",
+    "autoUpdateCheck": "Check for updates at launch",
+    "autoUpdateHint": "Connects to GitHub to look for a newer version. Nothing is installed without your confirmation.",
+    "checkForUpdates": "Check for Updates",
+    "updateChecking": "Checking…",
+    "updateUpToDate": "You're up to date.",
+    "updateFailed": "Couldn't check for updates: {{message}}",
     "close": "Close",
     "tabRemote": "Echo"
   },

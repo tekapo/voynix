@@ -11,6 +11,7 @@ import type { ThemePreference } from '../theme';
 import { pairingQrDataUri } from '../syncPairing';
 import type { RemoteAccess } from '../hooks/useRemoteServer';
 import { RemoteAccessSection } from './RemoteAccessSection';
+import type { SelfUpdate } from '../hooks/useUpdater';
 
 // Render modals at <body> so the fixed-position overlay isn't offset by an
 // ancestor that establishes a containing block (the sidebar's transform, the
@@ -206,6 +207,10 @@ interface SettingsModalProps {
     /** Colour theme preference: "system" follows the OS appearance. */
     theme: ThemePreference;
     onChangeTheme: (next: ThemePreference) => void;
+    /** Self-update (desktop only): the launch-time check preference and the manual check. */
+    autoUpdateCheck: boolean;
+    onToggleAutoUpdateCheck: (next: boolean) => void;
+    updater: SelfUpdate;
     /** Export/import a single JSON snapshot of playlists/folders/settings
      *  (desktop only) — see useBackup.ts. Disabled while isScanning, same as
      *  the folder actions above (an import re-scans any new folders). */
@@ -248,6 +253,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     onChangeLanguage,
     theme,
     onChangeTheme,
+    autoUpdateCheck,
+    onToggleAutoUpdateCheck,
+    updater,
     onExportBackup,
     onImportBackup,
     remote,
@@ -339,6 +347,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         <option value="light">{t('settings.themeLight')}</option>
                         <option value="dark">{t('settings.themeDark')}</option>
                     </select>
+                </div>
+                <div className="settings-section">
+                    <label className="settings-toggle">
+                        <input
+                            type="checkbox"
+                            checked={autoUpdateCheck}
+                            onChange={e => onToggleAutoUpdateCheck(e.target.checked)}
+                        />
+                        {t('settings.autoUpdateCheck')}
+                    </label>
+                    <p className="settings-hint">{t('settings.autoUpdateHint')}</p>
                 </div>
                 </>}
 
@@ -606,6 +625,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             {t('settings.showWelcome')}
                         </button>
                     </>}
+                    {' '}
+                    <button type="button" className="modal-btn cancel" onClick={updater.checkNow} disabled={updater.status.kind === 'checking'}>
+                        {t('settings.checkForUpdates')}
+                    </button>
+                    {updater.status.kind === 'checking' && <p className="settings-hint">{t('settings.updateChecking')}</p>}
+                    {updater.status.kind === 'upToDate' && <p className="settings-hint">{t('settings.updateUpToDate')}</p>}
+                    {updater.status.kind === 'error' && <p className="settings-hint">{t('settings.updateFailed', { message: updater.status.message })}</p>}
                     {licenses !== null && (
                         <pre className="settings-licenses" tabIndex={0}>{licenses}</pre>
                     )}
