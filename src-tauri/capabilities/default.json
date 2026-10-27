@@ -17,6 +17,8 @@
     "dialog:allow-open",
     "dialog:allow-ask",
     "dialog:allow-save",
+    "updater:default",
+    "process:allow-restart",
     "sql:default",
     "sql:allow-load",
     "sql:allow-execute",

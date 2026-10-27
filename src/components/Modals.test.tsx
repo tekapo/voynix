@@ -34,6 +34,15 @@ function makeProps(over: Partial<React.ComponentProps<typeof SettingsModal>> = {
         onChangeLanguage: () => {},
         theme: "system" as const,
         onChangeTheme: () => {},
+        autoUpdateCheck: true,
+        onToggleAutoUpdateCheck: () => {},
+        updater: {
+            status: { kind: "idle" } as const,
+            dialogOpen: false,
+            checkNow: () => {},
+            install: () => {},
+            dismiss: () => {},
+        },
         onExportBackup: () => {},
         onImportBackup: () => {},
         ...over,
@@ -83,5 +92,24 @@ describe("SettingsModal about tab", () => {
 
         fireEvent.click(screen.getByRole("button", { name: "Support on Ko-fi" }));
         expect(openUrl).toHaveBeenCalledWith("https://ko-fi.com/tekapo");
+    });
+});
+
+describe("SettingsModal self-update", () => {
+    it("toggles the launch-time check", () => {
+        const onToggleAutoUpdateCheck = vi.fn();
+        render(<SettingsModal {...makeProps({ onToggleAutoUpdateCheck })} />);
+        fireEvent.click(screen.getByLabelText("Check for updates at launch"));
+        expect(onToggleAutoUpdateCheck).toHaveBeenCalledWith(false);
+    });
+
+    it("runs a manual check from About and shows the result", () => {
+        const checkNow = vi.fn();
+        const updater = { status: { kind: "upToDate" } as const, dialogOpen: false, checkNow, install: () => {}, dismiss: () => {} };
+        render(<SettingsModal {...makeProps({ updater })} />);
+        fireEvent.click(screen.getByRole("tab", { name: "About" }));
+        fireEvent.click(screen.getByText("Check for Updates"));
+        expect(checkNow).toHaveBeenCalled();
+        expect(screen.getByText("You're up to date.")).toBeTruthy();
     });
 });

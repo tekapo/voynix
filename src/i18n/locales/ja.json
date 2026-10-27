@@ -361,6 +361,13 @@
     "startServer": "サーバーを開始",
     "never": "なし"
   },
+  "update": {
+    "title": "Voynix {{version}} が利用できます",
+    "install": "更新して再起動",
+    "later": "あとで",
+    "downloading": "ダウンロード中… {{percent}}%",
+    "downloadingUnknown": "ダウンロード中…"
+  },
   "welcome": {
     "step1Title": "Voynix へようこそ",
     "step1Body": "Mac 向けのローカルファーストな音楽プレイヤーです。Android とは Wi-Fi で同期できます。はじめに 2 つの手順を案内します。",
@@ -442,6 +449,12 @@
     "themeSystem": "システムに従う",
     "themeLight": "ライト",
     "themeDark": "ダーク",
+    "autoUpdateCheck": "起動時にアップデートを確認する",
+    "autoUpdateHint": "GitHub に接続して新しいバージョンを確認します。インストールは確認のうえで行います。",
+    "checkForUpdates": "アップデートを確認",
+    "updateChecking": "確認中…",
+    "updateUpToDate": "最新バージョンです。",
+    "updateFailed": "アップデートを確認できませんでした: {{message}}",
     "close": "閉じる",
     "tabRemote": "Echo"
   },

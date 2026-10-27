@@ -38,6 +38,8 @@ jobs:
         uses: tauri-apps/tauri-action@fce9c6108b31ea247710505d3aaaa893ee6768d4 # v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           args: --target aarch64-apple-darwin
 
@@ -49,10 +51,39 @@ jobs:
             src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
             src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app
 
+      # The in-app updater (tauri-plugin-updater) reads this manifest from
+      # releases/latest/download/latest.json.
+      - name: Write updater manifest
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          bundle=src-tauri/target/aarch64-apple-darwin/release/bundle/macos
+          node -e '
+            const fs = require("fs");
+            const dir = process.argv[1];
+            const tgz = fs.readdirSync(dir).find((f) => f.endsWith(".app.tar.gz"));
+            const { TAG, REPO } = process.env;
+            fs.writeFileSync(dir + "/latest.json", JSON.stringify({
+              version: TAG.replace(/^v/, ""),
+              notes: "",
+              pub_date: new Date().toISOString(),
+              platforms: { "darwin-aarch64": {
+                signature: fs.readFileSync(dir + "/" + tgz + ".sig", "utf8").trim(),
+                url: `https://github.com/${REPO}/releases/download/${TAG}/${tgz}`,
+              } },
+            }, null, 2));
+          ' "$bundle"
+
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@e598afbe1493e6b1bafb1f389cabb956eab91231 # v3.0.3
         with:
           draft: false
           generate_release_notes: true
-          files: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          files: |
+            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app.tar.gz
+            src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app.tar.gz.sig
+            src-tauri/target/aarch64-apple-darwin/release/bundle/macos/latest.json

@@ -25,6 +25,8 @@ import { useRemoteServer } from "./hooks/useRemoteServer";
 import { useTauriEvent } from "./hooks/useTauriEvent";
 import { AlbumContextMenu } from "./components/AlbumContextMenu";
 import { WelcomeModal } from "./components/WelcomeModal";
+import { UpdateModal } from "./components/UpdateModal";
+import { useUpdater } from "./hooks/useUpdater";
 import { AlbumInfoModal, AlbumTagFields } from "./components/AlbumInfoModal";
 import { ArtistContextMenu } from "./components/ArtistContextMenu";
 import { ArtistImagePicker } from "./components/ArtistImagePicker";
@@ -149,6 +151,11 @@ function App() {
   // shuffles). Default on; persisted as "podcast_no_shuffle".
   const [podcastNoShuffle, setPodcastNoShuffle, loadPodcastNoShuffle] = usePersistedSetting(
     "podcast_no_shuffle", true, raw => raw !== "0", v => v ? "1" : "0");
+  // Check GitHub for a newer release shortly after launch (useUpdater.ts).
+  // Default on; persisted as "auto_update_check".
+  const [autoUpdateCheck, setAutoUpdateCheck, loadAutoUpdateCheck] = usePersistedSetting(
+    "auto_update_check", true, raw => raw !== "0", v => v ? "1" : "0");
+  const updater = useUpdater(autoUpdateCheck);
   // Podcast playback speed (0.8–2.0x), shared across every podcast — not
   // per-episode. Music always plays at 1.0x regardless of this value (see
   // effectiveSpeed in playback.ts). Persisted as "podcast_speed".
@@ -455,11 +462,12 @@ function App() {
         if (v === "list") setLibraryLayout(l => ({ ...l, albums: 'list' }));
       }).catch(() => {}),
       loadPodcastNoShuffle(),
+      loadAutoUpdateCheck(),
       loadPodcastSpeed(),
       loadIsLyricsOpen(),
     ]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadShowPathColumn, loadTrackColumnWidths, loadUiLanguage, loadUiTheme, loadPodcastNoShuffle, loadPodcastSpeed, loadIsLyricsOpen]);
+  }, [loadShowPathColumn, loadTrackColumnWidths, loadUiLanguage, loadUiTheme, loadPodcastNoShuffle, loadAutoUpdateCheck, loadPodcastSpeed, loadIsLyricsOpen]);
 
   // Load data on startup
   useEffect(() => {
@@ -1869,6 +1877,8 @@ function App() {
           toggleServer={toggleServer}
         />
 
+        <UpdateModal updater={updater} />
+
         <WelcomeModal
           isOpen={isWelcomeOpen}
           onClose={() => setIsWelcomeOpen(false)}
@@ -1910,6 +1920,9 @@ function App() {
           onChangeLanguage={handleChangeLanguage}
           theme={uiTheme}
           onChangeTheme={handleChangeTheme}
+          autoUpdateCheck={autoUpdateCheck}
+          onToggleAutoUpdateCheck={setAutoUpdateCheck}
+          updater={updater}
           onExportBackup={handleExportBackup}
           onImportBackup={handleImportBackup}
           remote={remote}

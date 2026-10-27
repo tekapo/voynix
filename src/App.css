@@ -3326,3 +3326,13 @@ button {
 .welcome-dots { display: flex; justify-content: center; gap: 0.4rem; margin: 0 0 1rem; }
 .welcome-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); opacity: 0.5; }
 .welcome-dots span.active { background: var(--accent, currentColor); opacity: 1; }
+
+.update-modal { max-width: 460px; }
+.update-notes {
+  max-height: 14rem;
+  overflow: auto;
+  margin: 0.75rem 0 1rem;
+  white-space: pre-wrap;
+  font: inherit;
+  font-size: 0.85rem;
+}

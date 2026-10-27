@@ -1,6 +1,6 @@
 [package]
 name = "voynix"
-version = "0.27.3"
+version = "0.28.0"
 description = "Music player for Mac and Android with Wi-Fi library sync"
 authors = ["JOTAKI, Taisuke"]
 license = "MIT"
@@ -84,6 +84,8 @@ hyper-util = { version = "0.1", features = ["server", "server-auto", "tokio", "s
 # available via its "alac" feature, which rodio doesn't expose.
 rodio = { version = "0.22", default-features = false, features = ["playback"] }
 symphonia = { version = "0.6", default-features = false, features = ["isomp4", "alac", "aac", "flac", "mp3", "wav", "pcm"] }
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
 
 
 [target.'cfg(target_os = "macos")'.dependencies]
