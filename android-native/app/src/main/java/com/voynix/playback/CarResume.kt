@@ -73,6 +73,31 @@ fun shouldMarkCarPausedOnDisconnect(isPlaying: Boolean, lastPlayingAt: Long?, no
     return now - lastPlayingAt in 0..CAR_STOP_GRACE_MS
 }
 
+/**
+ * Whether the car projection dropping ([androidx.car.app.connection.CarConnection]
+ * going from connected to not connected — the engine turning off or the cable
+ * leaving) should write the "car went away" marker. This is the reliable
+ * signal: in the field the engine-off pause was AUDIO_FOCUS_LOSS in most cases
+ * (not AUDIO_BECOMING_NOISY), and the Android Auto app stays bound to the
+ * session on the phone, so [shouldPauseOnCarDisconnect] never saw the last car
+ * controller leave and no marker was written. [previousType]/[newType] are
+ * CarConnection.CONNECTION_TYPE_* values; playback must have been running (or
+ * only just stopped, see [CAR_STOP_GRACE_MS]) so a long-paused session isn't
+ * resumed by the next drive.
+ */
+fun shouldMarkCarPausedOnCarConnectionLost(
+    previousType: Int?,
+    newType: Int,
+    isPlaying: Boolean,
+    lastPlayingAt: Long?,
+    now: Long,
+): Boolean {
+    val wasConnected = previousType == androidx.car.app.connection.CarConnection.CONNECTION_TYPE_PROJECTION ||
+        previousType == androidx.car.app.connection.CarConnection.CONNECTION_TYPE_NATIVE
+    if (!wasConnected || newType != androidx.car.app.connection.CarConnection.CONNECTION_TYPE_NOT_CONNECTED) return false
+    return shouldMarkCarPausedOnDisconnect(isPlaying, lastPlayingAt, now)
+}
+
 /** Delays (ms after the first play()) at which a car-resume that lost audio focus is retried. */
 val CAR_RESUME_RETRY_DELAYS_MS = listOf(3_000L, 5_000L, 7_000L)
 

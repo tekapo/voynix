@@ -29,8 +29,8 @@ android {
         applicationId = "com.tekapo.voynix"
         minSdk = 26
         targetSdk = 36
-        versionCode = 156
-        versionName = "0.29.1"
+        versionCode = 157
+        versionName = "0.29.2"
     }
 
     signingConfigs {
@@ -132,6 +132,9 @@ dependencies {
 
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
+    // CarConnection: the one reliable "Android Auto went away" signal (the session's
+    // onDisconnected never sees the last car controller leave; see CarResume.kt).
+    implementation(libs.androidx.car.app)
 
     // Home-screen "now playing" widget (Glance renders it; the transport
     // buttons still ride the same MediaButtonReceiver as Bluetooth/notification).
