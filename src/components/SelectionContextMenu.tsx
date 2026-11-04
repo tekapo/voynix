@@ -14,11 +14,12 @@ interface SelectionContextMenuProps {
     onPlay: (tracks: Track[]) => void;
     onAddToQueue: (tracks: Track[]) => void;
     onAddToPlaylist: (playlistId: string, tracks: Track[]) => void;
+    onRemoveFromPlaylist?: (tracks: Track[]) => void;
     onClose: () => void;
 }
 
 export const SelectionContextMenu: React.FC<SelectionContextMenuProps> = ({
-    visible, x, y, tracks, playlists, onPlay, onAddToQueue, onAddToPlaylist, onClose
+    visible, x, y, tracks, playlists, onPlay, onAddToQueue, onAddToPlaylist, onRemoveFromPlaylist, onClose
 }) => {
     const { t } = useTranslation();
     const { ref, style } = useMenuPosition(visible, x, y);
@@ -30,6 +31,9 @@ export const SelectionContextMenu: React.FC<SelectionContextMenuProps> = ({
             <div className="context-menu-header">{t('selectionMenu.tracksSelected', { count: tracks.length })}</div>
             <div className="context-menu-item" onClick={() => { onPlay(tracks); onClose(); }}>{t('contextMenu.play')}</div>
             <div className="context-menu-item" onClick={() => { onAddToQueue(tracks); onClose(); }}>{t('contextMenu.addToQueue')}</div>
+            {onRemoveFromPlaylist && (
+                <div className="context-menu-item" onClick={() => { onRemoveFromPlaylist(tracks); onClose(); }}>{t('contextMenu.removeFromPlaylist')}</div>
+            )}
             <MenuDivider />
             <div className="context-menu-header">{t('contextMenu.addToPlaylist')}</div>
             {customPlaylists.length > 0 ? (

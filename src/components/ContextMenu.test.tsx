@@ -29,6 +29,17 @@ describe("TrackContextMenu", () => {
         expect(screen.queryByText("Get Info…")).not.toBeInTheDocument();
     });
 
+    it("shows Remove from Playlist only when onRemoveFromPlaylist is passed", () => {
+        const { rerender } = render(<TrackContextMenu {...base} />);
+        expect(screen.queryByText("Remove from Playlist")).not.toBeInTheDocument();
+        const onRemove = vi.fn();
+        const onClose = vi.fn();
+        rerender(<TrackContextMenu {...base} onRemoveFromPlaylist={onRemove} onClose={onClose} />);
+        fireEvent.click(screen.getByText("Remove from Playlist"));
+        expect(onRemove).toHaveBeenCalledWith(track);
+        expect(onClose).toHaveBeenCalled();
+    });
+
     it("calls onGetInfo with the track and closes the menu", () => {
         const onGetInfo = vi.fn();
         const onClose = vi.fn();

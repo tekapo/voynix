@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.29.0 — 2026-11-04
+- Added "Remove from Playlist" to the track right-click menu (single track and multi-selection) when viewing a regular playlist. The songs stay in the library.
+
 ## 0.28.0 — 2026-10-27
 - The Mac app can now update itself: it checks GitHub Releases at launch (Settings → General turns this off, Settings → About has a manual check) and asks before downloading, installing and restarting.
 - Release builds now publish a signed updater bundle and `latest.json` alongside the DMG.

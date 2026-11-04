@@ -122,6 +122,7 @@
     "kindOther": "Other",
     "markAsPlayed": "Mark as Played",
     "markAsUnplayed": "Mark as Unplayed",
+    "removeFromPlaylist": "Remove from Playlist",
     "addToPlaylist": "Add to Playlist",
     "noCustomPlaylists": "No custom playlists"
   },
@@ -318,6 +319,7 @@
     "initDbFailed": "Failed to initialize database: {{error}}",
     "deletePlaylistFailed": "Failed to delete playlist",
     "createPlaylistFailed": "Failed to create playlist",
+    "removeFromPlaylistFailed": "Failed to remove from playlist",
     "addToPlaylistFailed": "Failed to add to playlist",
     "playbackPrepFailed": "Playback prep error: {{error}}",
     "resumeFailed": "Resume error: {{error}}",

@@ -50,6 +50,7 @@ import { Sidebar } from "./components/Sidebar";
 import { ColumnWidths, TrackList } from "./components/TrackList";
 import {
   addTracksToPlaylist,
+  removeTracksFromPlaylist,
   backfillExtraTags,
   backfillTrackIdentities,
   backfillTrackNumbers,
@@ -686,6 +687,18 @@ function App() {
     }
   };
 
+  const removeFromCurrentPlaylist = async (tracks: Track[]) => {
+    const playlistId = currentPlaylistIdRef.current;
+    if (!playlistId) return;
+    try {
+      await removeTracksFromPlaylist(playlistId, tracks.map(t => t.id));
+      await refreshPlaylists();
+    } catch (err) {
+      console.error("Failed to remove from playlist:", err);
+      setError(t('errors.removeFromPlaylistFailed'));
+    }
+  };
+
   // Right-click on a multi-selection in the track list.
   const [selectionMenu, setSelectionMenu] = useState<{ visible: boolean; x: number; y: number; tracks: Track[] }>(
     { visible: false, x: 0, y: 0, tracks: [] });
@@ -1249,6 +1262,7 @@ function App() {
   // index without changing the underlying position, so dropping there would
   // silently reorder the wrong tracks.
   const currentPlaylist = playlists.find(p => p.id === currentPlaylistId);
+  const canRemoveFromPlaylist = viewMode === 'playlist' && currentPlaylist?.type === 'custom';
   const reorderable = viewMode === 'playlist' && !!currentPlaylistId && currentPlaylist?.type !== 'smart' && !sortState && !search;
   const handleReorderTracks = useCallback((from: number, to: number) => {
     const list = displayTracksRef.current;
@@ -1936,6 +1950,7 @@ function App() {
           playlists={playlists}
           onAddToPlaylist={addToPlaylist}
           onAddToQueue={addToQueue}
+          onRemoveFromPlaylist={canRemoveFromPlaylist ? (tr) => removeFromCurrentPlaylist([tr]) : undefined}
           onShowInFinder={handleShowInFinder}
           onSetArtwork={handleSetArtwork}
           onFindAlbumCover={setAlbumCoverPickerTrack}
@@ -1964,6 +1979,7 @@ function App() {
           onPlay={playCollection}
           onAddToQueue={addCollectionToQueue}
           onAddToPlaylist={addTracksToPlaylistMulti}
+          onRemoveFromPlaylist={canRemoveFromPlaylist ? removeFromCurrentPlaylist : undefined}
           onClose={closeSelectionMenu}
         />
 

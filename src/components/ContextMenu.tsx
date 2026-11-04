@@ -12,6 +12,7 @@ interface ContextMenuProps {
     playlists: Playlist[];
     onAddToPlaylist: (playlistId: string, track: Track) => void;
     onAddToQueue?: (track: Track) => void;
+    onRemoveFromPlaylist?: (track: Track) => void;
     onShowInFinder: (track: Track) => void;
     onSetArtwork: (track: Track) => void;
     onFindAlbumCover?: (track: Track) => void;
@@ -38,6 +39,7 @@ export const TrackContextMenu: React.FC<ContextMenuProps> = ({
     playlists,
     onAddToPlaylist,
     onAddToQueue,
+    onRemoveFromPlaylist,
     onShowInFinder,
     onSetArtwork,
     onFindAlbumCover,
@@ -146,6 +148,17 @@ export const TrackContextMenu: React.FC<ContextMenuProps> = ({
                             </div>
                         </>
                     )}
+                </>
+            )}
+            {onRemoveFromPlaylist && (
+                <>
+                    <MenuDivider />
+                    <div className="context-menu-item" onClick={() => {
+                        if (track) onRemoveFromPlaylist(track);
+                        onClose();
+                    }}>
+                        {t('contextMenu.removeFromPlaylist')}
+                    </div>
                 </>
             )}
             <MenuDivider />
