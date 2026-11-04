@@ -36,6 +36,7 @@ import {
     backfillTrackNumbers,
     buildSyncSnapshot,
     clearPlaylistTracks,
+    removeTracksFromPlaylist,
     createPlaylist,
     createSmartPlaylist,
     deletePlaylist,
@@ -1021,6 +1022,13 @@ describe("playlist CRUD", () => {
         const [sql, params] = fakeDb.execute.mock.calls[0];
         expect(sql).toBe("DELETE FROM playlist_tracks WHERE playlist_id = $1");
         expect(params).toEqual(["pl-1"]);
+    });
+
+    it("removeTracksFromPlaylist unlinks only the given tracks from that playlist", async () => {
+        await removeTracksFromPlaylist("pl-1", ["a", "b"]);
+        const [sql, params] = fakeDb.execute.mock.calls[0];
+        expect(sql).toBe("DELETE FROM playlist_tracks WHERE playlist_id = $1 AND track_id IN ($2, $3)");
+        expect(params).toEqual(["pl-1", "a", "b"]);
     });
 
     it("updateLyrics writes lyrics by track id", async () => {

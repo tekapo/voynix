@@ -266,6 +266,19 @@ export async function linkTracksToPlaylist(playlistId: string, trackIds: string[
     });
 }
 
+/** Unlink tracks from one playlist. Only the link goes; the `tracks` rows stay in the library. */
+export async function removeTracksFromPlaylist(playlistId: string, trackIds: string[]) {
+    if (trackIds.length === 0) return;
+    const db = await getDb();
+    for (const part of chunk(trackIds, 500)) {
+        const placeholders = part.map((_, j) => `$${j + 2}`).join(", ");
+        await db.execute(
+            `DELETE FROM playlist_tracks WHERE playlist_id = $1 AND track_id IN (${placeholders})`,
+            [playlistId, ...part]
+        );
+    }
+}
+
 export async function clearPlaylistTracks(playlistId: string) {
     const db = await getDb();
     await db.execute("DELETE FROM playlist_tracks WHERE playlist_id = $1", [playlistId]);

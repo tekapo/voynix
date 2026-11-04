@@ -122,6 +122,7 @@
     "kindOther": "その他",
     "markAsPlayed": "再生済みにする",
     "markAsUnplayed": "未再生に戻す",
+    "removeFromPlaylist": "プレイリストから削除",
     "addToPlaylist": "プレイリストに追加",
     "noCustomPlaylists": "カスタムプレイリストがありません"
   },
@@ -314,6 +315,7 @@
     "initDbFailed": "データベースの初期化に失敗しました: {{error}}",
     "deletePlaylistFailed": "プレイリストの削除に失敗しました",
     "createPlaylistFailed": "プレイリストの作成に失敗しました",
+    "removeFromPlaylistFailed": "プレイリストからの削除に失敗しました",
     "addToPlaylistFailed": "プレイリストへの追加に失敗しました",
     "playbackPrepFailed": "再生準備エラー: {{error}}",
     "resumeFailed": "再開エラー: {{error}}",
