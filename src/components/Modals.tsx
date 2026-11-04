@@ -358,6 +358,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         {t('settings.autoUpdateCheck')}
                     </label>
                     <p className="settings-hint">{t('settings.autoUpdateHint')}</p>
+                    <button type="button" className="modal-btn cancel" onClick={updater.checkNow} disabled={updater.status.kind === 'checking'}>
+                        {t('settings.checkForUpdates')}
+                    </button>
+                    {updater.status.kind === 'checking' && <p className="settings-hint">{t('settings.updateChecking')}</p>}
+                    {updater.status.kind === 'upToDate' && <p className="settings-hint">{t('settings.updateUpToDate')}</p>}
+                    {updater.status.kind === 'error' && <p className="settings-hint">{t('settings.updateFailed', { message: updater.status.message })}</p>}
                 </div>
                 </>}
 
@@ -625,13 +631,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             {t('settings.showWelcome')}
                         </button>
                     </>}
-                    {' '}
-                    <button type="button" className="modal-btn cancel" onClick={updater.checkNow} disabled={updater.status.kind === 'checking'}>
-                        {t('settings.checkForUpdates')}
-                    </button>
-                    {updater.status.kind === 'checking' && <p className="settings-hint">{t('settings.updateChecking')}</p>}
-                    {updater.status.kind === 'upToDate' && <p className="settings-hint">{t('settings.updateUpToDate')}</p>}
-                    {updater.status.kind === 'error' && <p className="settings-hint">{t('settings.updateFailed', { message: updater.status.message })}</p>}
                     {licenses !== null && (
                         <pre className="settings-licenses" tabIndex={0}>{licenses}</pre>
                     )}

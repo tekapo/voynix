@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.29.1 — 2026-11-04
+- Moved "Check for Updates" from Settings → About to the bottom of Settings → General, next to the launch-time check toggle.
+
 ## 0.29.0 — 2026-11-04
 - Added "Remove from Playlist" to the track right-click menu (single track and multi-selection) when viewing a regular playlist. The songs stay in the library.
 
