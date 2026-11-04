@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.29.2 — 2026-11-04
+- Android Auto: fixed playback not resuming when the car starts. Engine-off usually stops playback with an audio-focus loss, which never wrote the "stopped by the car" marker, so the marker is now also written when the car projection drops (androidx.car.app CarConnection).
+
 ## 0.29.1 — 2026-11-04
 - Moved "Check for Updates" from Settings → About to the bottom of Settings → General, next to the launch-time check toggle.
 

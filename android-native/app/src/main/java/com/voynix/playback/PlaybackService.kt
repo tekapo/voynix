@@ -7,6 +7,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Process
 import android.os.SystemClock
+import androidx.car.app.connection.CarConnection
+import androidx.lifecycle.Observer
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -109,6 +111,21 @@ class PlaybackService : MediaLibraryService() {
     private var lastPlayingAt: Long? = null
     private var lastPauseReason: Int? = null
 
+    // Android Auto projection state (CarConnection.CONNECTION_TYPE_*), observed
+    // for the "car went away" marker; null until the first value arrives.
+    private var lastCarConnectionType: Int? = null
+    private val carConnectionObserver = Observer<Int> { type ->
+        playbackLog("car connection: ${lastCarConnectionType} -> $type")
+        if (shouldMarkCarPausedOnCarConnectionLost(
+                lastCarConnectionType, type, exoPlayer.isPlaying, lastPlayingAt, SystemClock.elapsedRealtime())
+        ) {
+            playbackLog("car connection lost: marking (isPlaying=${exoPlayer.isPlaying})")
+            markCarPaused()
+        }
+        lastCarConnectionType = type
+    }
+    private var carConnection: CarConnection? = null
+
     inner class LocalBinder : android.os.Binder() {
         val service: PlaybackService get() = this@PlaybackService
     }
@@ -139,6 +156,8 @@ class PlaybackService : MediaLibraryService() {
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
         exoPlayer.addListener(DiagnosticPlayerListener())
+        // LiveData must be observed on the main thread; onCreate runs there.
+        carConnection = CarConnection(this).also { it.type.observeForever(carConnectionObserver) }
         albumArt = AlbumArtResolver(this, db)
         playerController = PlayerController(exoPlayer, db, serviceScope, albumArt)
         // Push podcast position to the paired Mac right after each settle point
@@ -360,6 +379,7 @@ class PlaybackService : MediaLibraryService() {
 
     override fun onDestroy() {
         playbackLog("onDestroy pid=${Process.myPid()}")
+        carConnection?.type?.removeObserver(carConnectionObserver)
         carDisconnectPauseJob?.cancel()
         autoButtonRepushJob?.cancel()
         // Await the final podcast position write: it used to be launched on

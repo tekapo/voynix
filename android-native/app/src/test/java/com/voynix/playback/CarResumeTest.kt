@@ -79,6 +79,28 @@ class CarResumeTest {
     }
 
     @Test
+    fun `marks when the car projection drops while playing or just after`() {
+        val projection = androidx.car.app.connection.CarConnection.CONNECTION_TYPE_PROJECTION
+        val native = androidx.car.app.connection.CarConnection.CONNECTION_TYPE_NATIVE
+        val none = androidx.car.app.connection.CarConnection.CONNECTION_TYPE_NOT_CONNECTED
+        assertTrue(shouldMarkCarPausedOnCarConnectionLost(projection, none, isPlaying = true, lastPlayingAt = null, now = now))
+        assertTrue(shouldMarkCarPausedOnCarConnectionLost(native, none, isPlaying = false, lastPlayingAt = now - 2000, now = now))
+    }
+
+    @Test
+    fun `does not mark a car projection drop that is not a real loss or long after playback`() {
+        val projection = androidx.car.app.connection.CarConnection.CONNECTION_TYPE_PROJECTION
+        val none = androidx.car.app.connection.CarConnection.CONNECTION_TYPE_NOT_CONNECTED
+        // not connected -> not connected (initial value) and connected -> connected
+        assertFalse(shouldMarkCarPausedOnCarConnectionLost(null, none, isPlaying = true, lastPlayingAt = null, now = now))
+        assertFalse(shouldMarkCarPausedOnCarConnectionLost(none, none, isPlaying = true, lastPlayingAt = null, now = now))
+        assertFalse(shouldMarkCarPausedOnCarConnectionLost(projection, projection, isPlaying = true, lastPlayingAt = null, now = now))
+        // paused long ago, or never played
+        assertFalse(shouldMarkCarPausedOnCarConnectionLost(projection, none, false, now - CAR_STOP_GRACE_MS - 1, now))
+        assertFalse(shouldMarkCarPausedOnCarConnectionLost(projection, none, false, null, now))
+    }
+
+    @Test
     fun `retries a car resume only after audio focus loss while the car is connected`() {
         val focusLoss = androidx.media3.common.Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS
         val user = androidx.media3.common.Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST
