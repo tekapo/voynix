@@ -294,6 +294,93 @@ class SyncTest {
     }
 
     @Test
+    fun `resolvePeer falls back to a subnet scan when discovery finds nothing`() = runTest {
+        val peer = SyncPeer("https://old:1", "tok", null, "pin-abc")
+        var scannedPort = -1
+        val result = resolvePeer(
+            peer,
+            probe = { url, _, _ -> if (url == "https://10.0.0.7:1") PeerProbeResult.OK else PeerProbeResult.UNREACHABLE },
+            discover = { emptyList() },
+            scan = { port -> scannedPort = port; listOf("https://10.0.0.6:1", "https://10.0.0.7:1", "https://10.0.0.8:1") },
+        )
+        assertEquals("https://10.0.0.7:1", result.peer.url)
+        assertEquals(1, scannedPort)
+        assertTrue(result.changed)
+    }
+
+    @Test(expected = PeerUnreachableError::class)
+    fun `resolvePeer throws unreachable when the subnet scan finds nothing either`() = runTest {
+        val peer = SyncPeer("https://old:1", "tok", null, "pin-abc")
+        resolvePeer(
+            peer,
+            probe = { _, _, _ -> PeerProbeResult.UNREACHABLE },
+            discover = { emptyList() },
+            scan = { listOf("https://10.0.0.6:1") },
+        )
+    }
+
+    @Test(expected = PeerUnauthorizedError::class)
+    fun `resolvePeer does not scan after an unauthorized probe`() = runTest {
+        val peer = SyncPeer("https://old:1", "tok", null, "pin-abc")
+        resolvePeer(
+            peer,
+            probe = { _, _, _ -> PeerProbeResult.UNAUTHORIZED },
+            discover = { emptyList() },
+            scan = { throw AssertionError("must not scan after an unauthorized probe") },
+        )
+    }
+
+    @Test
+    fun `resolvePeer skips the scan when discovery already found the Mac`() = runTest {
+        val peer = SyncPeer("https://old:1", "tok", null, "pin-abc")
+        val candidate = DiscoveredPeer("Mac", "new", 2, "https://new:2")
+        val result = resolvePeer(
+            peer,
+            probe = { url, _, _ -> if (url == candidate.url) PeerProbeResult.OK else PeerProbeResult.UNREACHABLE },
+            discover = { listOf(candidate) },
+            scan = { throw AssertionError("must not scan when discovery succeeded") },
+        )
+        assertEquals("https://new:2", result.peer.url)
+    }
+
+    @Test
+    fun `subnetCandidates lists every other host of a slash 24`() {
+        val urls = subnetCandidates(listOf("192.168.1.5" to 24), port = 60905)
+        assertEquals(253, urls.size)
+        assertFalse(urls.contains("https://192.168.1.5:60905"))
+        assertFalse(urls.contains("https://192.168.1.0:60905"))
+        assertFalse(urls.contains("https://192.168.1.255:60905"))
+        assertTrue(urls.contains("https://192.168.1.1:60905"))
+        assertTrue(urls.contains("https://192.168.1.254:60905"))
+    }
+
+    @Test
+    fun `subnetCandidates narrows a wide network to the slash 24 around the phone`() {
+        val urls = subnetCandidates(listOf("10.20.30.40" to 16), port = 1)
+        assertEquals(253, urls.size)
+        assertTrue(urls.all { it.startsWith("https://10.20.30.") })
+    }
+
+    @Test
+    fun `subnetCandidates honours a narrow network`() {
+        val urls = subnetCandidates(listOf("192.168.43.1" to 30), port = 1)
+        assertEquals(listOf("https://192.168.43.2:1"), urls)
+    }
+
+    @Test
+    fun `subnetCandidates merges interfaces without duplicates and skips junk`() {
+        val urls = subnetCandidates(
+            listOf("192.168.1.5" to 24, "192.168.1.9" to 24, "not-an-ip" to 24, "10.0.0.2" to 31, "10.0.1.2" to 0),
+            port = 1,
+        )
+        assertEquals(urls.size, urls.toSet().size)
+        // The phone's own addresses are never candidates, even when another interface's subnet covers them.
+        assertFalse(urls.contains("https://192.168.1.5:1"))
+        assertFalse(urls.contains("https://192.168.1.9:1"))
+        assertEquals(252, urls.size) // a /24 minus network, broadcast and the two own addresses; /31 and /0 contribute nothing
+    }
+
+    @Test
     fun `checkPeerConnection is CONNECTED and silent when the saved URL answers`() = runTest {
         val peer = SyncPeer("https://old:1", "tok", null, "pin-abc")
         var moved: SyncPeer? = null

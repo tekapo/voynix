@@ -243,6 +243,7 @@ suspend fun resolvePeer(
     peer: SyncPeer,
     probe: suspend (url: String, token: String, pin: String?) -> PeerProbeResult,
     discover: suspend () -> List<DiscoveredPeer>,
+    scan: suspend (port: Int) -> List<String> = { emptyList() },
 ): ResolvedPeer {
     val direct = probe(peer.url, peer.token, peer.pin)
     if (direct == PeerProbeResult.OK) return ResolvedPeer(peer, changed = false)
@@ -262,8 +263,79 @@ suspend fun resolvePeer(
             return ResolvedPeer(peer.copy(url = c.url), changed = true)
         }
     }
+
+    // mDNS is often blocked or unreliable on hotspots and guest networks, so as a
+    // last resort try the other hosts on the phone's own subnets. The pin check
+    // happens in the TLS handshake, so a stranger's host never sees the token.
+    val port = portOfUrl(peer.url)
+    if (port != null) {
+        val tried = setOf(peer.url)
+        val candidates = scan(port).filter { it !in tried }
+        val found = firstProbeOk(candidates, SCAN_PARALLELISM) { probe(it, peer.token, peer.pin) == PeerProbeResult.OK }
+        if (found != null) return ResolvedPeer(peer.copy(url = found), changed = true)
+    }
     throw PeerUnreachableError()
 }
+
+private const val SCAN_PARALLELISM = 16
+
+private fun portOfUrl(url: String): Int? =
+    runCatching { java.net.URI(url.trim()).port }.getOrNull()?.takeIf { it in 1..65535 }
+
+/** The first of [items] (in list order among those that pass) for which [check] is true, probing [limit] at a time. */
+private suspend fun firstProbeOk(items: List<String>, limit: Int, check: suspend (String) -> Boolean): String? {
+    val hits = java.util.concurrent.ConcurrentHashMap<Int, Boolean>()
+    val stop = java.util.concurrent.atomic.AtomicBoolean(false)
+    pool(items, limit) { item, i ->
+        if (stop.get()) return@pool
+        if (check(item)) {
+            hits[i] = true
+            stop.set(true)
+        }
+    }
+    return hits.keys.minOrNull()?.let { items[it] }
+}
+
+/**
+ * The URLs of every other host on the subnets the phone is on, for a last-resort
+ * scan when the Mac moved and mDNS can't find it (hotspot, guest Wi-Fi).
+ *
+ * [localIps] are the phone's IPv4 addresses with prefix lengths. Networks wider
+ * than a /24 are narrowed to the /24 around the phone (a /16 would be 65k hosts);
+ * /31, /32 and nonsense prefixes contribute nothing. The phone's own addresses,
+ * and each network's network/broadcast addresses, are never candidates.
+ */
+fun subnetCandidates(localIps: List<Pair<String, Int>>, port: Int): List<String> {
+    val own = localIps.mapNotNull { ipv4ToInt(it.first) }.toSet()
+    val out = LinkedHashSet<String>()
+    for ((ip, prefix) in localIps) {
+        val addr = ipv4ToInt(ip) ?: continue
+        if (prefix !in 1..30) continue
+        val effective = maxOf(prefix, 24)
+        val mask = (-1 shl (32 - effective))
+        val network = addr and mask
+        val broadcast = network or mask.inv()
+        for (host in (network + 1) until broadcast) {
+            if (host in own) continue
+            out.add("https://${intToIpv4(host)}:$port")
+        }
+    }
+    return out.toList()
+}
+
+private fun ipv4ToInt(ip: String): Int? {
+    val parts = ip.split('.')
+    if (parts.size != 4) return null
+    var n = 0
+    for (p in parts) {
+        val v = p.toIntOrNull()?.takeIf { it in 0..255 } ?: return null
+        n = (n shl 8) or v
+    }
+    return n
+}
+
+private fun intToIpv4(n: Int): String =
+    "${(n ushr 24) and 255}.${(n ushr 16) and 255}.${(n ushr 8) and 255}.${n and 255}"
 
 /** What the sync screen shows for the saved peer: saved ≠ reachable, so this is checked, not assumed. */
 enum class PeerConnection { CHECKING, CONNECTED, UNREACHABLE, UNAUTHORIZED }
@@ -278,9 +350,10 @@ suspend fun checkPeerConnection(
     probe: suspend (url: String, token: String, pin: String?) -> PeerProbeResult,
     discover: suspend () -> List<DiscoveredPeer>,
     onPeerMoved: suspend (SyncPeer) -> Unit = {},
+    scan: suspend (port: Int) -> List<String> = { emptyList() },
 ): PeerConnection =
     try {
-        val resolved = resolvePeer(peer, probe = probe, discover = discover)
+        val resolved = resolvePeer(peer, probe = probe, discover = discover, scan = scan)
         if (resolved.changed) onPeerMoved(resolved.peer)
         PeerConnection.CONNECTED
     } catch (e: PeerUnauthorizedError) {

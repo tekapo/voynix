@@ -27,7 +27,7 @@ Voynix は、Mac と Android 向けのローカルファーストな音楽プレ
 
 - **Mac**: macOS（配布している DMG は Apple Silicon／arm64 専用）
 - **Android**: Android 8.0（API 26）以上、Android Auto は任意
-- 同期には Mac と Android が同じ Wi-Fi ネットワーク上にあることが必要です
+- 同期には Mac と Android が同じ Wi-Fi ネットワーク上にあることが必要です（外出先で端末どうしを隔離する Wi-Fi の場合は、Mac をスマホのテザリングにつなぎ、手動で同期します）
 
 ## インストール
 

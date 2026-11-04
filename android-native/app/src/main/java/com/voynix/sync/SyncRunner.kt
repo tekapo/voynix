@@ -47,12 +47,13 @@ object SyncRunner {
         discover: suspend () -> List<DiscoveredPeer>,
         runSync: suspend (SyncPeer, onProgress: (SyncProgress) -> Unit) -> SyncSummary,
         onPeerMoved: suspend (SyncPeer) -> Unit = {},
+        scan: suspend (port: Int) -> List<String> = { emptyList() },
     ): SyncRunResult {
         if (!mutex.tryLock()) return SyncRunResult.AlreadyRunning
         try {
             _isSyncing.value = true
             _progress.value = SyncProgress("manifest", "Checking connection to Mac")
-            val resolved = resolvePeer(peer, probe = probe, discover = discover)
+            val resolved = resolvePeer(peer, probe = probe, discover = discover, scan = scan)
             if (resolved.changed) onPeerMoved(resolved.peer)
             val summary = runSync(resolved.peer) { p -> _progress.value = p }
             return SyncRunResult.Success(summary)

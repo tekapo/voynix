@@ -27,7 +27,7 @@ Voynix is a local-first music player for Mac and Android.
 
 - **Mac**: macOS (the distributed DMG is Apple Silicon (arm64) only)
 - **Android**: Android 8.0 (API 26) or later; Android Auto is optional
-- Sync requires the Mac and the Android device to be on the same Wi-Fi network
+- Sync requires the Mac and the Android device to be on the same Wi-Fi network (on the road, e.g. hotel Wi-Fi that isolates devices, connect the Mac to your phone's tethering instead and sync manually)
 
 ## Installation
 
