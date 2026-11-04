@@ -103,11 +103,10 @@ describe("SettingsModal self-update", () => {
         expect(onToggleAutoUpdateCheck).toHaveBeenCalledWith(false);
     });
 
-    it("runs a manual check from About and shows the result", () => {
+    it("runs a manual check from General and shows the result", () => {
         const checkNow = vi.fn();
         const updater = { status: { kind: "upToDate" } as const, dialogOpen: false, checkNow, install: () => {}, dismiss: () => {} };
         render(<SettingsModal {...makeProps({ updater })} />);
-        fireEvent.click(screen.getByRole("tab", { name: "About" }));
         fireEvent.click(screen.getByText("Check for Updates"));
         expect(checkNow).toHaveBeenCalled();
         expect(screen.getByText("You're up to date.")).toBeTruthy();
