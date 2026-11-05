@@ -174,7 +174,7 @@ class PlaybackService : MediaLibraryService() {
             PendingIntent.FLAG_IMMUTABLE,
         )
 
-        mediaSession = MediaLibrarySession.Builder(this, QueuePlayer(exoPlayer, playerController), LibrarySessionCallback())
+        mediaSession = MediaLibrarySession.Builder(this, QueuePlayer(exoPlayer, playerController, serviceScope), LibrarySessionCallback())
             .setSessionActivity(sessionActivity)
             .build()
         // Registers the session with this service's own MediaNotificationManager

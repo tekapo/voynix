@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.32.1 — 2026-11-05
+- Android / Android Auto: the queue shown by the media session now lists the real play queue in play order (a window of up to 200 entries around the current track) instead of only "now playing + next", and picking an entry from it jumps to that track.
+- Playback itself is unchanged: ExoPlayer still holds only the current and next track, so gapless hand-off is untouched.
+
 ## 0.32.0 — 2026-11-05
 - Settings > About now shows the library totals (tracks, artists, albums), unaffected by search or the current view.
 

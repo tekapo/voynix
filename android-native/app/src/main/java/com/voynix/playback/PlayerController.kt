@@ -363,7 +363,7 @@ class PlayerController(
         nextQueuedTrackId = nextTrack.id
     }
 
-    private fun buildMediaItem(track: TrackEntity): MediaItem {
+    internal fun buildMediaItem(track: TrackEntity): MediaItem {
         val mediaId = browseParentId?.let { leafMediaId(it, track.id) } ?: track.id
         return MediaItem.Builder()
             .setUri(trackUri(track.filePath))
@@ -658,6 +658,15 @@ class PlayerController(
         val currentSecs = player.currentPosition / 1000.0
         val target = skipTarget(currentSecs, deltaSecs, _uiState.value.durationSecs)
         seekTo(target)
+    }
+
+    /**
+     * Jump straight to play-order entry [pos] and play it — a controller (Android
+     * Auto, the system queue UI) picking an entry from the queue. Out of range is ignored.
+     */
+    fun jumpToOrderPos(pos: Int) {
+        if (pos !in _uiState.value.order.indices) return
+        playOrderPos(pos, playWhenReady = true)
     }
 
     fun next() = scope.launch { advance(dir = 1, naturalEnd = false) }
