@@ -354,7 +354,11 @@
     "window": "ウインドウ",
     "minimize": "しまう",
     "maximize": "拡大/縮小",
-    "help": "ヘルプ"
+    "help": "ヘルプ",
+    "helpManual": "Voynix ユーザーマニュアル",
+    "helpWelcome": "ようこそガイドを表示",
+    "helpReport": "問題を報告…",
+    "issuesUrl": "https://github.com/tekapo/voynix/issues/new/choose"
   },
   "dock": {
     "playPause": "再生/一時停止",

@@ -358,7 +358,11 @@
     "window": "Window",
     "minimize": "Minimize",
     "maximize": "Zoom",
-    "help": "Help"
+    "help": "Help",
+    "helpManual": "Voynix User Manual",
+    "helpWelcome": "Show Welcome Guide",
+    "helpReport": "Report an Issue…",
+    "issuesUrl": "https://github.com/tekapo/voynix/issues/new/choose"
   },
   "dock": {
     "playPause": "Play/Pause",

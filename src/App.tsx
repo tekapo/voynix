@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./App.css";
@@ -322,7 +323,8 @@ function App() {
         selectAll: t('appMenu.selectAll'), view: t('appMenu.view'),
         fullscreen: t('appMenu.fullscreen'), window: t('appMenu.window'),
         minimize: t('appMenu.minimize'), maximize: t('appMenu.maximize'),
-        help: t('appMenu.help'),
+        help: t('appMenu.help'), helpManual: t('appMenu.helpManual'),
+        helpWelcome: t('appMenu.helpWelcome'), helpReport: t('appMenu.helpReport'),
       },
     }).catch(() => { /* non-macOS / dev-server: no menu bar to update */ });
   }, [uiLanguage]);
@@ -895,6 +897,11 @@ function App() {
   useTauriEvent<null>("menu-about", () => {
     setSettingsInitialTab("about");
     setIsSettingsModalOpen(true);
+  });
+  // Help menu: manual / welcome guide / issue reporter.
+  useTauriEvent<"manual" | "welcome" | "report">("menu-help", (item) => {
+    if (item === "welcome") setIsWelcomeOpen(true);
+    else openUrl(i18n.t(item === "manual" ? 'settings.websiteUrl' : 'appMenu.issuesUrl')).catch(() => {});
   });
   useTauriEvent<"toggle" | "next" | "previous">("dock-action", (action) => {
     dockActionsRef.current[action]?.();
