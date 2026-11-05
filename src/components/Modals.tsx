@@ -614,23 +614,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="settings-section">
                     <p><strong>{t('settings.appName')}</strong>{version && t('settings.versionLabel', { version })}</p>
                     <p className="settings-hint">{t('settings.aboutTagline')}</p>
-                    <button type="button" className="modal-btn secondary" onClick={() => { openUrl(t('settings.websiteUrl')).catch(() => {}); }}>
-                        {t('settings.userManual')}
-                    </button>
-                    {' '}
-                    <button type="button" className="modal-btn secondary" onClick={toggleLicenses}>
-                        {t('settings.openSourceLicenses')}
-                    </button>
-                    {' '}
-                    <button type="button" className="modal-btn secondary" onClick={() => { openUrl(t('settings.supportUrl')).catch(() => {}); }}>
-                        {t('settings.supportOnKofi')}
-                    </button>
-                    {onShowWelcome && <>
-                        {' '}
-                        <button type="button" className="modal-btn secondary" onClick={() => { onClose(); onShowWelcome(); }}>
-                            {t('settings.showWelcome')}
+                    <div className="settings-about-actions">
+                        {onShowWelcome && (
+                            <button type="button" className="modal-btn secondary" onClick={() => { onClose(); onShowWelcome(); }}>
+                                {t('settings.showWelcome')}
+                            </button>
+                        )}
+                        <button type="button" className="modal-btn secondary" onClick={() => { openUrl(t('settings.websiteUrl')).catch(() => {}); }}>
+                            {t('settings.userManual')}
                         </button>
-                    </>}
+                        <button type="button" className="modal-btn secondary" onClick={toggleLicenses}>
+                            {t('settings.openSourceLicenses')}
+                        </button>
+                        <button type="button" className="modal-btn secondary" onClick={() => { openUrl(t('settings.supportUrl')).catch(() => {}); }}>
+                            {t('settings.supportOnKofi')}
+                        </button>
+                    </div>
                     {licenses !== null && (
                         <pre className="settings-licenses" tabIndex={0}>{licenses}</pre>
                     )}
