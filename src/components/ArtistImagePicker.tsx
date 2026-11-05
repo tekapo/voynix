@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import { Portal } from './Modals';
+import { useDialogFocus } from '../hooks/useDialogFocus';
 
 export interface ArtistImageCandidate {
     id: number;
@@ -57,6 +58,7 @@ export const ArtistImagePicker: React.FC<ArtistImagePickerProps> = ({ isOpen, ar
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, artist]);
 
+    const dialogRef = useDialogFocus(isOpen);
     if (!isOpen) return null;
 
     const handlePick = async (candidate: ArtistImageCandidate) => {
@@ -75,8 +77,8 @@ export const ArtistImagePicker: React.FC<ArtistImagePickerProps> = ({ isOpen, ar
 
     return (
         <Portal><div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content artist-image-picker" onClick={e => e.stopPropagation()}>
-                <h3>{t('artistImagePicker.title')}</h3>
+            <div className="modal-content artist-image-picker" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="artist-image-title" onClick={e => e.stopPropagation()}>
+                <h3 id="artist-image-title">{t('artistImagePicker.title')}</h3>
                 <form
                     onSubmit={e => { e.preventDefault(); search(query); }}
                     style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}

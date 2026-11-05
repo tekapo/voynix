@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Portal } from './Modals';
+import { useDialogFocus } from '../hooks/useDialogFocus';
 import { Icon } from './Icon';
 import { SmartCondition, SmartRules, SmartSortKey, Track } from '../types';
 import { evaluateSmartPlaylist, DEFAULT_SMART_RULES } from '../smartPlaylist';
@@ -185,6 +186,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
 
     useModalKeys({ enabled: !!editor, onEscape: requestClose, onSave: handleSave, canSave: dirty && !saving });
 
+    const dialogRef = useDialogFocus(!!editor);
     if (!editor) return null;
 
     const updateCondition = (i: number, next: SmartCondition) => {
@@ -199,7 +201,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
 
     return (
         <Portal><div className="modal-overlay" onClick={requestClose}>
-            <div className="modal-content info-modal smart-playlist-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-content info-modal smart-playlist-modal" ref={dialogRef} role="dialog" aria-modal="true" aria-label={t('sidebar.newSmartPlaylist')} onClick={e => e.stopPropagation()}>
                 <div className="info-modal-header">
                     <div className="info-modal-header-text">
                         <input

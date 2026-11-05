@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useTranslation } from 'react-i18next';
 import { Portal } from './Modals';
+import { useDialogFocus } from '../hooks/useDialogFocus';
 
 const STEPS = [
     { title: 'welcome.step1Title', body: 'welcome.step1Body' },
@@ -43,6 +44,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
         return () => window.removeEventListener('keydown', handleKey);
     }, [isOpen, onClose]);
 
+    const dialogRef = useDialogFocus(isOpen);
     if (!isOpen) return null;
 
     const last = step === STEPS.length - 1;
@@ -50,6 +52,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
         <Portal>
             <div className="modal-overlay" onClick={onClose}>
                 <div
+                    ref={dialogRef}
                     className="modal-content welcome-modal"
                     role="dialog"
                     aria-modal="true"

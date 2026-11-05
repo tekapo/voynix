@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -48,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import com.voynix.BuildConfig
 import com.voynix.R
 import com.voynix.data.db.VoynixDatabase
@@ -115,9 +117,15 @@ fun SettingsScreen(
                 supportingContent = { Text(stringResource(R.string.settings_dont_shuffle_podcasts_detail)) },
                 leadingContent = { Icon(Icons.Filled.Shuffle, contentDescription = null) },
                 trailingContent = {
-                    Switch(checked = podcastNoShuffle, onCheckedChange = { player.setPodcastNoShuffle(it) })
+                    // The row is the toggle (one TalkBack stop, announced as a switch);
+                    // the Switch is just its visual.
+                    Switch(checked = podcastNoShuffle, onCheckedChange = null)
                 },
-                modifier = Modifier.clickable { player.setPodcastNoShuffle(!podcastNoShuffle) },
+                modifier = Modifier.toggleable(
+                    value = podcastNoShuffle,
+                    role = Role.Switch,
+                    onValueChange = { player.setPodcastNoShuffle(it) },
+                ),
             )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_clear_album_art_cache)) },

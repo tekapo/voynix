@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -46,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -317,21 +319,30 @@ private fun PairedSection(vm: SyncViewModel, peerUrl: String, lastSyncAt: Long?)
                 headlineContent = { Text(stringResource(R.string.sync_auto_sync)) },
                 supportingContent = { Text(stringResource(R.string.sync_auto_sync_detail)) },
                 trailingContent = {
-                    Switch(checked = autoSyncEnabled, onCheckedChange = { vm.setAutoSyncEnabled(it) })
+                    // The row is the toggle (one TalkBack stop, announced as a switch).
+                    Switch(checked = autoSyncEnabled, onCheckedChange = null)
                 },
-                modifier = Modifier.clickable { vm.setAutoSyncEnabled(!autoSyncEnabled) },
+                modifier = Modifier.toggleable(
+                    value = autoSyncEnabled,
+                    role = Role.Switch,
+                    onValueChange = { vm.setAutoSyncEnabled(it) },
+                ),
             )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.sync_charging_only)) },
                 trailingContent = {
                     Switch(
                         checked = autoSyncChargingOnly,
-                        onCheckedChange = { vm.setAutoSyncChargingOnly(it) },
+                        onCheckedChange = null,
                         enabled = autoSyncEnabled,
                     )
                 },
-                modifier = Modifier
-                    .clickable(enabled = autoSyncEnabled) { vm.setAutoSyncChargingOnly(!autoSyncChargingOnly) },
+                modifier = Modifier.toggleable(
+                    value = autoSyncChargingOnly,
+                    enabled = autoSyncEnabled,
+                    role = Role.Switch,
+                    onValueChange = { vm.setAutoSyncChargingOnly(it) },
+                ),
             )
         }
     }

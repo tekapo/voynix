@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { SettingsModal } from "./Modals";
+import { CreatePlaylistModal, SettingsModal } from "./Modals";
 
 vi.mock("@tauri-apps/api/app", () => ({ getVersion: async () => "0.0.0-test" }));
 const openUrl = vi.hoisted(() => vi.fn(async () => {}));
@@ -130,5 +130,27 @@ describe("SettingsModal self-update", () => {
         fireEvent.click(screen.getByText("Check for Updates"));
         expect(checkNow).toHaveBeenCalled();
         expect(screen.getByText("You're up to date.")).toBeTruthy();
+    });
+});
+
+describe("modal dialog semantics", () => {
+    it("labels the settings modal as a dialog and focuses inside it", () => {
+        render(<SettingsModal {...makeProps()} />);
+        const dialog = screen.getByRole("dialog", { name: "Settings" });
+        expect(dialog).toHaveAttribute("aria-modal", "true");
+        expect(dialog).toContainElement(document.activeElement as HTMLElement);
+    });
+
+    it("labels the create-playlist modal by its heading", () => {
+        render(
+            <CreatePlaylistModal
+                isOpen
+                onClose={() => {}}
+                onSubmit={(e) => e.preventDefault()}
+                playlistName=""
+                setPlaylistName={() => {}}
+            />,
+        );
+        expect(screen.getByRole("dialog", { name: "Create Playlist" })).toBeInTheDocument();
     });
 });

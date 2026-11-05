@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Playlist, ViewMode } from '../types';
 import { Icon, IconName } from './Icon';
 import { LibrarySyncSource } from '../smartLists';
+import { activatable } from '../lib/a11y';
 
 const PLAYLIST_TYPE_ICON: Record<string, IconName> = {
     folder: 'folder',
@@ -99,7 +100,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <ul className="sidebar-list">
                     <li
                         className={`playlist-item ${viewMode === 'all_songs' ? 'active' : ''}`}
-                        onClick={() => { onLibraryClick('all_songs'); onClose(); }}
+                        aria-current={viewMode === 'all_songs' ? 'page' : undefined}
+                        {...activatable(() => { onLibraryClick('all_songs'); onClose(); })}
                         onContextMenu={(e) => onLibraryContextMenu?.(e, 'all_songs')}
                     >
                         <span className="playlist-icon"><Icon name="music" /></span>
@@ -112,7 +114,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </li>
                     <li
                         className={`playlist-item ${viewMode === 'favorites' ? 'active' : ''}`}
-                        onClick={() => { onLibraryClick('favorites'); onClose(); }}
+                        aria-current={viewMode === 'favorites' ? 'page' : undefined}
+                        {...activatable(() => { onLibraryClick('favorites'); onClose(); })}
                         onContextMenu={(e) => onLibraryContextMenu?.(e, 'favorites')}
                     >
                         <span className="playlist-icon"><Icon name="star" /></span>
@@ -125,7 +128,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </li>
                     <li
                         className={`playlist-item ${viewMode === 'most_played' ? 'active' : ''}`}
-                        onClick={() => { onLibraryClick('most_played'); onClose(); }}
+                        aria-current={viewMode === 'most_played' ? 'page' : undefined}
+                        {...activatable(() => { onLibraryClick('most_played'); onClose(); })}
                         onContextMenu={(e) => onLibraryContextMenu?.(e, 'most_played')}
                     >
                         <span className="playlist-icon"><Icon name="flame" /></span>
@@ -138,7 +142,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </li>
                     <li
                         className={`playlist-item ${viewMode === 'recently_added' ? 'active' : ''}`}
-                        onClick={() => { onLibraryClick('recently_added'); onClose(); }}
+                        aria-current={viewMode === 'recently_added' ? 'page' : undefined}
+                        {...activatable(() => { onLibraryClick('recently_added'); onClose(); })}
                         onContextMenu={(e) => onLibraryContextMenu?.(e, 'recently_added')}
                     >
                         <span className="playlist-icon"><Icon name="sparkle" /></span>
@@ -151,7 +156,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </li>
                     <li
                         className={`playlist-item ${viewMode === 'recently_played' ? 'active' : ''}`}
-                        onClick={() => { onLibraryClick('recently_played'); onClose(); }}
+                        aria-current={viewMode === 'recently_played' ? 'page' : undefined}
+                        {...activatable(() => { onLibraryClick('recently_played'); onClose(); })}
                         onContextMenu={(e) => onLibraryContextMenu?.(e, 'recently_played')}
                     >
                         <span className="playlist-icon"><Icon name="clock" /></span>
@@ -164,14 +170,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </li>
                     <li
                         className={`playlist-item ${viewMode === 'artists' ? 'active' : ''}`}
-                        onClick={() => { onLibraryClick('artists'); onClose(); }}
+                        aria-current={viewMode === 'artists' ? 'page' : undefined}
+                        {...activatable(() => { onLibraryClick('artists'); onClose(); })}
                     >
                         <span className="playlist-icon"><Icon name="mic" /></span>
                         <span className="item-label">{t('sidebar.artists')}</span>
                     </li>
                     <li
                         className={`playlist-item ${viewMode === 'albums' ? 'active' : ''}`}
-                        onClick={() => { onLibraryClick('albums'); onClose(); }}
+                        aria-current={viewMode === 'albums' ? 'page' : undefined}
+                        {...activatable(() => { onLibraryClick('albums'); onClose(); })}
                     >
                         <span className="playlist-icon"><Icon name="disc" /></span>
                         <span className="item-label">{t('sidebar.albums')}</span>
@@ -191,7 +199,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <li
                             key={pl.id}
                             className={`playlist-item ${currentPlaylistId === pl.id && viewMode === 'playlist' ? 'active' : ''}`}
-                            onClick={() => { onPlaylistClick(pl.id); onClose(); }}
+                            aria-current={currentPlaylistId === pl.id && viewMode === 'playlist' ? 'page' : undefined}
+                            {...activatable(() => { onPlaylistClick(pl.id); onClose(); })}
                             onContextMenu={(e) => onPlaylistContextMenu(e, pl.id)}
                         >
                             <span className="playlist-icon">
@@ -261,19 +270,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <div className="context-menu sidebar-new-menu">
                             <div
                                 className="context-menu-item"
-                                onClick={() => runAndClose(onCreatePlaylist)}
+                                {...activatable(() => runAndClose(onCreatePlaylist))}
                             >
                                 <Icon name="plus" size={16} /> {t('sidebar.newPlaylist')}
                             </div>
                             <div
                                 className="context-menu-item"
-                                onClick={() => runAndClose(onCreateSmartPlaylist)}
+                                {...activatable(() => runAndClose(onCreateSmartPlaylist))}
                             >
                                 <Icon name="wand" size={16} /> {t('sidebar.newSmartPlaylist')}
                             </div>
                             <div
                                 className={`context-menu-item ${isScanning ? 'disabled' : ''}`}
-                                onClick={() => { if (!isScanning) runAndClose(onAddFolder); }}
+                                {...activatable(() => { if (!isScanning) runAndClose(onAddFolder); })}
                             >
                                 <Icon name="folder" size={16} /> {t('sidebar.addMusicFolder')}
                             </div>

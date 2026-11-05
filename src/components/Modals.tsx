@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { getVersion } from '@tauri-apps/api/app';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useTranslation } from 'react-i18next';
+import { useDialogFocus } from '../hooks/useDialogFocus';
 import { ScanFolder, ServerActivity, ServerStatus, TrackKind } from '../types';
 import type { TranscodeFormat } from '../db';
 import { Icon } from './Icon';
@@ -40,11 +41,12 @@ export const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({
     setPlaylistName
 }) => {
     const { t } = useTranslation();
+    const dialogRef = useDialogFocus(isOpen);
     if (!isOpen) return null;
     return (
         <Portal><div className="modal-overlay">
-            <div className="modal-content">
-                <h3>{t('modals.createPlaylist')}</h3>
+            <div className="modal-content" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="create-playlist-title">
+                <h3 id="create-playlist-title">{t('modals.createPlaylist')}</h3>
                 <form onSubmit={onSubmit}>
                     <input
                         type="text"
@@ -100,7 +102,7 @@ const ServerSide: React.FC<Pick<SyncModalProps, 'serverStatus' | 'serverActivity
     }, [running, url, token, fingerprint]);
     return (
         <>
-            <h3>{t('modals.wifiSyncServer')}</h3>
+            <h3 id="sync-server-title">{t('modals.wifiSyncServer')}</h3>
             <p>{t('modals.wifiSyncIntro')}</p>
             <div className="sync-server-status">
                 {serverStatus?.running ? (
@@ -158,10 +160,11 @@ const ServerSide: React.FC<Pick<SyncModalProps, 'serverStatus' | 'serverActivity
 
 export const SyncModal: React.FC<SyncModalProps> = (props) => {
     const { t } = useTranslation();
+    const dialogRef = useDialogFocus(props.isOpen);
     if (!props.isOpen) return null;
     return (
         <Portal><div className="modal-overlay" onClick={props.onClose}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-content" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="sync-server-title" onClick={e => e.stopPropagation()}>
                 <ServerSide {...props} />
                 <div className="modal-actions">
                     <button type="button" className="modal-btn cancel" onClick={props.onClose}>{t('modals.close')}</button>
@@ -296,6 +299,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         if (isOpen && initialTab) setActiveTab(initialTab);
     }, [isOpen, initialTab]);
 
+    const dialogRef = useDialogFocus(isOpen);
     if (!isOpen) return null;
 
     const tabs: { id: SettingsTab; label: string }[] = [
@@ -309,8 +313,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
     return (
         <Portal><div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content settings-modal" onClick={e => e.stopPropagation()}>
-                <h3>{t('settings.title')}</h3>
+            <div className="modal-content settings-modal" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={e => e.stopPropagation()}>
+                <h3 id="settings-title">{t('settings.title')}</h3>
 
                 <div className="settings-tabs" role="tablist">
                     {tabs.map(tab => (

@@ -8,6 +8,8 @@ import { Track } from '../types';
 import { Icon } from './Icon';
 import { podcastBadge, podcastDurationText } from './trackFormat';
 
+const rowId = (trackId: string) => `track-row-${trackId}`;
+
 // Hoisted so React can bail out on the identical element reference — the star
 // renders once per row across a library that can run to thousands of tracks.
 const STAR_ON = <Icon name="star-filled" size={15} />;
@@ -86,6 +88,11 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
     // survives re-sorting; ids no longer in `tracks` are ignored via `selected`.
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const anchorRef = useRef<number | null>(null);
+    // Keyboard cursor (listbox with aria-activedescendant: focus stays on the
+    // <ul>, which survives the virtualizer unmounting rows). null until the
+    // list is first focused or a row clicked.
+    const [activeIndex, setActiveIndex] = useState<number | null>(null);
+    const listRef = useRef<HTMLUListElement>(null);
     const selected = useMemo(
         () => tracks.filter(t => selectedIds.has(t.id)),
         [tracks, selectedIds],
@@ -93,6 +100,10 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
     const multi = selected.length > 1;
 
     const handleRowClick = (e: React.MouseEvent, track: Track, index: number) => {
+        setActiveIndex(index);
+        // Rows aren't focusable themselves; park focus on the list so the arrow
+        // keys carry on from the clicked row.
+        listRef.current?.focus({ preventScroll: true });
         if (onSelectionContextMenu && (e.metaKey || e.ctrlKey)) {
             setSelectedIds(prev => {
                 const next = new Set(prev);
@@ -232,9 +243,12 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
             <li
                 key={extra?.key ?? track.id}
                 ref={extra?.measureRef}
+                id={rowId(track.id)}
+                role="option"
+                aria-selected={multi ? selectedIds.has(track.id) : isCued || isPlaying}
                 data-index={index}
                 style={extra?.style}
-                className={`track-item ${isPlaying ? 'active' : ''} ${isCued && !multi ? 'selected' : ''} ${multi && selectedIds.has(track.id) ? 'multi-selected' : ''} ${track.kind === 'podcast' && (track.play_state ?? 'unplayed') === 'played' ? 'is-played' : ''} ${dragIndex === index ? 'is-dragging' : ''} ${reorderable && overIndex === index && dragIndex !== index ? 'drop-target' : ''}`}
+                className={`track-item ${activeIndex === index ? 'kb-focus' : ''} ${isPlaying ? 'active' : ''} ${isCued && !multi ? 'selected' : ''} ${multi && selectedIds.has(track.id) ? 'multi-selected' : ''} ${track.kind === 'podcast' && (track.play_state ?? 'unplayed') === 'played' ? 'is-played' : ''} ${dragIndex === index ? 'is-dragging' : ''} ${reorderable && overIndex === index && dragIndex !== index ? 'drop-target' : ''}`}
                 onClick={(e) => handleRowClick(e, track, index)}
                 onDoubleClick={() => onTrackActivate(track)}
                 onContextMenu={(e) => handleRowContextMenu(e, track)}
@@ -392,6 +406,72 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
         }
     };
 
+    const scrollToRow = (index: number) => {
+        if (virtualized) {
+            rowVirtualizer.scrollToIndex(index, { align: 'auto' });
+        } else {
+            wrapperRef.current
+                ?.querySelector(`li.track-item[data-index="${index}"]`)
+                ?.scrollIntoView?.({ block: 'nearest' });
+        }
+    };
+
+    const clampedActive = activeIndex === null ? null : Math.min(activeIndex, tracks.length - 1);
+
+    const handleListFocus = () => {
+        // Functional update: focus fires synchronously inside a row's click,
+        // after that click already set the cursor to the clicked row.
+        if (tracks.length > 0) setActiveIndex(prev => prev ?? (playingIndex >= 0 ? playingIndex : 0));
+    };
+
+    // Arrow keys move the cursor (Shift extends a range), Enter plays, the
+    // Menu key / Shift+F10 opens the row's context menu. Space and ←/→ are left
+    // to useKeyboardShortcuts (play/pause, prev/next).
+    const handleListKeyDown = (e: React.KeyboardEvent<HTMLUListElement>) => {
+        if (tracks.length === 0) return;
+        const cur = clampedActive ?? 0;
+        const move = (to: number) => {
+            e.preventDefault();
+            const next = Math.max(0, Math.min(tracks.length - 1, to));
+            if (onSelectionContextMenu && e.shiftKey) {
+                const anchor = anchorRef.current ?? cur;
+                anchorRef.current = anchor;
+                const [lo, hi] = [Math.min(anchor, next), Math.max(anchor, next)];
+                setSelectedIds(new Set(tracks.slice(lo, hi + 1).map(t => t.id)));
+            } else {
+                anchorRef.current = next;
+                if (selectedIds.size > 0) setSelectedIds(new Set());
+            }
+            setActiveIndex(next);
+            scrollToRow(next);
+        };
+        switch (e.key) {
+            case 'ArrowDown': move(cur + 1); break;
+            case 'ArrowUp': move(cur - 1); break;
+            case 'Home': move(0); break;
+            case 'End': move(tracks.length - 1); break;
+            case 'Enter':
+                e.preventDefault();
+                onTrackActivate(tracks[cur]);
+                break;
+            case 'ContextMenu':
+            case 'F10': {
+                if (e.key === 'F10' && !e.shiftKey) break;
+                e.preventDefault();
+                const rowEl = wrapperRef.current?.querySelector(`li.track-item[data-index="${cur}"]`);
+                const rect = rowEl?.getBoundingClientRect();
+                const at = {
+                    clientX: rect ? rect.left + 24 : 0,
+                    clientY: rect ? rect.top + rect.height / 2 : 0,
+                    preventDefault: () => {},
+                    stopPropagation: () => {},
+                };
+                handleRowContextMenu(at as unknown as React.MouseEvent, tracks[cur]);
+                break;
+            }
+        }
+    };
+
     const wrapperStyle = useMemo(() => {
         const style: Record<string, string> = {};
         let custom = false;
@@ -420,6 +500,17 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
         '--np-container': `${nowPlaying.containerHeight}px`,
         '--np-header': `${nowPlaying.headerHeight}px`,
     } as React.CSSProperties;
+
+    const listProps = {
+        ref: listRef,
+        role: 'listbox' as const,
+        tabIndex: 0,
+        'aria-label': t('trackList.listLabel'),
+        'aria-multiselectable': onSelectionContextMenu ? true : undefined,
+        'aria-activedescendant': clampedActive !== null && tracks[clampedActive] ? rowId(tracks[clampedActive].id) : undefined,
+        onFocus: handleListFocus,
+        onKeyDown: handleListKeyDown,
+    };
 
     const nowPlayingFraction = tracks.length > 1 ? playingIndex / (tracks.length - 1) : 0;
 
@@ -469,7 +560,7 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                 </div>
             )}
             {virtualized ? (
-                <ul className="track-list is-virtualized" style={{ position: 'relative', height: rowVirtualizer.getTotalSize() }}>
+                <ul className="track-list is-virtualized" {...listProps} style={{ position: 'relative', height: rowVirtualizer.getTotalSize() }}>
                     {rowVirtualizer.getVirtualItems().map((item) => renderRow(tracks[item.index], item.index, {
                         key: item.key,
                         measureRef: rowVirtualizer.measureElement,
@@ -483,10 +574,10 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                     }))}
                 </ul>
             ) : (
-                <ul className="track-list">
+                <ul className="track-list" {...listProps}>
                     {tracks.map((track, index) => renderRow(track, index))}
                     {tracks.length === 0 && (
-                        <li className="empty-state">{t('trackList.noTracksFound')}</li>
+                        <li className="empty-state" role="presentation">{t('trackList.noTracksFound')}</li>
                     )}
                 </ul>
             )}

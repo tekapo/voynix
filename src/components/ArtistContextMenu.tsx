@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Playlist, Track } from '../types';
 import { UNKNOWN_ARTIST } from '../names';
 import { useMenuPosition } from '../hooks/useMenuPosition';
+import { useMenuKeyboard } from '../hooks/useMenuKeyboard';
 import { MenuDivider } from './Menu';
 
 interface ArtistContextMenuProps {
@@ -44,25 +45,26 @@ export const ArtistContextMenu: React.FC<ArtistContextMenuProps> = ({
 }) => {
     const { t } = useTranslation();
     const { ref, style } = useMenuPosition(visible, x, y);
+    const menuProps = useMenuKeyboard(ref, visible, onClose);
     if (!visible) return null;
     const customPlaylists = playlists.filter(p => p.type === 'custom');
 
     return (
         <div
             ref={ref}
-            className="context-menu"
+            className="context-menu" {...menuProps}
             style={style}
             onClick={(e) => e.stopPropagation()}
         >
             {artist && <div className="context-menu-header">{artist === UNKNOWN_ARTIST ? t('common.unknownArtist') : artist}</div>}
-            <div className={`context-menu-item ${track ? '' : 'disabled'}`} onClick={() => {
+            <div role="menuitem" tabIndex={-1} className={`context-menu-item ${track ? '' : 'disabled'}`} onClick={() => {
                 if (track) onPlay(track);
                 onClose();
             }}>
                 {t('contextMenu.play')}
             </div>
             {onAddToQueue && (
-                <div className={`context-menu-item ${track ? '' : 'disabled'}`} onClick={() => {
+                <div role="menuitem" tabIndex={-1} className={`context-menu-item ${track ? '' : 'disabled'}`} onClick={() => {
                     if (track) onAddToQueue(track);
                     onClose();
                 }}>
@@ -70,19 +72,19 @@ export const ArtistContextMenu: React.FC<ArtistContextMenuProps> = ({
                 </div>
             )}
             <MenuDivider />
-            <div className={`context-menu-item ${artist ? '' : 'disabled'}`} onClick={() => {
+            <div role="menuitem" tabIndex={-1} className={`context-menu-item ${artist ? '' : 'disabled'}`} onClick={() => {
                 if (artist) onFindArtistImage(artist);
                 onClose();
             }}>
                 {t('artistMenu.findArtistImage')}
             </div>
-            <div className={`context-menu-item ${artist ? '' : 'disabled'}`} onClick={() => {
+            <div role="menuitem" tabIndex={-1} className={`context-menu-item ${artist ? '' : 'disabled'}`} onClick={() => {
                 if (artist) onSetArtistImage(artist);
                 onClose();
             }}>
                 {t('artistMenu.setArtistImage')}
             </div>
-            <div className={`context-menu-item ${artist ? '' : 'disabled'}`} onClick={() => {
+            <div role="menuitem" tabIndex={-1} className={`context-menu-item ${artist ? '' : 'disabled'}`} onClick={() => {
                 if (artist) onResetArtistImage(artist);
                 onClose();
             }}>
@@ -94,6 +96,8 @@ export const ArtistContextMenu: React.FC<ArtistContextMenuProps> = ({
                 customPlaylists.map(pl => (
                     <div
                         key={pl.id}
+                        role="menuitem"
+                        tabIndex={-1}
                         className={`context-menu-item ${artist ? '' : 'disabled'}`}
                         onClick={() => {
                             if (artist) onAddToPlaylist(pl.id, artist);
@@ -104,7 +108,7 @@ export const ArtistContextMenu: React.FC<ArtistContextMenuProps> = ({
                     </div>
                 ))
             ) : (
-                <div className="context-menu-item disabled">{t('contextMenu.noCustomPlaylists')}</div>
+                <div role="menuitem" tabIndex={-1} className="context-menu-item disabled">{t('contextMenu.noCustomPlaylists')}</div>
             )}
         </div>
     );

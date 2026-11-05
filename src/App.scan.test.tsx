@@ -99,7 +99,7 @@ describe("Add Music Folder", () => {
 
         clickAddMusicFolder();
 
-        await screen.findByText("This folder is already registered.");
+        await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("This folder is already registered.")); // the banner text is mirrored into this live region
         expect(invoke).not.toHaveBeenCalledWith("scan_music_dir", expect.anything());
     });
 
@@ -134,7 +134,7 @@ describe("Add Music Folder", () => {
 
         clickAddMusicFolder();
 
-        await screen.findByText("Folder scan cancelled — nothing was added.");
+        await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Folder scan cancelled — nothing was added.")); // the banner text is mirrored into this live region
         expect((await getScanFolders())).toHaveLength(0);
         expect(invoke).not.toHaveBeenCalledWith("prewarm_album_thumbs", expect.anything());
     });
@@ -247,7 +247,7 @@ describe("Rescan", () => {
         const dialog = await openSettingsFoldersTab();
         fireEvent.click(within(dialog).getByRole("button", { name: "Rescan All" }));
 
-        await screen.findByText("Rescan cancelled — folders scanned so far are updated.");
+        await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Rescan cancelled — folders scanned so far are updated.")); // the banner text is mirrored into this live region
         expect(scanCalls).toBe(1); // loop broke after the first folder's cancelled result
     });
 
@@ -324,7 +324,7 @@ describe("Rescan", () => {
         const dialog = await openSettingsFoldersTab();
         fireEvent.click(within(dialog).getByRole("button", { name: "Rescan /music/artist-a/album-a" }));
 
-        await screen.findByText("Failed to rescan: Error: Folder not found: /music/artist-a/album-a");
+        await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Failed to rescan: Error: Folder not found: /music/artist-a/album-a")); // the banner text is mirrored into this live region
         // The playlist was never cleared, since the scan failed before rescanFolder touched it.
         fireEvent.click(within(sidebar()).getByText("Rock Favorites"));
         await within(trackList()).findByText("Aurora");
@@ -421,6 +421,6 @@ describe("Import iTunes Library", () => {
         const dialog = await openSettingsFoldersTab();
         fireEvent.click(within(dialog).getByRole("button", { name: "Import iTunes Library…" }));
 
-        await screen.findByText("iTunes import cancelled — nothing was added.");
+        await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("iTunes import cancelled — nothing was added.")); // the banner text is mirrored into this live region
     });
 });

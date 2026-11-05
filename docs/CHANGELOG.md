@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.34.0 — 2026-11-05
+- macOS: the track list, sidebar, library lists, context menus and dialogs now work with the keyboard and screen readers (arrow keys, Enter, menu key, focus handling, roles and labels, and status messages are announced).
+- Android: the switch rows in Settings and Sync are a single TalkBack stop announced as a switch.
+
 ## 0.33.0 — 2026-11-05
 - macOS: the Help menu is no longer empty. It now has User Manual, Show Welcome Guide and Report an Issue (opens the GitHub issue templates).
 
