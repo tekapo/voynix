@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.32.0 — 2026-11-05
+- Settings > About now shows the library totals (tracks, artists, albums), unaffected by search or the current view.
+
 ## 0.30.6 — 2026-11-05
 - Fixed a race where the "arm the view's first track" effect could replace a track the user had just asked to play while it was still loading, so playback never started.
 - Tests: raised the Vitest test timeout above the waitFor timeout so a stuck assertion reports its own error (this removes the flaky `App.stats.test.tsx` timeout).

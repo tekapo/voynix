@@ -175,6 +175,8 @@ export type SettingsTab = 'general' | 'folders' | 'library' | 'sync' | 'remote' 
 
 interface SettingsModalProps {
     isOpen: boolean;
+    /** Whole-library totals (unfiltered) shown in the About tab. */
+    libraryStats?: { tracks: number; artists: number; albums: number };
     /** Tab to switch to whenever the modal opens (e.g. 'about' from the app menu). */
     initialTab?: SettingsTab;
     onClose: () => void;
@@ -228,6 +230,7 @@ interface SettingsModalProps {
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
     isOpen,
+    libraryStats,
     initialTab,
     onClose,
     folders,
@@ -621,6 +624,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="settings-section">
                     <p><strong>{t('settings.appName')}</strong>{version && t('settings.versionLabel', { version })}</p>
                     <p className="settings-hint">{t('settings.aboutTagline')}</p>
+                    {libraryStats && (
+                        <p className="settings-hint" data-testid="library-stats">
+                            {t('settings.libraryStats', {
+                                tracks: t('settings.libraryTracks', { count: libraryStats.tracks }),
+                                artists: t('settings.libraryArtists', { count: libraryStats.artists }),
+                                albums: t('settings.libraryAlbums', { count: libraryStats.albums }),
+                            })}
+                        </p>
+                    )}
                     <div className="settings-about-actions">
                         {onShowWelcome && (
                             <button type="button" className="modal-btn secondary" onClick={() => { onClose(); onShowWelcome(); }}>
