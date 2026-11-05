@@ -1196,6 +1196,55 @@ fn player_set_volume(state: tauri::State<player::PlayerHandle>, volume: f32) {
     state.set_volume(volume);
 }
 
+/// `/…/Voynix.app/Contents/MacOS/Voynix` -> `/…/Voynix.app`; `None` for a binary
+/// that isn't inside an app bundle (`tauri:dev`, `cargo run`).
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+fn app_bundle_path(exe: &Path) -> Option<PathBuf> {
+    let macos = exe.parent()?;
+    if macos.file_name()? != "MacOS" {
+        return None;
+    }
+    let contents = macos.parent()?;
+    if contents.file_name()? != "Contents" {
+        return None;
+    }
+    let bundle = contents.parent()?;
+    (bundle.extension()? == "app").then(|| bundle.to_path_buf())
+}
+
+/// Restarts the app through LaunchServices (`open`) so the new instance is
+/// activated and comes to the front. The plugin's `relaunch()` spawns the binary
+/// directly, which on macOS leaves the new window behind whatever app was in
+/// front (the self-update dialog's "Install" was clicked in this app, but by the
+/// time the new process is up, nothing activates it). Returns `false` — and does
+/// nothing — outside an app bundle or off macOS, so the caller falls back to
+/// `relaunch()`.
+#[tauri::command]
+#[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
+fn relaunch_app(app: tauri::AppHandle) -> Result<bool, String> {
+    #[cfg(target_os = "macos")]
+    {
+        let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        let Some(bundle) = app_bundle_path(&exe) else {
+            return Ok(false);
+        };
+        // The delay lets this process finish exiting first: `open` on a running
+        // app only activates it instead of starting the new copy. The bundle path
+        // goes in as $1 so no quoting is needed.
+        std::process::Command::new("/bin/sh")
+            .arg("-c")
+            .arg("sleep 1; exec /usr/bin/open \"$1\"")
+            .arg("sh")
+            .arg(&bundle)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+        app.exit(0);
+        return Ok(true);
+    }
+    #[allow(unreachable_code)]
+    Ok(false)
+}
+
 #[tauri::command]
 #[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
 fn show_in_finder(path: String) -> Result<(), String> {
@@ -1397,6 +1446,7 @@ pub fn run() {
             set_remote_secret,
             transcode::prepare_sync_media,
             show_in_finder,
+            relaunch_app,
             get_track_artwork,
             set_track_artwork,
             get_track_file_info,
@@ -1654,6 +1704,27 @@ mod tests {
         // this exercises the same underlying lookup it wraps.
         let result = read_embedded_artwork(Path::new("/nonexistent/song.mp3"));
         assert_eq!(result, None);
+    }
+
+    #[test]
+    fn app_bundle_path_finds_the_bundle_around_the_binary() {
+        assert_eq!(
+            app_bundle_path(Path::new("/Applications/Voynix.app/Contents/MacOS/Voynix")),
+            Some(PathBuf::from("/Applications/Voynix.app"))
+        );
+        // A bundle path with spaces survives intact.
+        assert_eq!(
+            app_bundle_path(Path::new("/Users/me/My Apps/Voynix.app/Contents/MacOS/voynix")),
+            Some(PathBuf::from("/Users/me/My Apps/Voynix.app"))
+        );
+    }
+
+    #[test]
+    fn app_bundle_path_is_none_outside_a_bundle() {
+        assert_eq!(app_bundle_path(Path::new("/repo/src-tauri/target/debug/voynix")), None);
+        assert_eq!(app_bundle_path(Path::new("/Applications/Voynix.app/Contents/Resources/x")), None);
+        assert_eq!(app_bundle_path(Path::new("/opt/tools/Contents/MacOS/voynix")), None);
+        assert_eq!(app_bundle_path(Path::new("voynix")), None);
     }
 
     #[test]

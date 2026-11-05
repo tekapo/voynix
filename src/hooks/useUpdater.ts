@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { check, Update } from "@tauri-apps/plugin-updater";
+import { invoke } from "@tauri-apps/api/core";
 import { relaunch } from "@tauri-apps/plugin-process";
 
 /** Wait this long after launch before the automatic check, so it never competes with startup. */
@@ -75,7 +76,10 @@ export function useUpdater(autoCheck: boolean): SelfUpdate {
         else if (event.event === "Progress") done += event.data.chunkLength;
         setStatus({ kind: "downloading", version: update.version, done, total });
       });
-      await relaunch();
+      // The plugin's relaunch() leaves the new window behind other apps on macOS;
+      // relaunch_app goes through `open` so it comes to the front. It returns false
+      // when that isn't possible (e.g. not running from an .app bundle).
+      if (!(await invoke<boolean>("relaunch_app"))) await relaunch();
     } catch (e) {
       setStatus({ kind: "error", message: String(e) });
     }
