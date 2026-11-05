@@ -19,6 +19,10 @@ import java.util.concurrent.atomic.AtomicReference
 private val JSON_MEDIA_TYPE = "application/json".toMediaType()
 private val json = Json { ignoreUnknownKeys = true }
 
+/** Header carrying the TLS key fingerprint we observed. Must match `PAIR_OBSERVED_FP_HEADER` in src-tauri/src/server.rs. */
+private const val PAIR_OBSERVED_FP_HEADER = "X-Voynix-Observed-Fingerprint"
+
+class PairingIdentityException : Exception("Couldn't verify this Mac's identity, so pairing was stopped. Pair with the QR code or enter the pairing code instead, and make sure the Mac app is up to date.")
 class PairingDeclinedException : Exception("The Mac declined the pairing request.")
 class PairingTimeoutException : Exception("No response from the Mac. Approve the prompt there, then try again.")
 class PairingBusyException : Exception("The Mac is busy with another pairing request, or one was just declined. Try again in a few seconds.")
@@ -135,6 +139,17 @@ class SyncApi {
                 .newBuilder()
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(75, TimeUnit.SECONDS)
+                // Runs once the TLS handshake is done (so [observedPin] is set) and
+                // before the request is sent: tell the Mac which key we really saw.
+                // A relay in the middle shows us its own key, so the Mac refuses
+                // before it prompts its owner or releases the token.
+                .addNetworkInterceptor { chain ->
+                    chain.proceed(
+                        chain.request().newBuilder()
+                            .header(PAIR_OBSERVED_FP_HEADER, observedPin.get().orEmpty())
+                            .build()
+                    )
+                }
                 .build()
             val body = json.encodeToString(PairRequestDto.serializer(), PairRequestDto(deviceName))
                 .toRequestBody(JSON_MEDIA_TYPE)
@@ -142,6 +157,7 @@ class SyncApi {
             longClient.newCall(req).execute().use { resp ->
                 when (resp.code) {
                     in 200..299 -> json.decodeFromString(PairGrantedDto.serializer(), resp.body!!.string())
+                    400 -> throw PairingIdentityException()
                     403 -> throw PairingDeclinedException()
                     408 -> throw PairingTimeoutException()
                     429 -> throw PairingBusyException()
