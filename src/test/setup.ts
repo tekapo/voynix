@@ -6,6 +6,7 @@ import i18n from "../i18n";
 // The 1 s default for waitFor/findBy* is too tight on a loaded CI runner
 // (playback start is async audio + DB work); passing tests aren't slowed by a
 // longer ceiling.
+// Keep it below vite.config.ts's testTimeout so failures name the unmet assertion.
 configure({ asyncUtilTimeout: 5000 });
 
 afterEach(async () => {

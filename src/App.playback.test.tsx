@@ -143,6 +143,30 @@ describe("playback transport", () => {
     });
 });
 
+describe("play requested while the view changes", () => {
+    // Regression for the flaky App.stats.test: the "arm the first track of the
+    // view" effect used to replace a track whose load was still pending (the
+    // user had already asked to play it), so Pause never showed.
+    it("keeps the track being loaded when the view changes before the load resolves", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+
+        let release!: () => void;
+        const gate = new Promise<void>(r => { release = r; });
+        const realLoad = engine.load.bind(engine);
+        engine.load = async (...a: Parameters<FakeEngine["load"]>) => { await gate; return realLoad(...a); };
+
+        fireEvent.doubleClick(within(trackList()).getByText("Borealis").closest("li") as HTMLElement);
+        fireEvent.click(within(document.querySelector(".sidebar") as HTMLElement).getByText("My Podcast"));
+        release();
+
+        await waitFor(() => expect(playPauseButton()).toHaveAttribute("aria-label", "Pause"));
+        const playerBar = document.querySelector(".player-bar") as HTMLElement;
+        expect(within(playerBar).getByText("Borealis")).toBeInTheDocument();
+    });
+});
+
 describe("podcast pause settle point", () => {
     it("pausing a podcast saves the exact position (not the 5s-throttled one)", async () => {
         await seedLibrary();
