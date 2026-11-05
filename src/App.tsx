@@ -1,5 +1,4 @@
 import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,17 +6,19 @@ import "./App.css";
 import { invalidateAlbumArt, useNowPlayingArtwork } from "./albumArt";
 import { albumOf, effectiveAlbum } from "./albumName";
 import { artistOf, UNKNOWN_ARTIST } from "./names";
-import i18n, { LanguagePreference, resolveLanguage } from "./i18n";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { ThemePreference, THEME_QUERY, resolveTheme } from "./theme";
+import i18n, { LanguagePreference } from "./i18n";
+import { ThemePreference } from "./theme";
 import { invalidateArtistArt } from "./artistArt";
 import { useContextMenus } from "./hooks/useContextMenus";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useAudioPlayer } from "./hooks/useAudioPlayer";
+import { useArtworkActions } from "./hooks/useArtworkActions";
+import { useAppearance } from "./hooks/useAppearance";
 import { useBackup } from "./hooks/useBackup";
 import { usePlayerBarHeight } from "./hooks/usePlayerBarHeight";
 import { useMediaSession } from "./hooks/useMediaSession";
 import { usePersistedSetting } from "./hooks/usePersistedSetting";
+import { usePlaylistActions } from "./hooks/usePlaylistActions";
 import { useQueue } from "./hooks/useQueue";
 import { createKeyedSingleFlight } from "./lib/singleFlight";
 import { useScanFolders } from "./hooks/useScanFolders";
@@ -28,12 +29,12 @@ import { AlbumContextMenu } from "./components/AlbumContextMenu";
 import { WelcomeModal } from "./components/WelcomeModal";
 import { UpdateModal } from "./components/UpdateModal";
 import { useUpdater } from "./hooks/useUpdater";
-import { AlbumInfoModal, AlbumTagFields } from "./components/AlbumInfoModal";
+import { AlbumInfoModal } from "./components/AlbumInfoModal";
 import { ArtistContextMenu } from "./components/ArtistContextMenu";
 import { ArtistImagePicker } from "./components/ArtistImagePicker";
 import { AlbumCoverPicker } from "./components/AlbumCoverPicker";
 import { TrackContextMenu } from "./components/ContextMenu";
-import { TrackInfoModal, TrackTagFields } from "./components/TrackInfoModal";
+import { TrackInfoModal } from "./components/TrackInfoModal";
 import { Header } from "./components/Header";
 import { Icon } from "./components/Icon";
 import { LibraryColumns } from "./components/LibraryColumns";
@@ -45,7 +46,6 @@ import { PlayerBar } from "./components/PlayerBar";
 import { SelectionContextMenu } from "./components/SelectionContextMenu";
 import { PlaylistContextMenu } from "./components/PlaylistContextMenu";
 import { LibraryItemContextMenu } from "./components/LibraryItemContextMenu";
-import { LibrarySyncSource } from "./smartLists";
 import { QueuePanel } from "./components/QueuePanel";
 import { Sidebar } from "./components/Sidebar";
 import { ColumnWidths, TrackList } from "./components/TrackList";
@@ -62,30 +62,18 @@ import {
   getPlaylists,
   getScanFolders,
   getSetting,
-  getLibrarySyncSources,
-  setLibrarySyncSources,
   getTrackPlayState,
   initDb,
   loadLastPlayback,
   migrateFromJson,
   recordPlayEvent,
   reapplyPlaylistKind,
-  resetPlaylistManualOrder,
   saveLastPlayback,
-  getAlbumCover,
-  getArtistCoverKeys,
-  setAlbumCover,
-  setArtistCover,
-  setPlaylistKind,
-  setPlaylistSyncToDevice,
   setPlaylistTrackOrder,
   setSetting,
-  setTrackFavorite,
   setTrackIdentity,
-  setTrackKind,
   setTrackPlayState,
   updateSmartPlaylist,
-  updateTrackTags,
 } from "./db";
 import { accumulateListened, effectiveSpeed, emptyListenProgress, nextPlayState, nextSpeed, parseSpeed, shouldCountPlay } from "./playback";
 import { buildOrder, cycleRepeat, effectiveShuffle } from "./queue";
@@ -94,10 +82,9 @@ import { filterStrings, filterTracks } from "./search";
 import { moveItem } from "./playlistOrder";
 import { mostPlayed, recentlyAdded, recentlyPlayed } from "./smartLists";
 import { DEFAULT_SMART_RULES, evaluateSmartPlaylist } from "./smartPlaylist";
-import { pool } from "./sync";
 import { nextSort, SortKey, SortState, sortNatural, sortTracks } from "./trackSort";
 import type { LastPlayback } from "./db";
-import { LibraryLayout, Playlist, SmartRules, Track, TrackIdentity, TrackKind, ViewMode } from "./types";
+import { LibraryLayout, Playlist, SmartRules, Track, TrackIdentity, ViewMode } from "./types";
 
 const MAX_AUTO_SKIPS = 5;
 
@@ -295,60 +282,7 @@ function App() {
       } catch { return undefined; }
     },
     v => JSON.stringify(v));
-  const [uiLanguage, setUiLanguage, loadUiLanguage] = usePersistedSetting<LanguagePreference>(
-    "ui_language", "system",
-    raw => (raw === "en" || raw === "ja" || raw === "system" ? raw : undefined),
-    v => v);
-  // Applies whenever the preference changes (including the initial load from
-  // the DB, once loadUiLanguage() resolves it away from the "system" default)
-  // — i18next re-renders every `useTranslation()` consumer, and the Dock
-  // menu (native, outside React) is kept in sync via invoke.
-  useEffect(() => {
-    const resolved = resolveLanguage(uiLanguage);
-    document.documentElement.lang = resolved;
-    if (i18n.language !== resolved) i18n.changeLanguage(resolved);
-    invoke("set_dock_labels", {
-      labels: [i18n.t('dock.playPause'), i18n.t('dock.next'), i18n.t('dock.previous')],
-    }).catch(() => { /* non-macOS / dev-server: no Dock to update */ });
-    const name = "Voynix";
-    const t = i18n.t.bind(i18n);
-    invoke("set_app_menu", {
-      labels: {
-        about: t('appMenu.about', { name }), services: t('appMenu.services'),
-        hide: t('appMenu.hide', { name }), hideOthers: t('appMenu.hideOthers'),
-        quit: t('appMenu.quit', { name }), file: t('appMenu.file'),
-        closeWindow: t('appMenu.closeWindow'), edit: t('appMenu.edit'),
-        undo: t('appMenu.undo'), redo: t('appMenu.redo'), cut: t('appMenu.cut'),
-        copy: t('appMenu.copy'), paste: t('appMenu.paste'),
-        selectAll: t('appMenu.selectAll'), view: t('appMenu.view'),
-        fullscreen: t('appMenu.fullscreen'), window: t('appMenu.window'),
-        minimize: t('appMenu.minimize'), maximize: t('appMenu.maximize'),
-        help: t('appMenu.help'), helpManual: t('appMenu.helpManual'),
-        helpWelcome: t('appMenu.helpWelcome'), helpReport: t('appMenu.helpReport'),
-      },
-    }).catch(() => { /* non-macOS / dev-server: no menu bar to update */ });
-  }, [uiLanguage]);
-  const [uiTheme, setUiTheme, loadUiTheme] = usePersistedSetting<ThemePreference>(
-    "ui_theme", "system",
-    raw => (raw === "light" || raw === "dark" || raw === "system" ? raw : undefined),
-    v => v);
-  // Sets <html data-theme> (App.css keys its light variable set off it) and,
-  // for "system", follows the OS appearance live. The native window theme is
-  // kept in step so the title bar matches; null hands control back to the OS.
-  useEffect(() => {
-    const mq = window.matchMedia?.(THEME_QUERY);
-    const apply = () => {
-      document.documentElement.dataset.theme = resolveTheme(uiTheme, mq?.matches ?? true);
-    };
-    apply();
-    try {
-      getCurrentWindow().setTheme(uiTheme === "system" ? null : uiTheme)
-        .catch(() => { /* non-Tauri / dev-server: no native window to theme */ });
-    } catch { /* getCurrentWindow() throws outside Tauri */ }
-    if (uiTheme !== "system" || !mq) return;
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, [uiTheme]);
+  const { uiLanguage, setUiLanguage, loadUiLanguage, uiTheme, setUiTheme, loadUiTheme } = useAppearance();
   // "Find Artist Image…" picker (per-artist, from ArtistContextMenu).
   const [artistImagePickerArtist, setArtistImagePickerArtist] = useState<string | null>(null);
   // "Get Info…" dialog (per-track, from TrackContextMenu).
@@ -358,11 +292,6 @@ function App() {
   // "Find Album Cover…" picker (per-album, from AlbumContextMenu / track menu).
   const [albumCoverPickerTrack, setAlbumCoverPickerTrack] = useState<Track | null>(null);
   const [albumInfoTrack, setAlbumInfoTrack] = useState<Track | null>(null);
-  // Bulk "Fetch Missing Artist Images" (Settings > Library). Cancel is a flag
-  // rather than an AbortController since the loop lives in a `pool()` worker.
-  const [artistImageFetchProgress, setArtistImageFetchProgress] =
-    useState<{ done: number; total: number; found: number } | null>(null);
-  const artistImageFetchCancelRef = useRef(false);
 
   const {
     isSyncModalOpen,
@@ -415,12 +344,6 @@ function App() {
     closeAlbumMenu,
     closeArtistMenu,
   } = useContextMenus();
-
-  const [librarySyncSources, setLibrarySyncSourcesState] = useState<LibrarySyncSource[]>([]);
-  useEffect(() => {
-    getLibrarySyncSources().then(setLibrarySyncSourcesState).catch(e =>
-      console.error("Failed to load library sync sources:", e));
-  }, []);
 
   // Derived State: All Tracks (for Library)
   // Sourced from the `tracks` table directly (dbTracks, refreshed alongside
@@ -1055,98 +978,14 @@ function App() {
     return engine.subscribe(trampoline);
   }, [engine]);
 
-  const handleToggleFavorite = async (track: Track) => {
-    const next = !track.favorite;
-    try {
-      await setTrackFavorite(track.id, next);
-      patchCurrentTrackIfId(track.id, { favorite: next ? 1 : 0, favorite_updated_at: Date.now() });
-      await refreshPlaylists();
-    } catch (e) {
-      console.error("Failed to toggle favorite:", e);
-      setError(t('errors.updateFavoriteFailed', { error: String(e) }));
-    }
-  };
-
-  const handleSetKind = async (track: Track, kind: TrackKind) => {
-    try {
-      await setTrackKind(track.id, kind);
-      patchCurrentTrackIfId(track.id, { kind, kind_updated_at: Date.now() });
-      await refreshPlaylists();
-    } catch (e) {
-      console.error("Failed to set track kind:", e);
-      setError(t('errors.setKindFailed', { error: String(e) }));
-    }
-    closeTrackMenu();
-  };
-
-  // Manual podcast status override from the context menu.
-  const handleSetPlayState = async (track: Track, state: 'unplayed' | 'played') => {
-    try {
-      await setTrackPlayState(track.id, state, 0);
-      patchCurrentTrackIfId(track.id, { play_state: state, resume_position: 0, play_state_updated_at: Date.now() });
-      await refreshPlaylists();
-    } catch (e) {
-      console.error("Failed to set play state:", e);
-    }
-    closeTrackMenu();
-  };
-
-  const handleToggleLibrarySync = async (source: LibrarySyncSource) => {
-    const next = librarySyncSources.includes(source)
-      ? librarySyncSources.filter(s => s !== source)
-      : [...librarySyncSources, source];
-    try {
-      await setLibrarySyncSources(next);
-      setLibrarySyncSourcesState(next);
-      // buildSyncSnapshot reads these flags itself; nothing else changed that would
-      // retrigger the push effect, so ask for a rebuild explicitly.
-      bumpSnapshot();
-    } catch (e) {
-      console.error("Failed to toggle library sync flag:", e);
-      setError(t('errors.updateSyncSettingFailed', { error: String(e) }));
-    }
-    closeLibraryMenu();
-  };
-
-  const handleToggleSyncToDevice = async (playlistId: string) => {
-    const pl = playlists.find(p => p.id === playlistId);
-    try {
-      await setPlaylistSyncToDevice(playlistId, !pl?.sync_to_device);
-      await refreshPlaylists();
-    } catch (e) {
-      console.error("Failed to toggle sync flag:", e);
-      setError(t('errors.updateSyncSettingFailed', { error: String(e) }));
-    }
-    closePlaylistMenu();
-  };
-
-  const handleSetPlaylistKind = async (playlistId: string, kind: TrackKind) => {
-    try {
-      await setPlaylistKind(playlistId, kind);
-      // Bulk-reclassified the tracks; keep currentTrack's badge in step too.
-      setCurrentTrack(prev => {
-        if (!prev) return prev;
-        const inPl = playlists.find(p => p.id === playlistId)?.tracks.some(t => t.id === prev.id);
-        return inPl ? { ...prev, kind, kind_updated_at: Date.now() } : prev;
-      });
-      await refreshPlaylists();
-    } catch (e) {
-      console.error("Failed to set playlist kind:", e);
-      setError(t('errors.setKindFailed', { error: String(e) }));
-    }
-    closePlaylistMenu();
-  };
-
-  const handleResetManualOrder = async (playlistId: string) => {
-    try {
-      await resetPlaylistManualOrder(playlistId);
-      await refreshPlaylists();
-    } catch (e) {
-      console.error("Failed to reset playlist order:", e);
-      setError(t('errors.resetOrderFailed', { error: String(e) }));
-    }
-    closePlaylistMenu();
-  };
+  const {
+    librarySyncSources,
+    handleToggleFavorite, handleSetKind, handleSetPlayState, handleToggleLibrarySync,
+    handleToggleSyncToDevice, handleSetPlaylistKind, handleResetManualOrder,
+  } = usePlaylistActions({
+    playlists, refreshPlaylists, setError, patchCurrentTrackIfId, setCurrentTrack,
+    bumpSnapshot, closeTrackMenu, closePlaylistMenu, closeLibraryMenu,
+  });
 
   const handleTogglePathColumn = (next: boolean) => {
     setShowPathColumn(next);
@@ -1432,139 +1271,13 @@ function App() {
   // Actually, 'allTracks' is derived from 'playlists'. If we mutate a track inside 'playlists', forceUpdate might be needed.
   // But let's assume valid reactivity or just accept standard behavior for now.
 
-  const handleShowInFinder = async (track: Track) => {
-    try {
-      await invoke("show_in_finder", { path: track.file_path });
-    } catch (err) {
-      console.error("Failed to show in finder:", err);
-      setError(t('errors.showInFinderFailed', { error: String(err) }));
-    }
-  };
-
-  const handleSetArtwork = async (track: Track) => {
-    try {
-      const selected = await open({
-        multiple: false,
-        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg'] }],
-        title: "Select Artwork Image"
-      });
-
-      if (selected && typeof selected === "string") {
-        await invoke("set_track_artwork", { path: track.file_path, imagePath: selected });
-        // This rewrites the file's own embedded cover, so the disk-cached
-        // thumbnail (keyed by artist/album, not by content) would otherwise
-        // keep showing the old image in the album grid.
-        await invoke("clear_album_thumb_cache", { artist: track.artist ?? "", album: effectiveAlbum(track) ?? "" });
-        invalidateAlbumArt();
-      }
-    } catch (err) {
-      console.error("Failed to set artwork:", err);
-      setError(t('errors.setArtworkFailed', { error: String(err) }));
-    }
-  };
-
-  // "Get Info…" dialog's Save: rewrite the file's own tags, then the DB row.
-  // Title/artist/album/duration/track_no feed track_key (see compute_track_key,
-  // src-tauri/src/lib.rs), so editing them changes it — updateTrackTags carries
-  // play_events over to the new key so play count / last played survive.
-  const handleSaveTrackTags = async (track: Track, fields: TrackTagFields) => {
-    const identity = await invoke<{ track_key: string; content_hash: string }>("write_track_tags", {
-      path: track.file_path,
-      edit: fields,
-    });
-    await updateTrackTags(track.id, track.track_key, fields, identity.track_key, identity.content_hash);
-    const artistChanged = fields.artist !== (track.artist ?? "");
-    const albumChanged = fields.album !== (track.album ?? "");
-    if (artistChanged || albumChanged) {
-      // The disk-cached album thumbnail is keyed by (artist, album) — the
-      // folder-derived name when the track had no tag of its own (see
-      // albumName.ts) — not by content, so it would otherwise keep showing
-      // under the old key.
-      await invoke("clear_album_thumb_cache", { artist: track.artist ?? "", album: effectiveAlbum(track) ?? "" });
-      invalidateAlbumArt();
-    }
-    patchCurrentTrackIfId(track.id, {
-      title: fields.title,
-      artist: fields.artist || undefined,
-      album: fields.album || undefined,
-      disc_no: fields.disc_no,
-      track_no: fields.track_no,
-      track_key: identity.track_key,
-      content_hash: identity.content_hash,
-    });
-    await refreshPlaylists();
-  };
-
-  // Album "Get Info…" dialog's Save: rewrites artist/album on every track in
-  // the album (title/disc/track stay per-track, out of scope here — see
-  // AlbumInfoModal). Each file write + DB update mirrors handleSaveTrackTags
-  // above (including the track_key re-key), just looped with bounded
-  // concurrency via pool() (same helper the bulk artist-image fetch uses).
-  // Partial failures don't roll back what already succeeded — those files are
-  // already renamed on disk and in the DB — but we throw a summary so the
-  // dialog surfaces it instead of silently closing.
-  const handleSaveAlbumTags = async (
-    tracks: Track[],
-    fields: AlbumTagFields,
-    onProgress: (done: number, total: number) => void
-  ) => {
-    if (tracks.length === 0) return;
-    const oldArtist = tracks[0].artist ?? "";
-    // The cover/thumb cache is keyed by the *effective* album (folder-derived
-    // when untagged, see albumName.ts), not the raw blank tag, so the carry-
-    // over/cache-clear below must look it up under that same key.
-    const oldAlbum = effectiveAlbum(tracks[0]) ?? "";
-
-    let done = 0;
-    const failures: string[] = [];
-    await pool(tracks, 3, async (t) => {
-      try {
-        const edit = {
-          title: t.title,
-          artist: fields.artist,
-          album: fields.album,
-          disc_no: t.disc_no ?? null,
-          track_no: t.track_no ?? null,
-        };
-        const identity = await invoke<{ track_key: string; content_hash: string }>("write_track_tags", {
-          path: t.file_path,
-          edit,
-        });
-        await updateTrackTags(t.id, t.track_key, edit, identity.track_key, identity.content_hash);
-      } catch (err) {
-        console.error(`Failed to update tags for ${t.file_path}:`, err);
-        failures.push(t.file_name);
-      } finally {
-        done += 1;
-        onProgress(done, tracks.length);
-      }
-    });
-
-    // Carry the album cover override over to the new (artist, album) key so
-    // a rename doesn't silently drop it (see setAlbumCover's cache-key note).
-    // Computed the same way the cache itself is keyed (effectiveAlbum, not
-    // the raw tag) so leaving an already-untagged album's field blank isn't
-    // mistaken for a rename (its folder-derived key doesn't actually change).
-    const newAlbumKey = effectiveAlbum({ album: fields.album, file_path: tracks[0].file_path }) ?? "";
-    const renamed = fields.artist !== oldArtist || newAlbumKey !== oldAlbum;
-    if (renamed) {
-      const cover = await getAlbumCover(oldArtist, oldAlbum);
-      if (cover) {
-        await setAlbumCover(fields.artist, newAlbumKey, cover);
-        await setAlbumCover(oldArtist, oldAlbum, null);
-      }
-      await invoke("clear_album_thumb_cache", { artist: oldArtist, album: oldAlbum });
-      await invoke("clear_album_thumb_cache", { artist: fields.artist, album: newAlbumKey });
-      invalidateAlbumArt();
-    }
-    await refreshPlaylists();
-
-    if (failures.length > 0) {
-      throw new Error(
-        `${failures.length}/${tracks.length} files failed: ${failures.slice(0, 3).join(", ")}${failures.length > 3 ? "…" : ""}`
-      );
-    }
-  };
+  const {
+    artistImageFetchProgress,
+    handleShowInFinder, handleSetArtwork, handleSaveTrackTags, handleSaveAlbumTags,
+    handleSetAlbumCover, applyAlbumCoverUrl, handleResetAlbumCover,
+    handleSetArtistImage, handleResetArtistImage, applyArtistImageUrl,
+    handleFetchMissingArtistImages, cancelFetchMissingArtistImages,
+  } = useArtworkActions({ setError, refreshPlaylists, patchCurrentTrackIfId, artists });
 
   // Album grid's right-click "Play"/"Add to Queue": act on every track in the
   // clicked album (matched by name, same grouping LibraryView's Albums view
@@ -1585,50 +1298,6 @@ function App() {
       setError(t('errors.addAlbumToPlaylistFailed'));
     }
   };
-
-  // Non-destructive per-album override: unlike handleSetArtwork, this never
-  // touches a music file's own tags, applies to every track sharing the same
-  // (artist, album) pair — NOT album name alone, so a different artist's
-  // same-titled (or also-untagged) album is unaffected — and syncs to paired
-  // devices via SyncSnapshot.album_covers.
-  const handleSetAlbumCover = async (track: Track) => {
-    const artist = track.artist ?? "";
-    const album = effectiveAlbum(track) ?? "";
-    try {
-      const selected = await open({
-        multiple: false,
-        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg'] }],
-        title: "Select Album Cover Image"
-      });
-      if (selected && typeof selected === "string") {
-        const dataUri = await invoke<string>("read_image_as_data_uri", { imagePath: selected });
-        await setAlbumCover(artist, album, dataUri);
-        invalidateAlbumArt();
-      }
-    } catch (err) {
-      console.error("Failed to set album cover:", err);
-      setError(t('errors.setAlbumCoverFailed', { error: String(err) }));
-    }
-  };
-
-  const applyAlbumCoverUrl = async (track: Track, imageUrl: string) => {
-    const dataUri = await invoke<string>("fetch_image_as_data_uri", { url: imageUrl });
-    await setAlbumCover(track.artist ?? "", effectiveAlbum(track) ?? "", dataUri);
-    invalidateAlbumArt();
-  };
-
-  const handleResetAlbumCover = async (track: Track) => {
-    const artist = track.artist ?? "";
-    const album = effectiveAlbum(track) ?? "";
-    try {
-      await setAlbumCover(artist, album, null);
-      invalidateAlbumArt();
-    } catch (err) {
-      console.error("Failed to reset album cover:", err);
-      setError(t('errors.resetAlbumCoverFailed', { error: String(err) }));
-    }
-  };
-
   // Artist grid's right-click "Play"/"Add to Queue": act on every track by
   // the clicked artist (matched by name, same grouping LibraryView's Artists
   // view uses), not just the single representative track the menu was opened with.
@@ -1650,86 +1319,10 @@ function App() {
     }
   };
 
-  // Non-destructive per-artist image override (see artistArt.ts), synced to
-  // Android read-only like album covers.
-  const handleSetArtistImage = async (artist: string) => {
-    try {
-      const selected = await open({
-        multiple: false,
-        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg'] }],
-        title: "Select Artist Image"
-      });
-      if (selected && typeof selected === "string") {
-        const dataUri = await invoke<string>("read_image_as_data_uri", { imagePath: selected });
-        await setArtistCover(artist, dataUri);
-        invalidateArtistArt();
-      }
-    } catch (err) {
-      console.error("Failed to set artist image:", err);
-      setError(t('errors.setArtistImageFailed', { error: String(err) }));
-    }
-  };
-
-  const handleResetArtistImage = async (artist: string) => {
-    try {
-      await setArtistCover(artist, null);
-      invalidateArtistArt();
-    } catch (err) {
-      console.error("Failed to reset artist image:", err);
-      setError(t('errors.resetArtistImageFailed', { error: String(err) }));
-    }
-  };
-
   // Opens the Deezer candidate picker; the picker itself calls back into
   // applyArtistImageUrl on selection.
   const handleFindArtistImage = (artist: string) => {
     setArtistImagePickerArtist(artist);
-  };
-
-  const applyArtistImageUrl = async (artist: string, pictureUrl: string) => {
-    const dataUri = await invoke<string>("fetch_image_as_data_uri", { url: pictureUrl });
-    await setArtistCover(artist, dataUri);
-    invalidateArtistArt();
-  };
-
-  // Bulk-fills every artist without a cover override yet, using Deezer's
-  // exact-name-match auto lookup (see auto_artist_image in metadata.rs).
-  // Never touches an artist that already has one — manual or automatic.
-  const handleFetchMissingArtistImages = async () => {
-    const targets = artists.filter(a => a !== UNKNOWN_ARTIST);
-    const existing = await getArtistCoverKeys();
-    const missing = targets.filter(a => !existing.has(a.trim().toLowerCase()));
-    if (missing.length === 0) {
-      setArtistImageFetchProgress({ done: 0, total: 0, found: 0 });
-      return;
-    }
-
-    artistImageFetchCancelRef.current = false;
-    let done = 0;
-    let found = 0;
-    setArtistImageFetchProgress({ done, total: missing.length, found });
-
-    await pool(missing, 2, async (artist) => {
-      if (artistImageFetchCancelRef.current) return;
-      try {
-        const dataUri = await invoke<string | null>("auto_artist_image", { artist });
-        if (dataUri) {
-          await setArtistCover(artist, dataUri);
-          found += 1;
-        }
-      } catch (err) {
-        console.warn(`auto_artist_image failed for ${artist}:`, err);
-      }
-      done += 1;
-      setArtistImageFetchProgress({ done, total: missing.length, found });
-    });
-
-    invalidateArtistArt();
-    setArtistImageFetchProgress(null);
-  };
-
-  const cancelFetchMissingArtistImages = () => {
-    artistImageFetchCancelRef.current = true;
   };
 
   const trackListRegion = (
