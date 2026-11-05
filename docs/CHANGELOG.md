@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.35.1 — 2026-11-05
+- Internal refactor, no behaviour change: App.tsx's artwork/tag actions, language/theme handling and track/playlist toggles moved into `useArtworkActions`, `useAppearance` and `usePlaylistActions`; the Settings dialog was split into one component per tab.
+- Added tests for those hooks and for every Settings tab (55 + 21 new tests).
+
 ## 0.35.0 — 2026-11-05
 - macOS: the Settings dialog now has a fixed size with the tabs in a left column, so the title, tabs and Close button no longer shift when switching tabs; only the right-hand content scrolls.
 - Up/Down arrow keys move between Settings tabs; on narrow windows the tabs go back to a row on top.
