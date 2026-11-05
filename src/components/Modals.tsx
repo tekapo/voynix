@@ -358,7 +358,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         {t('settings.autoUpdateCheck')}
                     </label>
                     <p className="settings-hint">{t('settings.autoUpdateHint')}</p>
-                    <button type="button" className="modal-btn cancel" onClick={updater.checkNow} disabled={updater.status.kind === 'checking'}>
+                    <button type="button" className="modal-btn secondary" onClick={updater.checkNow} disabled={updater.status.kind === 'checking'}>
                         {t('settings.checkForUpdates')}
                     </button>
                     {updater.status.kind === 'checking' && <p className="settings-hint">{t('settings.updateChecking')}</p>}
@@ -392,7 +392,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                 </div>
                             )}
                             {onCancelScan && (
-                                <button type="button" className="modal-btn cancel" onClick={onCancelScan}>
+                                <button type="button" className="modal-btn secondary" onClick={onCancelScan}>
                                     {t('settings.cancelScan')}
                                 </button>
                             )}
@@ -447,7 +447,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div className="settings-folder-actions">
                         <button
                             type="button"
-                            className="modal-btn cancel"
+                            className="modal-btn secondary"
                             disabled={isScanning}
                             onClick={onAddFolder}
                         >
@@ -455,7 +455,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         </button>
                         <button
                             type="button"
-                            className="modal-btn cancel"
+                            className="modal-btn secondary"
                             disabled={isScanning || folders.length === 0}
                             onClick={onRescan}
                         >
@@ -463,7 +463,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         </button>
                         <button
                             type="button"
-                            className="modal-btn cancel"
+                            className="modal-btn secondary"
                             disabled={isScanning}
                             onClick={onImportXml}
                         >
@@ -529,12 +529,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                     />
                                 </div>
                             )}
-                            <button type="button" className="modal-btn cancel" onClick={onCancelFetchMissingArtistImages}>
+                            <button type="button" className="modal-btn secondary" onClick={onCancelFetchMissingArtistImages}>
                                 {t('settings.cancel')}
                             </button>
                         </div>
                     ) : (
-                        <button type="button" className="modal-btn cancel" onClick={onFetchMissingArtistImages}>
+                        <button type="button" className="modal-btn secondary" onClick={onFetchMissingArtistImages}>
                             {t('settings.fetchMissingArtistImages')}
                         </button>
                     )}
@@ -547,10 +547,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         {t('settings.backupHint')}
                     </p>
                     <div className="settings-folder-actions">
-                        <button type="button" className="modal-btn cancel" disabled={isScanning} onClick={onExportBackup}>
+                        <button type="button" className="modal-btn secondary" disabled={isScanning} onClick={onExportBackup}>
                             {t('settings.exportBackup')}
                         </button>
-                        <button type="button" className="modal-btn cancel" disabled={isScanning} onClick={onImportBackup}>
+                        <button type="button" className="modal-btn secondary" disabled={isScanning} onClick={onImportBackup}>
                             {t('settings.importBackup')}
                         </button>
                     </div>
@@ -614,20 +614,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="settings-section">
                     <p><strong>{t('settings.appName')}</strong>{version && t('settings.versionLabel', { version })}</p>
                     <p className="settings-hint">{t('settings.aboutTagline')}</p>
-                    <button type="button" className="modal-btn cancel" onClick={() => { openUrl(t('settings.websiteUrl')).catch(() => {}); }}>
+                    <button type="button" className="modal-btn secondary" onClick={() => { openUrl(t('settings.websiteUrl')).catch(() => {}); }}>
                         {t('settings.userManual')}
                     </button>
                     {' '}
-                    <button type="button" className="modal-btn cancel" onClick={toggleLicenses}>
+                    <button type="button" className="modal-btn secondary" onClick={toggleLicenses}>
                         {t('settings.openSourceLicenses')}
                     </button>
                     {' '}
-                    <button type="button" className="modal-btn cancel" onClick={() => { openUrl(t('settings.supportUrl')).catch(() => {}); }}>
+                    <button type="button" className="modal-btn secondary" onClick={() => { openUrl(t('settings.supportUrl')).catch(() => {}); }}>
                         {t('settings.supportOnKofi')}
                     </button>
                     {onShowWelcome && <>
                         {' '}
-                        <button type="button" className="modal-btn cancel" onClick={() => { onClose(); onShowWelcome(); }}>
+                        <button type="button" className="modal-btn secondary" onClick={() => { onClose(); onShowWelcome(); }}>
                             {t('settings.showWelcome')}
                         </button>
                     </>}

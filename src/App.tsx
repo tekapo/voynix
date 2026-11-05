@@ -308,6 +308,23 @@ function App() {
     invoke("set_dock_labels", {
       labels: [i18n.t('dock.playPause'), i18n.t('dock.next'), i18n.t('dock.previous')],
     }).catch(() => { /* non-macOS / dev-server: no Dock to update */ });
+    const name = "Voynix";
+    const t = i18n.t.bind(i18n);
+    invoke("set_app_menu", {
+      labels: {
+        about: t('appMenu.about', { name }), support: t('settings.supportOnKofi'),
+        supportUrl: t('settings.supportUrl'), services: t('appMenu.services'),
+        hide: t('appMenu.hide', { name }), hideOthers: t('appMenu.hideOthers'),
+        quit: t('appMenu.quit', { name }), file: t('appMenu.file'),
+        closeWindow: t('appMenu.closeWindow'), edit: t('appMenu.edit'),
+        undo: t('appMenu.undo'), redo: t('appMenu.redo'), cut: t('appMenu.cut'),
+        copy: t('appMenu.copy'), paste: t('appMenu.paste'),
+        selectAll: t('appMenu.selectAll'), view: t('appMenu.view'),
+        fullscreen: t('appMenu.fullscreen'), window: t('appMenu.window'),
+        minimize: t('appMenu.minimize'), maximize: t('appMenu.maximize'),
+        help: t('appMenu.help'),
+      },
+    }).catch(() => { /* non-macOS / dev-server: no menu bar to update */ });
   }, [uiLanguage]);
   const [uiTheme, setUiTheme, loadUiTheme] = usePersistedSetting<ThemePreference>(
     "ui_theme", "system",

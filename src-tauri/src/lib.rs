@@ -1345,6 +1345,8 @@ fn set_track_artwork(path: String, image_path: String) -> Result<(), String> {
 #[cfg(target_os = "macos")]
 mod dock;
 #[cfg(target_os = "macos")]
+mod menu;
+#[cfg(target_os = "macos")]
 mod now_playing;
 
 pub fn run() {
@@ -1416,6 +1418,7 @@ pub fn run() {
             read_track_numbers,
             read_extra_tags,
             dock::set_dock_labels,
+            menu::set_app_menu,
             now_playing::set_now_playing,
             now_playing::set_now_playing_artwork
         ])
@@ -1425,6 +1428,7 @@ pub fn run() {
     #[cfg(target_os = "macos")]
     {
         dock::install(app.handle());
+        menu::install(app.handle());
         now_playing::install(app.handle());
     }
 
