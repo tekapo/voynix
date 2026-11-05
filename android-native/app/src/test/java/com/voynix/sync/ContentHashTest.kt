@@ -88,7 +88,7 @@ class ContentHashTest {
         assertNotEquals("internal whitespace must not collapse", c, d)
     }
 
-    /** Shared contract with Rust's `compute_content_hash` (src-tauri/src/lib.rs)
+    /** Shared contract with Rust's `compute_content_hash` (src-tauri/src/identity.rs)
      *  — see docs/test-vectors/content-hash.json and the matching Rust test. */
     @Test
     fun `computeContentHash matches shared test vectors`() {

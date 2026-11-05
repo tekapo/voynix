@@ -77,7 +77,7 @@ export function useArtworkActions({ setError, refreshPlaylists, patchCurrentTrac
 
   // "Get Info…" dialog's Save: rewrite the file's own tags, then the DB row.
   // Title/artist/album/duration/track_no feed track_key (see compute_track_key,
-  // src-tauri/src/lib.rs), so editing them changes it — updateTrackTags carries
+  // src-tauri/src/identity.rs), so editing them changes it — updateTrackTags carries
   // play_events over to the new key so play count / last played survive.
   const handleSaveTrackTags = async (track: Track, fields: TrackTagFields) => {
     const identity = await invoke<{ track_key: string; content_hash: string }>("write_track_tags", {

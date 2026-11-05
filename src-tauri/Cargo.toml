@@ -1,6 +1,6 @@
 [package]
 name = "voynix"
-version = "0.35.1"
+version = "0.35.2"
 description = "Music player for Mac and Android with Wi-Fi library sync"
 authors = ["JOTAKI, Taisuke"]
 license = "MIT"
@@ -61,7 +61,7 @@ subtle = "2.6"
 hmac = "0.12"
 unicode-normalization = "0.1"
 # Track ids are SipHash-1-3 of the file path, persisted in the DB (see
-# `calculate_hash` in lib.rs). `std::hash::DefaultHasher` isn't guaranteed
+# `calculate_hash` in scan.rs). `std::hash::DefaultHasher` isn't guaranteed
 # stable across Rust releases, so ids are hashed with this crate directly
 # instead, pinned to the same algorithm and zero key `DefaultHasher` used —
 # verified byte-for-byte identical to it (see the regression test).
