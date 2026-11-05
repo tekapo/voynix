@@ -167,6 +167,24 @@ class SyncEngineRunSyncTest {
     }
 
     @Test
+    fun `a removed track whose stored path is outside the sync folder is dropped but its file is kept`() = runTest {
+        manifest = manifest.copy(tracks = listOf(track("a"), track("b")))
+        engine.runSync(peer)
+        val outside = File(context.filesDir, "outside-synced.txt").apply { writeText("keep me") }
+        db.openHelper.writableDatabase.execSQL(
+            "UPDATE tracks SET file_path = ? WHERE track_key = 'b'",
+            arrayOf<Any>(outside.absolutePath),
+        )
+
+        manifest = manifest.copy(tracks = listOf(track("a")))
+        val summary = engine.runSync(peer)
+
+        assertEquals(1, summary.deleted)
+        assertEquals(listOf("a"), db.trackDao().getMirrorTracks().map { it.trackKey })
+        assertTrue(outside.isFile)
+    }
+
+    @Test
     fun `a failed download is reported and does not stop the other tracks`() = runTest {
         failing.add("a")
         manifest = manifest.copy(tracks = listOf(track("a"), track("b")))

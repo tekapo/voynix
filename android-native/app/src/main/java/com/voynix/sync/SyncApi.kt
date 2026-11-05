@@ -2,6 +2,7 @@ package com.voynix.sync
 
 import android.util.Log
 import com.voynix.logic.PeerProbeResult
+import com.voynix.logic.isSafeTrackKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -313,8 +314,13 @@ class SyncApi {
 }
 
 private fun destFile(dir: File, trackKey: String, fileName: String): File {
+    // The key comes from the Mac's manifest: it must not be able to point the
+    // download (or the later delete) outside [dir].
+    if (!isSafeTrackKey(trackKey)) throw IOException("Unsafe track key in manifest")
     val safeName = fileName.replace('/', '_').replace('\\', '_')
-    return File(dir, "${trackKey.take(16)}_$safeName")
+    val dest = File(dir, "${trackKey.take(16)}_$safeName")
+    if (dest.canonicalFile.parentFile != dir.canonicalFile) throw IOException("Download path escapes the sync folder")
+    return dest
 }
 
 private fun withExtension(file: File, ext: String): File {

@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.35.5 — 2026-11-05
+- Security: mDNS pairing now refuses to hand out the token unless the phone reports the same TLS key the Mac presented (a relay on the LAN can no longer obtain it). This needs both the Mac and Android apps updated for mDNS auto-pairing; QR and manual pairing and already-paired phones are unaffected.
+- Security (Android): a track key from the Mac's manifest can no longer point a download or a delete outside the sync folder; unsafe keys are ignored.
+
 ## 0.35.4 — 2026-11-05
 - macOS: fix the last played track and position not being restored on launch; it is now armed in the player bar (not playing), and ▶ resumes from the saved position.
 - Added tests for cold-start restore, skipping unplayable tracks and playback-cursor saving.

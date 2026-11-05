@@ -63,7 +63,12 @@ class SyncEngine(
             }
         val plan = diffTracks(manifestTracks, localTracks)
 
-        for (t in plan.toDelete) runCatching { File(t.filePath).delete() }
+        // Only ever delete inside the sync folder, whatever path the row holds.
+        val syncedRoot = syncedDir.canonicalFile
+        for (t in plan.toDelete) runCatching {
+            val f = File(t.filePath).canonicalFile
+            if (f.startsWith(syncedRoot)) f.delete()
+        }
         db.withTransaction {
             for (t in plan.toDelete) db.trackDao().deleteMirrorTrack(t.id)
         }

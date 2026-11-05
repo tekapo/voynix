@@ -90,7 +90,21 @@ data class TrackPlan(
     val toDelete: List<LocalMirrorTrack> = emptyList(),
 )
 
-fun diffTracks(manifest: List<ManifestTrack>, local: List<LocalMirrorTrack>): TrackPlan {
+private val SAFE_TRACK_KEY = Regex("^[A-Za-z0-9_-]{1,128}$")
+
+/**
+ * Whether a manifest `track_key` is safe to use as part of a local file name
+ * and a request path. Real keys are lowercase SHA-256 hex; this is a little
+ * wider so it never rejects a legitimate key, but it excludes `/`, `\`, `.`,
+ * `?` and `#` — the manifest comes from the Mac, which the phone must not
+ * trust to name files on the phone.
+ */
+fun isSafeTrackKey(key: String): Boolean = SAFE_TRACK_KEY.matches(key)
+
+fun diffTracks(allManifest: List<ManifestTrack>, local: List<LocalMirrorTrack>): TrackPlan {
+    // A track whose key isn't safe is ignored entirely: never downloaded, and
+    // (since it isn't in the manifest keys) never keeps a local row alive.
+    val manifest = allManifest.filter { isSafeTrackKey(it.trackKey) }
     val localByKey = local.associateBy { it.trackKey }
     val manifestKeys = manifest.mapTo(HashSet()) { it.trackKey }
 

@@ -81,6 +81,31 @@ class SyncTest {
     }
 
     @Test
+    fun `diffTracks ignores manifest tracks whose key is unsafe as a file name`() {
+        val manifest = listOf(
+            manifestTrack("ok_1-A"),
+            manifestTrack("../../cache/"),
+            manifestTrack("a/b"),
+            manifestTrack("k.e"),
+            manifestTrack("q?x"),
+            manifestTrack(""),
+        )
+
+        val plan = diffTracks(manifest, emptyList())
+
+        assertEquals(listOf("ok_1-A"), plan.toAdd.map { it.trackKey })
+    }
+
+    @Test
+    fun `isSafeTrackKey accepts hex and word keys and rejects path and URL characters`() {
+        assertTrue(isSafeTrackKey("0123456789abcdef".repeat(4)))
+        assertTrue(isSafeTrackKey("trackkey1234"))
+        for (bad in listOf("", "..", "../x", "a/b", "a\\b", "a.b", "a?b", "a#b", "a b", "a".repeat(129))) {
+            assertFalse("expected unsafe: '$bad'", isSafeTrackKey(bad))
+        }
+    }
+
+    @Test
     fun `diffTracks skips a track whose metadata already matches`() {
         val m = manifestTrack("a", artist = "Art", album = "Alb", discNo = 1, trackNo = 2)
         val plan = diffTracks(listOf(m), listOf(localMatching(m)))
