@@ -197,6 +197,11 @@ const MAX_PENDING_PAIRS: usize = 1;
 const PAIR_DECLINE_COOLDOWN: Duration = Duration::from_secs(10);
 /// The device name is attacker-controlled text shown in the approval prompt.
 const MAX_DEVICE_NAME_CHARS: usize = 40;
+/// Header in which a phone reports the TLS key fingerprint it observed in its
+/// own handshake with this server. `POST /pair` is refused unless it matches,
+/// so a relay in the middle can't obtain the token (the phone would report the
+/// relay's key). Must match `PAIR_OBSERVED_FP_HEADER` in Android's `SyncApi.kt`.
+const PAIR_OBSERVED_FP_HEADER: &str = "x-voynix-observed-fingerprint";
 
 static NEXT_PAIR_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -891,8 +896,9 @@ async fn post_stats(State(state): State<Shared>, Json(payload): Json<IncomingSta
 /// A phone that found this Mac over mDNS calls this to pair without anyone typing
 /// a code: it blocks while the Mac's owner approves or denies the on-screen
 /// prompt, then returns the bearer token (or 403 / 408).
-async fn post_pair(State(state): State<Shared>, Json(body): Json<PairRequestBody>) -> Response {
+async fn post_pair(State(state): State<Shared>, headers: HeaderMap, Json(body): Json<PairRequestBody>) -> Response {
     let device_name = sanitize_device_name(body.device_name);
+    let observed = headers.get(PAIR_OBSERVED_FP_HEADER).and_then(|v| v.to_str().ok());
 
     let id = NEXT_PAIR_ID.fetch_add(1, Ordering::Relaxed);
     let (tx, rx) = oneshot::channel::<bool>();
@@ -901,6 +907,12 @@ async fn post_pair(State(state): State<Shared>, Json(body): Json<PairRequestBody
         let mut s = state.lock().unwrap();
         if s.token.is_empty() {
             return (StatusCode::SERVICE_UNAVAILABLE, "Server not ready").into_response();
+        }
+        // The phone must say which TLS key it actually saw. If something is
+        // relaying the connection, the phone saw the relay's key, not ours —
+        // refuse before any prompt is raised or the token is released.
+        if !crate::util::fingerprint_matches(observed, &s.fingerprint) {
+            return (StatusCode::BAD_REQUEST, "Could not verify this connection's identity").into_response();
         }
         match pair_admission(s.pending_pairs.len(), s.pair_declined_at, Instant::now()) {
             PairAdmission::Admit => {}
@@ -1574,12 +1586,36 @@ mod tests {
             .build()
             .unwrap()
             .post(format!("https://127.0.0.1:{}/pair", status.port))
+            .header(PAIR_OBSERVED_FP_HEADER, &status.fingerprint)
             .json(&serde_json::json!({ "device_name": "Pixel 8" }))
             .send()
             .await
             .unwrap();
         assert_eq!(resp.status(), reqwest::StatusCode::NOT_IMPLEMENTED);
         assert!(state.lock().unwrap().pending_pairs.is_empty());
+    }
+
+    #[tokio::test]
+    async fn pair_endpoint_refuses_a_client_that_did_not_see_this_servers_key() {
+        // A relay shows the phone its own key, so the phone reports a different
+        // fingerprint (or none, if the relay strips the header). Either way the
+        // Mac must refuse before raising a prompt or releasing the token.
+        let state = Arc::new(Mutex::new(SyncServer::new()));
+        let status = start(state.clone(), "tok-123".into(), None, None).await.unwrap();
+        let client = reqwest::Client::builder().danger_accept_invalid_certs(true).build().unwrap();
+        let url = format!("https://127.0.0.1:{}/pair", status.port);
+        let body = serde_json::json!({ "device_name": "Pixel 8" });
+
+        let missing = client.post(&url).json(&body).send().await.unwrap();
+        assert_eq!(missing.status(), reqwest::StatusCode::BAD_REQUEST);
+
+        let relay_key = "cd34".repeat(16);
+        let wrong = client.post(&url).header(PAIR_OBSERVED_FP_HEADER, relay_key).json(&body).send().await.unwrap();
+        assert_eq!(wrong.status(), reqwest::StatusCode::BAD_REQUEST);
+        assert!(!wrong.text().await.unwrap().contains("tok-123"), "the token must never be in the refusal");
+
+        assert!(state.lock().unwrap().pending_pairs.is_empty());
+        assert!(state.lock().unwrap().pair_declined_at.is_none(), "a refusal is not a decline cooldown");
     }
 
     #[tokio::test]

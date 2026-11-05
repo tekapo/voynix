@@ -176,6 +176,31 @@ class SyncApiTest {
         assertEquals(pin, observed.get())
     }
 
+    @Test
+    fun `requestPairing tells the Mac which key it observed so a relay can be refused`() = runTest {
+        server.enqueue(
+            MockResponse().setResponseCode(200).setBody(
+                """{"url":"${url()}","token":"granted-tok","fingerprint":"$pin"}"""
+            )
+        )
+        api.requestPairing(url(), "Pixel 8", AtomicReference<String>())
+
+        val recorded = server.takeRequest()
+        assertEquals("/pair", recorded.path)
+        assertEquals(pin, recorded.getHeader("X-Voynix-Observed-Fingerprint"))
+    }
+
+    @Test
+    fun `requestPairing turns the Mac's identity refusal into a readable error`() = runTest {
+        server.enqueue(MockResponse().setResponseCode(400).setBody("Could not verify this connection's identity"))
+        try {
+            api.requestPairing(url(), "Pixel 8", AtomicReference<String>())
+            fail("expected a PairingIdentityException")
+        } catch (e: PairingIdentityException) {
+            assertTrue(e.message!!.contains("QR"))
+        }
+    }
+
     // ---- fetchManifest --------------------------------------------------------
 
     @Test

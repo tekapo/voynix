@@ -25,6 +25,22 @@ pub(crate) fn bearer_matches(header_value: Option<&str>, token: &str) -> bool {
     }
 }
 
+/// Whether the TLS key fingerprint a client says it saw in its handshake
+/// equals this server's own. A client talking to a relay sees the relay's key,
+/// so a mismatch (or a missing claim) means the connection isn't end-to-end.
+/// Case-insensitive on the claim (hex), constant time on the comparison, and
+/// an empty `expected` never matches.
+pub(crate) fn fingerprint_matches(claimed: Option<&str>, expected: &str) -> bool {
+    use subtle::ConstantTimeEq;
+    match claimed {
+        Some(c) => {
+            let c = c.trim().to_ascii_lowercase();
+            !expected.is_empty() && c.len() == expected.len() && bool::from(c.as_bytes().ct_eq(expected.as_bytes()))
+        }
+        None => false,
+    }
+}
+
 /// Folds a free-text field (artist/album/title, …) so cosmetic differences —
 /// case, leading/trailing space, doubled internal space — collapse to the
 /// same value before it's hashed into an identity or cache key. Shared by
@@ -52,6 +68,17 @@ mod tests {
     #[test]
     fn differs_for_different_input() {
         assert_ne!(sha256_hex(b"a"), sha256_hex(b"b"));
+    }
+
+    #[test]
+    fn fingerprint_matches_only_the_servers_own_fingerprint() {
+        let fp = "ab12".repeat(16);
+        assert!(fingerprint_matches(Some(&fp), &fp));
+        assert!(fingerprint_matches(Some(&fp.to_uppercase()), &fp), "hex case must not matter");
+        assert!(!fingerprint_matches(Some(&"cd34".repeat(16)), &fp), "a relay's key differs");
+        assert!(!fingerprint_matches(Some("ab12"), &fp), "a prefix is not a match");
+        assert!(!fingerprint_matches(None, &fp), "a stripped claim must not pass");
+        assert!(!fingerprint_matches(Some(""), ""), "an unset server fingerprint never matches");
     }
 
     #[test]
