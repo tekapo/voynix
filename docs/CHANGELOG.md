@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.34.2 — 2026-11-05
+- macOS: after a self-update the app now relaunches through `open`, so the new window comes to the front instead of opening behind other apps (takes effect for updates made from this version on).
+
 ## 0.34.1 — 2026-11-05
 - Android: fixed a crash when pressing Next from the third track onward (the media session was paired with a mismatched timeline since 0.32.1).
 
