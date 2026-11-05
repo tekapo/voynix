@@ -1304,6 +1304,13 @@ function App() {
       });
   }, []);
 
+  // Whole-library totals for Settings > About — unfiltered, so a search or the
+  // current view doesn't change them. Matches "All Songs" (podcasts included).
+  const libraryStats = useMemo(() => ({
+    tracks: allTracks.length,
+    artists: new Set(allTracks.map(artistOf)).size,
+    albums: new Set(allTracks.map(albumOf)).size,
+  }), [allTracks]);
   const artists = useMemo(
     () => filterStrings(Array.from(new Set(allTracks.map(artistOf))).sort(), search),
     [allTracks, search],
@@ -1936,6 +1943,7 @@ function App() {
 
         <SettingsModal
           isOpen={isSettingsModalOpen}
+          libraryStats={libraryStats}
           initialTab={settingsInitialTab}
           onShowWelcome={() => setIsWelcomeOpen(true)}
           onClose={() => setIsSettingsModalOpen(false)}
