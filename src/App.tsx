@@ -312,7 +312,8 @@ function App() {
     const t = i18n.t.bind(i18n);
     invoke("set_app_menu", {
       labels: {
-        about: t('appMenu.about', { name }), services: t('appMenu.services'),
+        about: t('appMenu.about', { name }), support: t('settings.supportOnKofi'),
+        supportUrl: t('settings.supportUrl'), services: t('appMenu.services'),
         hide: t('appMenu.hide', { name }), hideOthers: t('appMenu.hideOthers'),
         quit: t('appMenu.quit', { name }), file: t('appMenu.file'),
         closeWindow: t('appMenu.closeWindow'), edit: t('appMenu.edit'),

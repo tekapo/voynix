@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.30.3 — 2026-11-05
+- macOS: added "Support on Ko-fi" (Japanese: 作者にコーヒーをおごる) to the Voynix app menu, right below About.
+
 ## 0.30.2 — 2026-11-05
 - macOS: the menu bar (About, Hide, Quit, File, Edit, View, Window, Help) now follows the UI language instead of always showing English.
 

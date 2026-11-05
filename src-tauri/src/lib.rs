@@ -1428,6 +1428,7 @@ pub fn run() {
     #[cfg(target_os = "macos")]
     {
         dock::install(app.handle());
+        menu::install(app.handle());
         now_playing::install(app.handle());
     }
 
