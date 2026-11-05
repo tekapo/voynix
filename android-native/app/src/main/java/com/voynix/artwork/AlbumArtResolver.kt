@@ -22,6 +22,16 @@ import java.io.File
 class AlbumArtResolver(private val context: Context, private val db: VoynixDatabase) {
     private val albumArtDir = File(context.cacheDir, "album_art")
     private val cache = LruBitmapCache(maxEntries = 80)
+    private val artistResolver by lazy { ArtistArtResolver(db) }
+
+    /**
+     * For on-screen cover slots only: the album's own art, else the artist's
+     * image (the Mac does the same, see TrackCover in CoverArt.tsx). Kept apart
+     * from [resolve] because notifications, Android Auto and the widget share
+     * that one and should keep showing exactly the album's art.
+     */
+    suspend fun resolveWithArtistFallback(artist: String?, album: String?, filePath: String): Bitmap? =
+        resolve(artist, album, filePath) ?: artistResolver.resolve(artist)
 
     suspend fun resolve(artist: String?, album: String?, filePath: String): Bitmap? {
         val a = artist ?: ""
