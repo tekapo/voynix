@@ -443,6 +443,8 @@ function App() {
         // in memory, so a cold start would otherwise reset to the first track.
         const last = await loadLastPlayback().catch(() => null);
         lastPlaybackRef.current = last;
+        // Nothing saved: tell the restore effect there is nothing to wait for.
+        if (!last) didRestoreRef.current = true;
 
         const restoredView =
           last?.viewMode === 'playlist' && last.playlistId &&
@@ -1197,7 +1199,10 @@ function App() {
   useEffect(() => {
     if (didRestoreRef.current) return;
     const last = lastPlaybackRef.current;
-    if (!last) { didRestoreRef.current = true; return; }
+    // initialize() hasn't read the saved cursor yet (this effect also runs on
+    // mount, before it has): wait. Marking the restore done here — as this used
+    // to — meant the saved track + position were never armed.
+    if (!last) return;
     // Wait until the library has loaded; viewTracks is derived in the same
     // render that playlists arrives, so one shot is enough.
     if (playlists.length === 0 && viewTracks.length === 0) return;
