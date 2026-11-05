@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Portal } from './Modals';
 import { useAlbumThumb } from '../albumArt';
+import { TrackCover } from './CoverArt';
 import { effectiveAlbum } from '../albumName';
 import { Track } from '../types';
 import { formatDuration } from './trackFormat';
@@ -116,8 +117,8 @@ export const AlbumInfoModal: React.FC<AlbumInfoModalProps> = ({ tracks, onClose,
         <Portal><div className="modal-overlay" onClick={requestClose}>
             <div className="modal-content info-modal" onClick={e => e.stopPropagation()}>
                 <div className="info-modal-header">
-                    {art
-                        ? <img src={art} alt="" className="info-modal-art" />
+                    {first
+                        ? <TrackCover track={first} artUrl={art} className="info-modal-art" />
                         : <div className="info-modal-art info-modal-art-placeholder"><Icon name="disc" size={28} /></div>}
                     <div className="info-modal-header-text">
                         <div className="info-modal-title" title={album || albumFallback}>{album || albumFallback}</div>

@@ -29,7 +29,7 @@ android {
         applicationId = "com.tekapo.voynix"
         minSdk = 26
         targetSdk = 36
-        versionCode = 165
+        versionCode = 166
         versionName = "0.32.1"
     }
 

@@ -91,6 +91,21 @@ describe("SettingsModal about tab", () => {
         expect(screen.getByRole("button", { name: "Support on Ko-fi" })).toBeInTheDocument();
     });
 
+    it("shows the library totals, with singular and plural forms", () => {
+        const { rerender } = render(
+            <SettingsModal {...makeProps({ initialTab: "about", libraryStats: { tracks: 1234, artists: 1, albums: 340 } })} />,
+        );
+        expect(screen.getByTestId("library-stats")).toHaveTextContent("Library: 1234 tracks · 1 artist · 340 albums");
+
+        rerender(<SettingsModal {...makeProps({ initialTab: "about", libraryStats: { tracks: 1, artists: 1, albums: 1 } })} />);
+        expect(screen.getByTestId("library-stats")).toHaveTextContent("Library: 1 track · 1 artist · 1 album");
+    });
+
+    it("omits the library line when no totals are given", () => {
+        render(<SettingsModal {...makeProps({ initialTab: "about" })} />);
+        expect(screen.queryByTestId("library-stats")).toBeNull();
+    });
+
     it("opens the Ko-fi page from the support button", () => {
         render(<SettingsModal {...makeProps()} />);
         fireEvent.click(screen.getByRole("tab", { name: "About" }));
