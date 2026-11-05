@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.32.1 — 2026-11-05
+- Android / Android Auto: the queue shown by the media session now lists the real play queue in play order (a window of up to 200 entries around the current track) instead of only "now playing + next", and picking an entry from it jumps to that track.
+- Playback itself is unchanged: ExoPlayer still holds only the current and next track, so gapless hand-off is untouched.
+
 ## 0.30.6 — 2026-11-05
 - Fixed a race where the "arm the view's first track" effect could replace a track the user had just asked to play while it was still loading, so playback never started.
 - Tests: raised the Vitest test timeout above the waitFor timeout so a stuck assertion reports its own error (this removes the flaky `App.stats.test.tsx` timeout).
