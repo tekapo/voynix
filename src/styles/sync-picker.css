@@ -1,0 +1,74 @@
+/* Sync progress */
+.sync-progress {
+  margin: 0.75rem 0;
+}
+
+.sync-progress-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--fill-3);
+  overflow: hidden;
+}
+
+.sync-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
+
+/* Artist Image Picker */
+.artist-image-picker {
+  max-width: 480px;
+}
+
+.artist-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.75rem;
+  max-height: 50vh;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.artist-image-candidate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--fill-1);
+  border: 1px solid var(--fill-3);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.artist-image-candidate:hover:not(:disabled) {
+  border-color: var(--accent-text);
+}
+
+.artist-image-candidate:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.artist-image-candidate img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.artist-image-candidate-name {
+  font-size: 0.8rem;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.artist-image-candidate-loading {
+  font-size: 0.7rem;
+  color: var(--text-2);
+}

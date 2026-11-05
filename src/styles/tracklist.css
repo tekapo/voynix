@@ -1,0 +1,496 @@
+/* Track List */
+/* Track List Grid Layout */
+/* Horizontal row holding the track list and the docked lyrics panel. */
+.content-row {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.track-list-container {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 0 0 calc(var(--player-height) + 12px);
+  /* Remove side padding for full width table feel */
+}
+
+/* Header Row */
+.track-list-header {
+  display: grid;
+  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) var(--col-path, 2fr) 44px 32px var(--col-time, 112px);
+  /* # Title Artist Album Path Plays Fav Duration. The --col-* vars are set by
+     TrackList.tsx once a column has been dragged to a custom width. */
+  padding: 0.8rem 2rem;
+  border-bottom: 1px solid var(--fill-3);
+  position: sticky;
+  top: 0;
+  background: var(--surface-sticky);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+  color: var(--text-3);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.track-list-header div:last-child {
+  text-align: right;
+}
+
+/* Clickable column headers (sort). The <button> is transparent so the header
+   keeps its look; only the cursor + hover colour change. */
+.track-list-header .th-sort {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.track-list-header .th-sort:hover {
+  color: var(--text-1);
+}
+
+.track-list-header .th-time .th-sort {
+  justify-content: flex-end;
+}
+
+.track-list-header .th-plays .th-sort {
+  justify-content: center;
+}
+
+/* Drag handle on a header cell's right edge (TrackList.tsx ColResizer). */
+.track-list-header .th-title,
+.track-list-header .th-artist,
+.track-list-header .th-album,
+.track-list-header .th-time {
+  position: relative;
+}
+
+/* Measures the widest HH:MM:SS for the Time column's default width. */
+.time-sizer {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.col-resizer {
+  position: absolute;
+  top: -0.4rem;
+  bottom: -0.4rem;
+  right: -4px;
+  width: 16px;
+  cursor: col-resize;
+  touch-action: none;
+  z-index: 1;
+}
+
+.col-resizer.is-left {
+  left: -8px;
+  right: auto;
+}
+
+.col-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  /* Sits ~8px left of the column boundary (the handle spans 12px left of it
+     to 4px right) so the bar doesn't touch the next column's text. */
+  left: 2px;
+  width: 2px;
+  background: var(--text-3);
+}
+
+/* Brighten every handle while the header is hovered so they're easy to find
+   on the near-black background; the one under the pointer goes accent. */
+.track-list-header:hover .col-resizer::after {
+  background: var(--text-2);
+}
+
+.col-resizer:hover::after,
+.col-resizer.is-dragging::after {
+  left: 1px;
+  width: 3px;
+  background: var(--accent);
+}
+
+.th-sort-caret {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.track-list {
+  list-style: none;
+  padding: 0 1rem;
+  margin: 0;
+}
+
+.track-item {
+  display: grid;
+  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) var(--col-path, 2fr) 44px 32px var(--col-time, 112px);
+  /* Match header */
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 2px;
+  cursor: default;
+  transition: background var(--transition-fast);
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+/* A large library (e.g. "All Songs") only mounts the visible + overscan rows
+   (TrackList.tsx's VIRTUALIZE_THRESHOLD) — each row is absolutely positioned
+   by the virtualizer, which already spaces rows via its own `gap` option, so
+   the normal-flow margin-bottom above would be redundant (harmless with
+   position: absolute + an explicit top, but dropped here for clarity). */
+.track-list.is-virtualized .track-item {
+  margin-bottom: 0;
+}
+
+/* Path column hidden (the default; toggled in Settings) — drop its 2fr track
+   so the remaining columns line up. `:where()` keeps this at specificity (0,1,0)
+   so the mobile 4-column grid in the media query still wins. */
+:where(.hide-path) .track-list-header,
+:where(.hide-path) .track-item {
+  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) 44px 32px var(--col-time, 112px);
+}
+
+.track-item:hover {
+  background: var(--fill-hover);
+  color: var(--text-1);
+}
+
+/* Drag & drop reorder (manually-orderable playlists, e.g. Podcast). */
+.track-item.is-dragging {
+  opacity: 0.4;
+}
+
+.track-item.drop-target {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.track-item.active {
+  background: var(--fill-active);
+  color: var(--accent-text);
+}
+
+/* "Now Playing" jump button — floats at the top or bottom edge of the
+   scrollable track list (via the sticky, height:0 slot around it) whenever
+   the playing row has scrolled out of view. Disappears once it's visible
+   again (TrackList.tsx recomputes this on scroll/resize). */
+.now-playing-jump-slot {
+  /* Mirror .track-list-container's padding: a sticky offset is measured from
+     the padding edge, and the player bar overlays the container's bottom. */
+  --np-player: var(--player-height);
+  --np-pad-top: 0px;
+  --np-pad-bottom: calc(var(--player-height) + 12px);
+  /* Centre of the visible rows, measured from the container's top edge. */
+  --np-center: calc((var(--np-header) + var(--np-container) - var(--np-player)) / 2);
+  z-index: 15;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.now-playing-jump-slot.is-above {
+  align-items: flex-start;
+  top: calc(var(--np-center) - var(--np-pad-top));
+}
+
+.now-playing-jump-slot.is-below {
+  align-items: flex-end;
+  bottom: calc(var(--np-container) - var(--np-pad-bottom) - var(--np-center));
+}
+
+@media (max-width: 768px) {
+  .now-playing-jump-slot {
+    --np-player: var(--player-height-mobile);
+    --np-pad-top: 1rem;
+    --np-pad-bottom: var(--player-height-mobile);
+  }
+}
+
+.now-playing-jump {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.4rem 0.9rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #000;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.now-playing-jump-slot.is-above .now-playing-jump {
+  translate: 0 -50%;
+}
+
+.now-playing-jump-slot.is-below .now-playing-jump {
+  translate: 0 50%;
+}
+
+.now-playing-jump:hover {
+  transform: translateY(-1px);
+}
+
+/* Position marker along the right edge of the list, mirroring where the
+   playing track sits in the full (unscrolled) list — a miniature "you are
+   here" for the scrollbar. Only shown once the list is actually taller than
+   its viewport. */
+.now-playing-rail-slot {
+  width: 0;
+  margin-left: auto;
+  z-index: 15;
+}
+
+.now-playing-rail {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+.now-playing-marker {
+  position: absolute;
+  right: 0.35rem;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 3px;
+  border: none;
+  border-radius: 2px;
+  background: var(--accent);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: width var(--transition-fast), height var(--transition-fast);
+}
+
+.now-playing-marker:hover {
+  width: 14px;
+  height: 4px;
+}
+
+/* Cued (single-clicked, not playing): a plain highlight, no pulse / accent so
+   it reads as "selected, press ▶" rather than "now playing". */
+.track-item.selected {
+  background: var(--fill-hover);
+  color: var(--text-1);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.track-item.multi-selected {
+  background: var(--fill-active);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.track-icon {
+  font-size: 0.9rem;
+  opacity: 0.6;
+  display: flex;
+  justify-content: center;
+}
+
+.track-item.active .track-icon {
+  opacity: 1;
+  animation: pulse 2s infinite;
+}
+
+.cell-title {
+  color: var(--text-1);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 1rem;
+}
+
+.track-item.active .cell-title {
+  color: var(--accent-text);
+}
+
+/* Podcast status dot inside the title cell. */
+.podcast-badge {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.podcast-badge--unplayed {
+  background: var(--accent);
+}
+
+/* In-progress: a ring rather than a filled dot. */
+.podcast-badge--in_progress {
+  background: transparent;
+  border: 2px solid var(--accent);
+}
+
+.track-item.is-played .cell-title,
+.track-item.is-played .cell-text,
+.track-item.is-played .cell-duration {
+  opacity: 0.55;
+}
+
+.cell-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 1rem;
+}
+
+.cell-duration {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.cell-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cell-playcount {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.55;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.track-item:hover .star-btn,
+.star-btn.is-favorite {
+  opacity: 1;
+}
+
+.star-btn.is-favorite {
+  color: var(--accent-text);
+}
+
+.star-btn:hover {
+  color: var(--accent-text);
+}
+
+.player-fav-btn.is-favorite {
+  color: var(--accent-text);
+  opacity: 1;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.5;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-3);
+  font-size: 1rem;
+  font-weight: 300;
+  border: 2px dashed var(--fill-hover);
+  border-radius: var(--radius-lg);
+  margin-top: 2rem;
+}
+
+/* Library Grid (Artists/Albums). The parent .track-list-container has no side
+   padding on purpose (full-width table feel for the track list), so the grid
+   needs its own inset — matches .track-list-header's left/right padding. */
+.library-list-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+  list-style: none;
+  padding: 0 2rem;
+}
+
+.library-list-item {
+  background: var(--fill-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.library-list-item:hover {
+  background: var(--fill-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.library-list-icon {
+  margin-bottom: 1rem;
+  color: var(--accent-text);
+  display: flex;
+  filter: drop-shadow(0 0 12px var(--accent-softer));
+}
+
+.library-list-art {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.library-list-name {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-1);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

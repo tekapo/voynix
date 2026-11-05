@@ -1,0 +1,332 @@
+/* Fonts */
+/* Self-hosted so the app renders correctly offline and under a strict CSP. */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 300 600;
+  font-display: swap;
+  src: url('/fonts/outfit.woff2') format('woff2');
+}
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* ---- Surfaces ---------------------------------------------------------- */
+  --surface-0: #0b0b0d;
+  /* app background */
+  --surface-bg: radial-gradient(circle at top left, #17151b, #0b0b0d);
+  --surface-sidebar: rgba(18, 18, 18, 0.6);
+  --surface-header: rgba(15, 15, 15, 0.6);
+  --surface-sticky: rgba(15, 15, 15, 0.95);
+  /* track-list header */
+  --surface-bar: rgba(20, 20, 20, 0.95);
+  /* player bar */
+  --surface-panel: rgba(20, 20, 20, 0.98);
+  /* queue panel */
+  --surface-card: #1e1e1e;
+  /* modal card */
+  --surface-menu: rgba(30, 30, 30, 0.95);
+  /* context menu */
+  --scrim: rgba(0, 0, 0, 0.5);
+  --scrim-strong: rgba(0, 0, 0, 0.7);
+
+  /* ---- Hairlines & neutral fills --------------------------------------- */
+  --line: rgba(255, 255, 255, 0.08);
+  --line-soft: rgba(255, 255, 255, 0.05);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --fill-1: rgba(255, 255, 255, 0.03);
+  --fill-2: rgba(255, 255, 255, 0.06);
+  --fill-3: rgba(255, 255, 255, 0.1);
+  --fill-4: rgba(255, 255, 255, 0.14);
+
+  --backdrop-blur: blur(12px);
+
+  /* ---- Accent (amber) -------------------------------------------------- */
+  --accent: #eda55e;
+  --accent-strong: #d35400;
+  --accent-line: rgba(237, 165, 94, 0.32);
+  --accent-soft: rgba(237, 165, 94, 0.16);
+  --accent-softer: rgba(237, 165, 94, 0.08);
+  --accent-gradient: linear-gradient(135deg, #eda55e, #d35400);
+
+  /* ---- Danger -------------------------------------------------------- */
+  --danger: #cf6679;
+  --danger-strong: rgba(207, 102, 121, 0.9);
+  --danger-soft: rgba(207, 102, 121, 0.4);
+
+  /* ---- Text --------------------------------------------------------- */
+  --text-1: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.6);
+  --text-3: rgba(255, 255, 255, 0.5);
+
+  /* ---- Spacing (4px scale) ---------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* ---- Radii ---------------------------------------------------- */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* ---- Elevation --------------------------------------------- */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-3: 0 24px 64px rgba(0, 0, 0, 0.55);
+
+  /* ---- Type ------------------------------------------------- */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-md: 0.875rem;
+  --fs-lg: 1rem;
+  --fs-xl: 1.25rem;
+
+  /* ---- Layout --------------------------------------------- */
+  --sidebar-width: 260px;
+  /* Single row (art + title / transport / time + volume) with a thin seek line
+     on the bar's top edge. .player-bar uses this as a min-height, not a hard
+     height — see below. Mobile keeps the info/controls stack, so it's taller. */
+  --player-height: 76px;
+  /* The mobile PlayerBar wraps to two rows (info + full-width controls), so it
+     stands ~120px tall — the sidebar / track-list / lyrics panel all reserve
+     this much space at the bottom. Keep in step with the real rendered height. */
+  --player-height-mobile: 120px;
+
+  /* ---- Motion ------------------------------------------- */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 0.2s var(--ease);
+  --transition-med: 0.32s var(--ease);
+
+  /* ---- z-index ladder ---------------------------------- */
+  --z-track-header: 10;
+  --z-header: 50;
+  --z-overlay: 90;
+  --z-sidebar: 100;
+  --z-player: 200;
+  --z-queue-overlay: 300;
+  --z-queue: 301;
+  --z-modal: 2000;
+  --z-menu: 3000;
+
+  --fill-hover: rgba(255, 255, 255, 0.08);
+  --fill-active: rgba(255, 255, 255, 0.12);
+
+  /* ---- Theme-dependent one-offs (overridden in the light set below) ---- */
+  --on-text-1: #000; /* text on a --text-1 filled button */
+  --confirm-hover: #fff;
+  --glow: rgba(255, 255, 255, 0.2);
+  --glow-strong: rgba(255, 255, 255, 0.4);
+  --title-gradient: linear-gradient(to right, #fff, #aaa);
+  --art-placeholder: linear-gradient(135deg, #333, #555);
+  --art-placeholder-fg: rgba(255, 255, 255, 0.5);
+  --surface-inset: rgba(0, 0, 0, 0.2);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+  --line-input: rgba(255, 255, 255, 0.2);
+  --accent-row: rgba(237, 165, 94, 0.12);
+  --accent-text: var(--accent); /* accent used as text colour: needs 4.5:1 */
+  /* Highlighted context-menu row. */
+  --menu-selection-bg: var(--accent);
+  --menu-selection-text: #000;
+}
+
+/* Light theme: App.tsx sets <html data-theme="light"> (the "ui_theme" setting,
+   or the OS appearance when it's "system"). Only colour tokens differ; the
+   amber accent is darkened so it stays legible on a pale background. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --surface-0: #f4f2ef;
+  --surface-bg: radial-gradient(circle at top left, #fbf8f4, #eeebe6);
+  --surface-sidebar: rgba(255, 255, 255, 0.6);
+  --surface-header: rgba(255, 255, 255, 0.6);
+  --surface-sticky: rgba(250, 248, 245, 0.95);
+  --surface-bar: rgba(252, 250, 247, 0.95);
+  --surface-panel: rgba(252, 250, 247, 0.98);
+  --surface-card: #ffffff;
+  --surface-menu: rgba(255, 255, 255, 0.96);
+  --scrim: rgba(0, 0, 0, 0.35);
+  --scrim-strong: rgba(0, 0, 0, 0.5);
+
+  --line: rgba(0, 0, 0, 0.1);
+  --line-soft: rgba(0, 0, 0, 0.06);
+  --line-strong: rgba(0, 0, 0, 0.18);
+  --fill-1: rgba(0, 0, 0, 0.03);
+  --fill-2: rgba(0, 0, 0, 0.05);
+  --fill-3: rgba(0, 0, 0, 0.08);
+  --fill-4: rgba(0, 0, 0, 0.12);
+  --fill-hover: rgba(0, 0, 0, 0.06);
+  --fill-active: rgba(0, 0, 0, 0.1);
+
+  --accent: #c8701f;
+  --accent-strong: #a8480a;
+  --accent-line: rgba(200, 112, 31, 0.4);
+  --accent-soft: rgba(200, 112, 31, 0.16);
+  --accent-softer: rgba(200, 112, 31, 0.08);
+  --accent-gradient: linear-gradient(135deg, #d98530, #a8480a);
+  --accent-row: rgba(200, 112, 31, 0.12);
+  --accent-text: #9a520f;
+
+  --danger: #b3263e;
+  --danger-strong: rgba(179, 38, 62, 0.92);
+  --danger-soft: rgba(179, 38, 62, 0.3);
+
+  --text-1: #1b1a1d;
+  --text-2: rgba(27, 26, 29, 0.78);
+  --text-3: rgba(27, 26, 29, 0.62);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.12);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --shadow-3: 0 24px 64px rgba(0, 0, 0, 0.25);
+
+  --on-text-1: #fff;
+  --confirm-hover: #000;
+  --glow: rgba(0, 0, 0, 0.15);
+  --glow-strong: rgba(0, 0, 0, 0.25);
+  --title-gradient: linear-gradient(to right, #1b1a1d, #6b6870);
+  --art-placeholder: linear-gradient(135deg, #d8d4cf, #c2bdb7);
+  --art-placeholder-fg: rgba(0, 0, 0, 0.4);
+  --surface-inset: rgba(0, 0, 0, 0.04);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+  --line-input: rgba(0, 0, 0, 0.25);
+  /* HIG: selected menu items are the accent colour with white text; the
+     amber is deepened so white keeps ~4.6:1 contrast. */
+  --menu-selection-bg: #b35f12;
+  --menu-selection-text: #fff;
+}
+
+/* HIG: if the default palette is under the minimum contrast, provide a higher
+   contrast scheme when the system's Increase Contrast setting is on. */
+@media (prefers-contrast: more) {
+  :root {
+    --line: rgba(255, 255, 255, 0.28);
+    --line-soft: rgba(255, 255, 255, 0.2);
+    --line-strong: rgba(255, 255, 255, 0.5);
+    --text-2: rgba(255, 255, 255, 0.85);
+    --text-3: rgba(255, 255, 255, 0.72);
+  }
+
+  :root[data-theme="light"] {
+    --line: rgba(0, 0, 0, 0.35);
+    --line-soft: rgba(0, 0, 0, 0.22);
+    --line-strong: rgba(0, 0, 0, 0.55);
+    --text-2: rgba(0, 0, 0, 0.88);
+    --text-3: rgba(0, 0, 0, 0.78);
+    --accent-text: #7a3f08;
+    --menu-selection-bg: #8f4a0c;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--surface-0);
+  color: var(--text-1);
+  height: 100dvh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  /* A right-click (or a long-press on device) should open a context menu, not
+     leave the clicked word highlighted. Kill selection app-wide and
+     re-enable it only where the user actually reads/edits copy. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea,
+.lyrics-display,
+.lyrics-line,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+#root {
+  height: 100dvh;
+  width: 100%;
+}
+
+/* App Layout */
+.app-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  background: var(--surface-bg);
+  position: relative;
+  /* Belt-and-suspenders against a child overflowing the viewport width (the
+     track list computes overflow-x: auto from its overflow-y: auto). Modals,
+     context menus and the queue panel are position: fixed, so they escape. */
+  overflow: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--fill-3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Typography */
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+button {
+  font-family: inherit;
+  /* No UA reset existed, so on Android WebView (color-scheme: dark) every button
+     that doesn't set its own surface picked up the grey ButtonFace fill and the
+     2px outset bevel that reads as a shadow. Every styled button sets its own
+     background/border, so clearing them here is safe. */
+  background: none;
+  border: none;
+}
+
+/* Inline SVG icons — inherit color from the parent, align to the text box. */
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Keyboard focus — there was no visible focus state anywhere before. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

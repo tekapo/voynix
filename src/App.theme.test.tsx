@@ -1,4 +1,4 @@
-// Theme preference: applied to <html data-theme> (App.css keys its light
+// Theme preference: applied to <html data-theme> (styles/base.css keys its light
 // variable set off it) and persisted from Settings → Library.
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";

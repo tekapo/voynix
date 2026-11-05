@@ -1,0 +1,269 @@
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    position: absolute;
+    top: 0;
+    /* Stop above the player bar so the sidebar footer (Create / Sync) stays
+       tappable. --player-height-mobile is the ResizeObserver's measured bar
+       height, which already includes the bar's safe-area bottom padding. */
+    height: calc(100% - var(--player-height-mobile));
+    transform: translateX(-100%);
+    box-shadow: 10px 0 50px var(--scrim);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .hamburger-btn {
+    display: block;
+  }
+
+  .track-list-container {
+    /* --player-height-mobile already accounts for the bar's safe-area padding. */
+    padding: 1rem 0 var(--player-height-mobile);
+  }
+
+  .header {
+    padding: 0 1rem;
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Collapsed: magnifier only, title keeps the width. */
+  .header-search-toggle {
+    display: flex;
+  }
+
+  .header-search {
+    display: none;
+    margin-right: 0;
+  }
+
+  /* Expanded: the field replaces the header row entirely. Title + hamburger drop
+     out of layout (rather than sitting behind a translucent overlay) so nothing
+     bleeds through the search field. */
+  .header.search-open .header-left {
+    display: none;
+  }
+
+  .header.search-open .header-actions {
+    flex: 1;
+  }
+
+  .header.search-open .header-search-toggle {
+    display: none;
+  }
+
+  .header.search-open .layout-toggle {
+    display: none;
+  }
+
+  .header.search-open .header-search {
+    display: flex;
+    flex: 1;
+    width: auto;
+  }
+
+  .header.search-open .header-search:focus-within {
+    width: auto;
+  }
+
+  /* Phone widths can't fit the desktop column set: show #, Title, ★, Time.
+     minmax(0,1fr) on the title lets it ellipsize instead of shoving ★/Time off
+     the right edge; the two paddings below line the header up with the rows. */
+  .track-list-header,
+  .track-item {
+    grid-template-columns: 28px minmax(0, 1fr) 44px 96px;
+  }
+
+  /* Hide by class, not nth-child — the Path column is conditionally rendered
+     (Settings toggle), which would shift positional indices. */
+  .track-list-header > .th-artist,
+  .track-list-header > .th-album,
+  .track-list-header > .th-path,
+  .track-list-header > .th-plays,
+  .col-resizer,
+  .track-item > .cell-text,
+  .track-item > .cell-playcount {
+    display: none;
+  }
+
+  .track-list {
+    padding: 0;
+  }
+
+  .track-list-header {
+    padding: 0.8rem 1rem;
+  }
+
+  .track-item {
+    padding: 0.7rem 1rem;
+  }
+
+  .cell-title {
+    min-width: 0;
+  }
+
+  /* No :hover on touch — the star must stay visible and be a real tap target. */
+  .star-btn {
+    opacity: 1;
+    font-size: 1.15rem;
+  }
+
+  .player-bar {
+    height: auto;
+    min-height: var(--player-height-mobile);
+  }
+
+  /* One flex row can't fit art + 5 controls + fav/queue at phone widths — wrap
+     to an info + fav/queue row above a full-width controls row (order: below). */
+  .player-row {
+    flex-wrap: wrap;
+    row-gap: 0.35rem;
+    /* Tight side padding — the 7-button transport row needs every px at 360px. */
+    padding: 0.4rem 0.5rem calc(0.9rem + env(safe-area-inset-bottom));
+  }
+
+  .player-info {
+    order: 1;
+    flex: 1 1 auto;
+    gap: 0.6rem;
+  }
+
+  .player-art-placeholder {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+
+  /* Keep the fav/queue/lyrics buttons on the info row; volume is on the hardware
+     keys and there's no room for the time readout. */
+  .player-extra {
+    order: 2;
+    justify-self: auto;
+  }
+
+  .player-time,
+  .volume-control {
+    display: none;
+  }
+
+  /* No room for a docked column — the lyrics panel becomes a full-screen
+     overlay. Scoped so this wins over the base `.lyrics-panel` rule that
+     follows it in source order. */
+  .content-row .lyrics-panel {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    border-left: 0;
+    z-index: var(--z-queue);
+    padding: env(safe-area-inset-top) 1rem var(--player-height-mobile);
+  }
+
+  .player-controls {
+    order: 4;
+    flex: 0 0 100%;
+    justify-content: space-around;
+    gap: 0.375rem;
+    /* 7 buttons at 44px don't fit a very narrow viewport (large display-size /
+       font-scale). Wrap to a second row rather than clip the ends. */
+    flex-wrap: wrap;
+    row-gap: 0.4rem;
+  }
+
+  .player-controls .control-btn {
+    padding: 0.4rem;
+    font-size: 1.25rem;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Seek moves out of the bar's bottom edge (where a thumb sits under the
+     gesture bar and gets nudged by accident) into its own full-width row
+     between the info row and the transport row. */
+  .player-seek {
+    order: 3;
+    position: static;
+    flex: 0 0 100%;
+    inset: auto;
+  }
+
+  .progress-bar {
+    height: 24px;
+    margin: 0;
+  }
+
+  .sidebar-overlay.visible {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--scrim);
+    z-index: 90;
+    backdrop-filter: blur(2px);
+  }
+
+  /* Library list layout: one pane at a time — the left names list until
+     something's selected, then the right pane with a back button. */
+  .library-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .library-columns-left {
+    border-right: none;
+  }
+
+  .library-columns.has-selection .library-columns-left {
+    display: none;
+  }
+
+  .library-columns:not(.has-selection) .library-columns-right {
+    display: none;
+  }
+
+  .library-columns-back {
+    display: flex;
+  }
+
+  .album-section-header {
+    flex-wrap: wrap;
+  }
+}
+
+/* Very narrow effective width (large Android display-size / font-scale): the
+   7-button transport row doesn't fit at 44px. Shrink it to keep one clean row
+   with all controls visible rather than wrapping or clipping. ~356px is where
+   6×44 + 40 + gaps stops fitting. flex-wrap: wrap (above) still catches anything
+   narrower than this can handle. */
+@media (max-width: 356px) {
+  .player-row {
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+  }
+
+  .player-controls {
+    gap: 0.2rem;
+  }
+
+  .player-controls .control-btn {
+    min-width: 36px;
+    padding: 0.25rem;
+    font-size: 1.1rem;
+  }
+
+  .player-controls .control-btn .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .player-controls .play-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .player-controls .play-btn .icon {
+    width: 16px;
+    height: 16px;
+  }
+}

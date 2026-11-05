@@ -1,0 +1,563 @@
+/* "Get Info…" dialogs (TrackInfoModal, AlbumInfoModal) — shared shell: fixed
+   header/footer, scrolling body, so Save never scrolls out of view the way it
+   did in the v1 single-column TrackInfoModal. */
+.info-modal {
+  width: 92vw;
+  max-width: 520px;
+  max-height: min(640px, calc(100dvh - 2rem));
+  padding: 1.5rem 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.info-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-shrink: 0;
+}
+
+.info-modal-art {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.info-modal-art.library-thumb-placeholder {
+  font-size: 1.6rem;
+}
+
+.info-modal-art-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fill-2);
+  color: var(--text-3);
+}
+
+.info-modal-header-text {
+  min-width: 0;
+}
+
+.info-modal-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.info-modal-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 0.15rem;
+}
+
+.info-modal-tabs.settings-tabs {
+  flex-shrink: 0;
+  margin: 1rem 0 0;
+}
+
+.info-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 0 0.25rem;
+  min-height: 0;
+}
+
+.info-modal-fields {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.6rem 0.9rem;
+}
+
+.info-modal-fields label {
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+.info-modal-fields .modal-input {
+  margin-bottom: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.info-modal-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 1.25rem;
+}
+
+.info-modal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--fill-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 0.25rem 0.65rem;
+  font-size: 0.78rem;
+  color: var(--text-2);
+}
+
+.info-modal-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.info-modal-skeleton-line {
+  height: 0.85rem;
+  border-radius: var(--radius-xs);
+  background: var(--fill-2);
+  animation: infoModalPulse 1.2s ease-in-out infinite;
+}
+
+.info-modal-skeleton-line:nth-child(2) { width: 80%; }
+.info-modal-skeleton-line:nth-child(3) { width: 60%; }
+
+@keyframes infoModalPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.info-modal-error {
+  flex-shrink: 0;
+  margin: 0.5rem 0 0;
+}
+
+.info-modal-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+  margin-top: 0.75rem;
+}
+
+.info-modal-footer-actions {
+  gap: 0.75rem;
+}
+
+.info-modal-confirm-discard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+.info-modal-confirm-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .info-modal-fields {
+    grid-template-columns: 1fr;
+  }
+  .info-modal-fields label {
+    margin-top: 0.4rem;
+  }
+}
+
+/* Smart Playlist editor (SmartPlaylistModal). Shares the .info-modal shell. */
+.smart-playlist-modal {
+  max-width: 600px;
+}
+
+.smart-playlist-modal .info-modal-header-text {
+  flex: 1;
+}
+
+.smart-playlist-modal .info-modal-header-text .modal-input {
+  margin-bottom: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.smart-rules-match {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-2);
+  margin-bottom: 0.75rem;
+}
+
+.smart-rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.smart-rule-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.smart-rule-row select {
+  flex-shrink: 0;
+}
+
+.smart-rule-value {
+  flex: 1;
+  min-width: 80px;
+  margin-bottom: 0;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.smart-rule-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+
+.smart-rule-remove:hover {
+  background: var(--fill-2);
+  color: var(--text-1);
+}
+
+.smart-rules-add {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.smart-rules-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.smart-rules-limit,
+.smart-rules-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+.smart-rules-limit-input {
+  width: 4.5rem;
+  margin-bottom: 0;
+  padding: 0.3rem 0.5rem;
+}
+
+.smart-rules-preview {
+  margin-top: 0.75rem;
+}
+
+/* Track-only: Disc/Track number pair, technical-info sections, file path. */
+.track-info-cloud-notice {
+  margin-bottom: 1rem;
+}
+
+.track-info-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.track-info-numbers .track-info-number {
+  width: 4.5rem;
+  flex: none;
+}
+
+.track-info-numbers-sep {
+  color: var(--text-3);
+}
+
+.track-info-section {
+  margin-bottom: 1.25rem;
+}
+
+.track-info-section h4 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-3);
+  margin: 0 0 0.5rem;
+}
+
+.track-info-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 1rem;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.track-info-grid dt {
+  color: var(--text-2);
+}
+
+.track-info-grid dd {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track-info-path-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.track-info-path {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  color: var(--text-2);
+  word-break: break-all;
+  flex: 1;
+}
+
+.track-info-copy-btn {
+  flex-shrink: 0;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.track-info-finder-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Album-only: the Tracks tab's per-track list. */
+.album-info-track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.album-info-track-row {
+  display: grid;
+  grid-template-columns: 2.25rem 1fr auto;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 0.85rem;
+}
+
+.album-info-track-row:last-child {
+  border-bottom: none;
+}
+
+.album-info-track-no {
+  color: var(--text-3);
+  text-align: right;
+}
+
+.album-info-track-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.album-info-track-duration {
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-section {
+  margin-bottom: 1.5rem;
+}
+
+.settings-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 1.25rem;
+}
+
+.settings-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-2);
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+}
+
+.settings-tab:hover {
+  color: var(--text-1);
+}
+
+.settings-tab.active {
+  color: var(--text-1);
+  border-bottom-color: var(--accent-text);
+}
+
+.settings-section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.settings-section-header h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.settings-hint {
+  color: var(--text-2);
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.settings-licenses {
+  max-height: 16rem;
+  overflow: auto;
+  margin: 0.5rem 0 0;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--fill-2);
+  color: var(--text-2);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
+
+.settings-empty {
+  color: var(--text-3);
+  font-style: italic;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--text-1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.settings-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-text);
+  cursor: pointer;
+}
+
+.settings-folder-list {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.settings-folder-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.settings-folder-item:last-child {
+  border-bottom: none;
+}
+
+.settings-folder-path {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+}
+
+.settings-folder-kind {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.35rem;
+  border-radius: var(--radius-sm);
+  background: var(--fill-2);
+  color: var(--text-1);
+  border: 1px solid var(--line-soft);
+}
+
+.settings-folder-rescan,
+.settings-folder-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.settings-folder-rescan:hover:not(:disabled) {
+  color: var(--text-1);
+  background: var(--fill-hover);
+}
+
+.settings-folder-remove:hover:not(:disabled) {
+  color: var(--text-1);
+  background: var(--danger-soft);
+}
+
+.settings-folder-rescan:disabled,
+.settings-folder-remove:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.settings-folder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.settings-folder-actions .modal-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

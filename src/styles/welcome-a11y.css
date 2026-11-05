@@ -1,0 +1,60 @@
+/* First-launch welcome dialog */
+.welcome-modal { max-width: 460px; }
+.welcome-action { margin: 0.75rem 0 1rem; }
+.welcome-dots { display: flex; justify-content: center; gap: 0.4rem; margin: 0 0 1rem; }
+.welcome-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); opacity: 0.5; }
+.welcome-dots span.active { background: var(--accent, currentColor); opacity: 1; }
+
+.update-modal { max-width: 460px; }
+.update-notes {
+  max-height: 14rem;
+  overflow: auto;
+  margin: 0.75rem 0 1rem;
+  white-space: pre-wrap;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.settings-about-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.settings-about-actions .modal-btn {
+  width: 100%;
+}
+
+/* Keyboard cursor in the track list (a listbox with aria-activedescendant:
+   focus stays on the <ul>, so the active row draws its own ring, and only for
+   keyboard focus — a mouse click parks focus on the list without a ring). */
+.track-list:focus-visible {
+  outline: none;
+}
+
+.track-list:focus-visible .track-item.kb-focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: var(--radius-xs);
+}
+
+/* Keyboard-focused menu row looks like the hovered one. */
+.context-menu-item:focus-visible {
+  background: var(--menu-selection-bg);
+  color: var(--menu-selection-text);
+  outline: none;
+}
+
+/* Text for screen readers only (live regions). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

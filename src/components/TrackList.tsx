@@ -24,11 +24,11 @@ const STAR_OFF = <Icon name="star" size={15} />;
 // describe block for the behavioural contract this threshold protects.
 const VIRTUALIZE_THRESHOLD = 300;
 // Rows never wrap (see .cell-title/.cell-text's white-space: nowrap in
-// App.css) so every row is the same height within a given breakpoint/setting
+// styles/tracklist.css) so every row is the same height within a given breakpoint/setting
 // — this is just a first-paint guess; the real height is measured per row
 // (virtualizer.measureElement below) and converges immediately.
 const ESTIMATED_ROW_HEIGHT = 38;
-// Matches .track-item's `margin-bottom: 2px` (App.css) — told to the
+// Matches .track-item's `margin-bottom: 2px` (styles/tracklist.css) — told to the
 // virtualizer directly (via `gap`) rather than left on the CSS, since
 // getBoundingClientRect()/ResizeObserver (which measureElement uses) don't
 // include margin, and a virtualizer that doesn't know about the gap would
@@ -493,7 +493,7 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
     }, [widths, flexColumn, timeDefaultWidth]);
 
     // Both jump buttons sit at the vertical centre of the visible rows (between
-    // the header and the player bar); App.css turns these into top/bottom.
+    // the header and the player bar); styles/tracklist.css turns these into top/bottom.
     const jumpSlotStyle = {
         position: 'sticky',
         height: 0,

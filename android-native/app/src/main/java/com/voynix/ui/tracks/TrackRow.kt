@@ -137,7 +137,7 @@ fun podcastStatusText(label: PodcastStatusLabel?): String? = when (label) {
 }
 
 /**
- * Podcast status dot for the title cell, mirroring src/App.css's
+ * Podcast status dot for the title cell, mirroring src/styles/tracklist.css's
  * .podcast-badge: a filled dot for unplayed, a ring for in-progress. PLAYED
  * renders nothing here — the whole row is dimmed instead (see [TrackRow]).
  */

@@ -1,0 +1,325 @@
+/* ==================
+   Player Bar
+   ================== */
+.player-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  /* Grow to fit the content (bottom is pinned, so it extends upward) — a hard
+     height clips the controls when the content is taller (e.g. mobile stack). */
+  height: auto;
+  min-height: var(--player-height);
+  background: var(--surface-bar);
+  /* Slightly more opaque */
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--fill-3);
+  /* One row, then a thin seek line absolutely pinned to the bottom edge. */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  z-index: 200;
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Single flex row: transport pinned left, now-playing info takes the slack and
+   ellipsizes, utilities pinned right. Transport is first in the DOM so the
+   track title's width can never shift it. */
+.player-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.5rem 1.5rem 0.9rem;
+}
+
+.player-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.player-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.player-art.library-thumb-placeholder {
+  font-size: 1.4rem;
+}
+
+.player-art-placeholder {
+  width: 50px;
+  height: 50px;
+  background: var(--art-placeholder);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--art-placeholder-fg);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.player-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  /* Take the leftover width and ellipsize, rather than pushing the fav/queue
+     buttons (and the column edge) around. */
+  flex: 1;
+  min-width: 0;
+}
+
+.player-track-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-track-artist {
+  font-size: 0.8rem;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Left: transport controls. */
+.player-controls {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.control-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 50%;
+  position: relative;
+}
+
+.control-btn:hover:not(:disabled) {
+  color: var(--text-1);
+  background: var(--line-soft);
+}
+
+.control-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.control-btn.icon-btn {
+  font-size: 1rem;
+  color: var(--text-3);
+}
+
+.control-btn.icon-btn:hover {
+  color: var(--accent-text);
+}
+
+/* Toggle-on state for shuffle / repeat. SVG icons honour `color`, so the
+   amber tint plus the chip background is enough — no dot marker needed. */
+.control-btn.is-active {
+  color: var(--accent-text);
+  background: var(--accent-soft);
+}
+
+/* Repeat-one marker: a bold "1" badge over the repeat icon — the "1" glyph
+   inside the SVG alone is unreadable at 18px. */
+.repeat-one-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #000;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 20px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.play-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--text-1);
+  color: var(--on-text-1);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: 0 0 15px var(--glow);
+}
+
+.play-btn:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 0 25px var(--glow-strong);
+}
+
+.play-btn:disabled {
+  background: var(--text-2);
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Seek line: absolutely pinned to the bar's bottom edge, full width. The 3px
+   track sits centred in the 14px hit-area, so it floats ~5px above the edge.
+   Progress is shown by painting the elapsed side amber — no moving thumb. */
+.player-seek {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.progress-bar {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 14px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.progress-bar::-webkit-slider-runnable-track {
+  height: 3px;
+  /* Elapsed = accent, remaining = the rail colour. --seek-pct comes from the
+     component as an inline style and is inherited into this pseudo-element. */
+  background: linear-gradient(
+    to right,
+    var(--accent) 0 var(--seek-pct, 0%),
+    var(--fill-3) var(--seek-pct, 0%) 100%
+  );
+  transition: height var(--transition-fast);
+}
+
+/* Thumb is kept for drag hit-testing but never drawn — progress is the fill. */
+.progress-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  margin-top: -3.5px;
+  opacity: 0;
+}
+
+.player-bar:hover .progress-bar::-webkit-slider-runnable-track {
+  height: 5px;
+}
+
+.progress-bar:disabled {
+  cursor: default;
+}
+
+/* Elapsed / total time, always visible. Fixed min-width + tabular figures so
+   digit changes (0:59 → 1:00) don't shift the buttons to its right. */
+.player-time {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  min-width: 84px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Right: time, favourite, queue, lyrics, volume. */
+.player-extra {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Volume is icon-only; the slider lives in a popover that opens on hover/focus. */
+.volume-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.volume-popover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 116px;
+  background: var(--surface-menu);
+  border: 1px solid var(--fill-3);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-fast), visibility var(--transition-fast);
+}
+
+.volume-control:hover .volume-popover,
+.volume-control:focus-within .volume-popover {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Rotated rather than writing-mode/appearance:slider-vertical — the latter two
+   are unreliable across WKWebView and the Android WebView. -90deg puts the
+   minimum at the bottom, so dragging up raises the volume. */
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 96px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--fill-3);
+  cursor: pointer;
+  flex: 0 0 auto;
+  transform: rotate(-90deg);
+  transition: height 0.1s;
+}
+
+.volume-slider:hover {
+  height: 6px;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--scrim);
+  transition: transform 0.1s;
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
