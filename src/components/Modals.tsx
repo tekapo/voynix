@@ -171,8 +171,12 @@ export const SyncModal: React.FC<SyncModalProps> = (props) => {
     );
 };
 
+export type SettingsTab = 'general' | 'folders' | 'library' | 'sync' | 'remote' | 'about';
+
 interface SettingsModalProps {
     isOpen: boolean;
+    /** Tab to switch to whenever the modal opens (e.g. 'about' from the app menu). */
+    initialTab?: SettingsTab;
     onClose: () => void;
     folders: ScanFolder[];
     isScanning: boolean;
@@ -224,6 +228,7 @@ interface SettingsModalProps {
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
     isOpen,
+    initialTab,
     onClose,
     folders,
     isScanning,
@@ -283,8 +288,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             .catch(() => setLicenses(t('settings.licensesLoadFailed')));
     };
 
-    type SettingsTab = 'general' | 'folders' | 'library' | 'sync' | 'remote' | 'about';
-    const [activeTab, setActiveTab] = useState<SettingsTab>('general');
+    const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab ?? 'general');
+    useEffect(() => {
+        if (isOpen && initialTab) setActiveTab(initialTab);
+    }, [isOpen, initialTab]);
 
     if (!isOpen) return null;
 

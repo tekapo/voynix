@@ -38,7 +38,7 @@ import { Icon } from "./components/Icon";
 import { LibraryColumns } from "./components/LibraryColumns";
 import { LibraryView } from "./components/LibraryView";
 import { LyricsPanel } from "./components/LyricsPanel";
-import { CreatePlaylistModal, SettingsModal, SyncModal } from "./components/Modals";
+import { CreatePlaylistModal, SettingsModal, SyncModal, type SettingsTab } from "./components/Modals";
 import { SmartPlaylistModal } from "./components/SmartPlaylistModal";
 import { PlayerBar } from "./components/PlayerBar";
 import { SelectionContextMenu } from "./components/SelectionContextMenu";
@@ -265,6 +265,7 @@ function App() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab | undefined>(undefined);
   // First-launch guide: opened once by initialize() on an empty install, or on
   // demand from Settings → About.
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
@@ -312,8 +313,7 @@ function App() {
     const t = i18n.t.bind(i18n);
     invoke("set_app_menu", {
       labels: {
-        about: t('appMenu.about', { name }), support: t('settings.supportOnKofi'),
-        supportUrl: t('settings.supportUrl'), services: t('appMenu.services'),
+        about: t('appMenu.about', { name }), services: t('appMenu.services'),
         hide: t('appMenu.hide', { name }), hideOthers: t('appMenu.hideOthers'),
         quit: t('appMenu.quit', { name }), file: t('appMenu.file'),
         closeWindow: t('appMenu.closeWindow'), edit: t('appMenu.edit'),
@@ -887,6 +887,11 @@ function App() {
     next: () => playAdjacent(1),
     previous: () => playAdjacent(-1),
   };
+  // Voynix menu > About opens Settings on the About tab.
+  useTauriEvent<null>("menu-about", () => {
+    setSettingsInitialTab("about");
+    setIsSettingsModalOpen(true);
+  });
   useTauriEvent<"toggle" | "next" | "previous">("dock-action", (action) => {
     dockActionsRef.current[action]?.();
   });
@@ -1842,7 +1847,7 @@ function App() {
         artworkProgress={artworkProgress}
         onCancelThumbPrewarm={cancelThumbPrewarm}
         onSync={openSyncModal}
-        onSettings={() => setIsSettingsModalOpen(true)}
+        onSettings={() => { setSettingsInitialTab(undefined); setIsSettingsModalOpen(true); }}
       />
 
       <div className={`sidebar-overlay ${isSidebarOpen ? 'visible' : ''}`} onClick={closeSidebar}></div>
@@ -1922,6 +1927,7 @@ function App() {
 
         <SettingsModal
           isOpen={isSettingsModalOpen}
+          initialTab={settingsInitialTab}
           onShowWelcome={() => setIsWelcomeOpen(true)}
           onClose={() => setIsSettingsModalOpen(false)}
           folders={scanFolders}

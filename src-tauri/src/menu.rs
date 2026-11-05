@@ -5,25 +5,20 @@
 //! their text is replaced — so the shortcuts and behaviour are unchanged.
 //! The frontend calls `set_app_menu` whenever the UI language is resolved or
 //! changed (see App.tsx), which rebuilds and swaps the whole menu.
-use std::sync::Mutex;
-
+//!
+//! "About" is the one custom item: instead of macOS's bare About panel it
+//! emits `menu-about`, and the frontend opens Settings on the About tab
+//! (version, tagline, manual, licenses, Ko-fi).
 use serde::Deserialize;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
-use tauri::AppHandle;
-use tauri_plugin_opener::OpenerExt;
+use tauri::{AppHandle, Emitter};
 
-const SUPPORT_ID: &str = "support";
-
-/// Where the "support" menu item points; refreshed with every `set_app_menu`
-/// so it always matches the current language's `settings.supportUrl`.
-static SUPPORT_URL: Mutex<String> = Mutex::new(String::new());
+const ABOUT_ID: &str = "about";
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MenuLabels {
     about: String,
-    support: String,
-    support_url: String,
     services: String,
     hide: String,
     hide_others: String,
@@ -53,8 +48,7 @@ fn build(app: &AppHandle, l: &MenuLabels) -> tauri::Result<Menu<tauri::Wry>> {
         &app.package_info().name,
         true,
         &[
-            &PredefinedMenuItem::about(app, Some(&l.about), None)?,
-            &MenuItem::with_id(app, SUPPORT_ID, &l.support, true, None::<&str>)?,
+            &MenuItem::with_id(app, ABOUT_ID, &l.about, true, None::<&str>)?,
             &sep()?,
             &PredefinedMenuItem::services(app, Some(&l.services))?,
             &sep()?,
@@ -117,7 +111,6 @@ fn build(app: &AppHandle, l: &MenuLabels) -> tauri::Result<Menu<tauri::Wry>> {
 pub fn set_app_menu(app: AppHandle, labels: MenuLabels) -> Result<(), String> {
     // AppKit menus must be touched on the main thread; Tauri commands run on
     // a worker thread by default.
-    *SUPPORT_URL.lock().unwrap() = labels.support_url.clone();
     let handle = app.clone();
     app.run_on_main_thread(move || {
         if let Ok(menu) = build(&handle, &labels) {
@@ -127,16 +120,13 @@ pub fn set_app_menu(app: AppHandle, labels: MenuLabels) -> Result<(), String> {
     .map_err(|e| e.to_string())
 }
 
-/// Opens the support page when its menu item is chosen. The menu is rebuilt
-/// on language changes, but this handler is app-wide so it only needs
-/// registering once.
+/// Tells the frontend to show the About tab when "About" is chosen. The menu
+/// is rebuilt on language changes, but this handler is app-wide so it only
+/// needs registering once.
 pub fn install(app: &AppHandle) {
     app.on_menu_event(|app, event| {
-        if event.id().as_ref() == SUPPORT_ID {
-            let url = SUPPORT_URL.lock().unwrap().clone();
-            if !url.is_empty() {
-                let _ = app.opener().open_url(url, None::<&str>);
-            }
+        if event.id().as_ref() == ABOUT_ID {
+            let _ = app.emit("menu-about", ());
         }
     });
 }
