@@ -14,6 +14,9 @@ use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{AppHandle, Emitter};
 
 const ABOUT_ID: &str = "about";
+const HELP_MANUAL_ID: &str = "help-manual";
+const HELP_WELCOME_ID: &str = "help-welcome";
+const HELP_REPORT_ID: &str = "help-report";
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -38,6 +41,9 @@ pub struct MenuLabels {
     minimize: String,
     maximize: String,
     help: String,
+    help_manual: String,
+    help_welcome: String,
+    help_report: String,
 }
 
 fn build(app: &AppHandle, l: &MenuLabels) -> tauri::Result<Menu<tauri::Wry>> {
@@ -95,7 +101,17 @@ fn build(app: &AppHandle, l: &MenuLabels) -> tauri::Result<Menu<tauri::Wry>> {
             &PredefinedMenuItem::close_window(app, Some(&l.close_window))?,
         ],
     )?;
-    let help_menu = Submenu::with_items(app, &l.help, true, &[])?;
+    let help_menu = Submenu::with_items(
+        app,
+        &l.help,
+        true,
+        &[
+            &MenuItem::with_id(app, HELP_MANUAL_ID, &l.help_manual, true, None::<&str>)?,
+            &MenuItem::with_id(app, HELP_WELCOME_ID, &l.help_welcome, true, None::<&str>)?,
+            &sep()?,
+            &MenuItem::with_id(app, HELP_REPORT_ID, &l.help_report, true, None::<&str>)?,
+        ],
+    )?;
 
     let menu = Menu::with_items(
         app,
@@ -125,8 +141,20 @@ pub fn set_app_menu(app: AppHandle, labels: MenuLabels) -> Result<(), String> {
 /// needs registering once.
 pub fn install(app: &AppHandle) {
     app.on_menu_event(|app, event| {
-        if event.id().as_ref() == ABOUT_ID {
-            let _ = app.emit("menu-about", ());
+        match event.id().as_ref() {
+            ABOUT_ID => {
+                let _ = app.emit("menu-about", ());
+            }
+            HELP_MANUAL_ID => {
+                let _ = app.emit("menu-help", "manual");
+            }
+            HELP_WELCOME_ID => {
+                let _ = app.emit("menu-help", "welcome");
+            }
+            HELP_REPORT_ID => {
+                let _ = app.emit("menu-help", "report");
+            }
+            _ => {}
         }
     });
 }
