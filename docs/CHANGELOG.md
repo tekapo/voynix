@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.31.0 — 2026-11-05
+- A track with no cover now shows its artist's image, then the artist's initial on a colored tile, instead of a music-note icon: Mac player bar, album grid and info dialogs, and Android track rows, mini player and Now Playing.
+- Notifications, Android Auto and the widget still show only the album's own art.
+
 ## 0.30.6 — 2026-11-05
 - Fixed a race where the "arm the view's first track" effect could replace a track the user had just asked to play while it was still loading, so playback never started.
 - Tests: raised the Vitest test timeout above the waitFor timeout so a stuck assertion reports its own error (this removes the flaky `App.stats.test.tsx` timeout).

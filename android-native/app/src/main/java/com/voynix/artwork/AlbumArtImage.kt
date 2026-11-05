@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,8 +23,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Track/album cover art, resolved asynchronously; a music-note placeholder
- * while loading or absent. Sizing comes from [modifier] — pass `.size(48.dp)`
+ * Track/album cover art, resolved asynchronously: the album's art, else the
+ * artist's image, else the artist's initial on a colored tile (same as the
+ * Mac's TrackCover) while loading or absent. Sizing comes from [modifier] — pass `.size(48.dp)`
  * for a fixed square (track rows) or `.fillMaxWidth().aspectRatio(1f)` for a
  * responsive one (Now Playing); [BoxWithConstraints] reads back the resolved
  * size so the placeholder icon scales with it either way.
@@ -46,7 +44,7 @@ fun AlbumArtImage(
 
     LaunchedEffect(artist, album, filePath) {
         bitmap = null
-        bitmap = resolver.resolve(artist, album, filePath)
+        bitmap = resolver.resolveWithArtistFallback(artist, album, filePath)
     }
 
     BoxWithConstraints(
@@ -64,12 +62,8 @@ fun AlbumArtImage(
                 modifier = Modifier.fillMaxSize(),
             )
         } else {
-            Icon(
-                Icons.Filled.MusicNote,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(maxWidth / 2),
-            )
+            val name = artist?.takeIf { it.isNotBlank() } ?: album.orEmpty()
+            ArtworkInitial(name = name, boxSize = maxWidth)
         }
     }
 }

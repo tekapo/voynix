@@ -4,6 +4,7 @@ import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Portal } from './Modals';
 import { useAlbumThumb } from '../albumArt';
+import { TrackCover } from './CoverArt';
 import { Track } from '../types';
 import { formatDuration } from './trackFormat';
 import { formatBytes } from '../format';
@@ -183,8 +184,8 @@ export const TrackInfoModal: React.FC<TrackInfoModalProps> = ({ track, onClose, 
         <Portal><div className="modal-overlay" onClick={requestClose}>
             <div className="modal-content info-modal" onClick={e => e.stopPropagation()}>
                 <div className="info-modal-header">
-                    {art
-                        ? <img src={art} alt="" className="info-modal-art" />
+                    {track
+                        ? <TrackCover track={track} artUrl={art} className="info-modal-art" />
                         : <div className="info-modal-art info-modal-art-placeholder"><Icon name="music" size={28} /></div>}
                     <div className="info-modal-header-text">
                         <div className="info-modal-title" title={title || track.file_name}>{title || track.file_name}</div>
