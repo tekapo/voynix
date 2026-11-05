@@ -86,6 +86,11 @@ describe("SettingsModal theme setting", () => {
 });
 
 describe("SettingsModal about tab", () => {
+    it("opens on the About tab when initialTab is about", () => {
+        render(<SettingsModal {...makeProps({ initialTab: "about" })} />);
+        expect(screen.getByRole("button", { name: "Support on Ko-fi" })).toBeInTheDocument();
+    });
+
     it("opens the Ko-fi page from the support button", () => {
         render(<SettingsModal {...makeProps()} />);
         fireEvent.click(screen.getByRole("tab", { name: "About" }));

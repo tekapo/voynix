@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.30.5 — 2026-11-05
+- macOS: removed "Support on Ko-fi" from the app menu; "About Voynix" now opens Settings on the About tab, which has the Ko-fi button.
+
 ## 0.30.4 — 2026-11-05
 - Settings > About: the four buttons are now laid out as an equal-width two-column grid instead of ragged inline buttons.
 
