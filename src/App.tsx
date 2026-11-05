@@ -850,7 +850,11 @@ function App() {
         // A bad file (e.g. a stale library row whose file is gone) shouldn't
         // strand the listener on a dead ⏸ — move on to the next track.
         if (++loadFailStreakRef.current < MAX_AUTO_SKIPS) playAdjacent(1);
-        else loadFailStreakRef.current = 0;
+        else {
+          loadFailStreakRef.current = 0;
+          // Gave up: let the auto-arm effect take over again.
+          pendingPlayRef.current = null;
+        }
       }
       // Cover art itself is handled by useNowPlayingArtwork (see currentArtwork
       // above), which resolves for armed-but-not-loaded tracks too and reacts
@@ -1365,13 +1369,18 @@ function App() {
 
   // Arm the first track of whatever view is showing, so ▶ / ⏭ / the queue
   // button work straight after picking a playlist — no need to click a row
-  // first. Never interrupts playback: if something is playing we leave it be.
+  // first. Never interrupts playback: if something is playing — or a track the
+  // user just asked to play is still loading — we leave it be.
   // Keyed on the view identity + the first track's id (which also covers the
   // initial load, when playlists arrive after mount). `isPlaying` and `shuffle`
   // are read but deliberately NOT deps — we don't want a keystroke in the search
   // box or a play/pause to re-arm.
   useEffect(() => {
     if (isPlaying) return;
+    // Play was requested but the load hasn't finished (isPlaying is still false):
+    // re-arming now would swap the track out from under the pending load.
+    if (currentTrack && pendingPlayRef.current === currentTrack.id
+        && loadedTrackIdRef.current !== currentTrack.id) return;
     // The restore effect just armed the saved track (which may not be row 0);
     // let it stand this once.
     if (restoredRef.current) { restoredRef.current = false; return; }

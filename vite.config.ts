@@ -41,6 +41,8 @@ export default defineConfig(async () => ({
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
+    // Longer than setup.ts's asyncUtilTimeout (5s) so a stuck waitFor reports its own error instead of "Test timed out".
+    testTimeout: 15000,
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     css: false,
     coverage: {
