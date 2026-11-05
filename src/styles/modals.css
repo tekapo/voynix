@@ -1,0 +1,122 @@
+/* ==================
+   Modals & Context Menu 
+   ================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--scrim-strong);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: var(--surface-card);
+  border: 1px solid var(--fill-3);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  width: 90%;
+  max-width: 400px;
+  /* Taller-than-viewport content (Settings with folders, small screens) scrolls
+     inside the modal instead of pushing its ends off-screen. */
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  box-shadow: 0 20px 50px var(--scrim);
+  animation: modalPop 0.2s ease-out;
+}
+
+.modal-content h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.modal-input {
+  width: 100%;
+  background: var(--fill-1);
+  border: 1px solid var(--line-input);
+  color: var(--text-1);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  margin-bottom: 1.5rem;
+  box-sizing: border-box;
+}
+
+.modal-input:focus {
+  border-color: var(--accent-text);
+  background: var(--line-soft);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.modal-btn {
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  font-size: 0.95rem;
+  transition: all var(--transition-fast);
+}
+
+.modal-btn.cancel {
+  background: transparent;
+  color: var(--text-2);
+}
+
+.modal-btn.cancel:hover {
+  color: var(--text-1);
+  background: var(--line-soft);
+}
+
+.modal-btn.secondary {
+  background: var(--fill-2);
+  border: 1px solid var(--fill-3);
+  color: var(--text-1);
+}
+
+.modal-btn.secondary:hover {
+  background: var(--fill-4);
+}
+
+.modal-btn.secondary:disabled:hover {
+  background: var(--fill-2);
+}
+
+.modal-btn.confirm {
+  background: var(--text-1);
+  color: var(--on-text-1);
+}
+
+.modal-btn.confirm:hover {
+  background: var(--confirm-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--glow);
+}
+
+.modal-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.modal-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.modal-btn.confirm:disabled:hover {
+  background: var(--text-1);
+}

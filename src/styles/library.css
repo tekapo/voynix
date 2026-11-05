@@ -1,0 +1,318 @@
+/* ==================
+   Library List Layout (Artists/Albums — two-pane, columns)
+   ================== */
+.library-columns {
+  display: grid;
+  grid-template-columns: minmax(220px, 30%) 1fr;
+  height: 100%;
+  min-height: 0;
+}
+
+.library-columns-left {
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+}
+
+.library-columns-right {
+  overflow-y: auto;
+  padding: 0 2rem calc(var(--player-height) + 24px);
+}
+
+.library-columns-right > .empty-state {
+  margin-top: 2rem;
+}
+
+.library-col-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem;
+}
+
+.library-col-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.library-col-item:hover {
+  background: var(--fill-hover);
+}
+
+.library-col-item.active {
+  background: var(--fill-active);
+  color: var(--accent-text);
+}
+
+.library-col-art {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.library-col-art-round {
+  border-radius: 50%;
+}
+
+/* Shared by ArtistThumb and AlbumThumb's fallback (see LibraryView.tsx's
+   ThumbPlaceholder) — an initial-letter placeholder in place of a missing
+   image, sized to match whichever `library-*-art` class it's paired with. */
+.library-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  user-select: none;
+}
+
+.library-list-art.library-thumb-placeholder {
+  font-size: 3.5rem;
+}
+
+.library-col-art.library-thumb-placeholder {
+  font-size: 1.1rem;
+}
+
+.library-columns-header-art.library-thumb-placeholder {
+  font-size: 2.75rem;
+}
+
+.library-col-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  background: var(--fill-1);
+  flex-shrink: 0;
+}
+
+.library-col-name {
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-columns-back {
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  color: var(--text-2);
+  cursor: pointer;
+  padding: 1rem 0 0;
+  font-size: 0.9rem;
+}
+
+.library-columns-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem 0 1rem;
+}
+
+.library-columns-header-art {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.library-columns-header-art-round {
+  border-radius: 50%;
+}
+
+.library-columns-header-meta h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.6rem;
+}
+
+.library-columns-header-count {
+  color: var(--text-3);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.library-columns-header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.library-columns-play,
+.library-columns-shuffle,
+.library-columns-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  background: var(--accent);
+}
+
+.library-columns-more {
+  background: var(--fill-3);
+  color: var(--text-1);
+}
+
+.album-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  padding-bottom: 1rem;
+}
+
+.album-section-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.album-section-art {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.album-section-large .album-section-art {
+  width: 180px;
+  height: 180px;
+}
+
+.album-section-art.library-thumb-placeholder {
+  font-size: 2.25rem;
+}
+
+.album-section-large .album-section-art.library-thumb-placeholder {
+  font-size: 4.5rem;
+}
+
+.album-section-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.album-section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.album-section-large .album-section-title {
+  font-size: 1.8rem;
+}
+
+.album-section-artist {
+  color: var(--text-2);
+  font-size: 0.95rem;
+  margin-top: 0.15rem;
+}
+
+.album-section-count {
+  color: var(--text-3);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.album-section-more {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  padding: 0.4rem;
+  align-self: flex-start;
+}
+
+.album-section-more:hover {
+  color: var(--text-1);
+}
+
+.album-section-tracks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.album-track-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px 112px 28px;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--line);
+  cursor: default;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.album-track-row:hover {
+  background: var(--fill-hover);
+  color: var(--text-1);
+}
+
+.album-track-row.active {
+  color: var(--accent-text);
+}
+
+.album-track-row.selected {
+  background: var(--fill-hover);
+  color: var(--text-1);
+}
+
+.album-track-num {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+  font-size: 0.85rem;
+}
+
+.album-track-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.album-track-artist {
+  color: var(--text-3);
+}
+
+.album-track-duration {
+  white-space: nowrap;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+  font-size: 0.85rem;
+}
+
+.album-track-more {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  padding: 0.2rem;
+}
+
+.album-track-row:hover .album-track-more {
+  display: flex;
+}

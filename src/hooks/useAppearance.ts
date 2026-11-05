@@ -48,7 +48,7 @@ export function useAppearance() {
     "ui_theme", "system",
     raw => (raw === "light" || raw === "dark" || raw === "system" ? raw : undefined),
     v => v);
-  // Sets <html data-theme> (App.css keys its light variable set off it) and,
+  // Sets <html data-theme> (styles/base.css keys its light variable set off it) and,
   // for "system", follows the OS appearance live. The native window theme is
   // kept in step so the title bar matches; null hands control back to the OS.
   useEffect(() => {

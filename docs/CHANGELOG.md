@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.35.3 — 2026-11-05
+- Internal refactor, no visual change: `App.css` was split into 16 files under `src/styles/` (base, sidebar, header, track list, player bar, modals, responsive, …), imported in the original order so the cascade is unchanged; the built CSS is byte-identical.
+
 ## 0.35.2 — 2026-11-05
 - Internal refactor, no behaviour change: the Rust `lib.rs` was split into `identity.rs` (track key / content hash / cloud-placeholder check), `tags.rs` (tag and cover read/write) and `scan.rs` (library scan and iTunes import).
 - Added a test that every command the UI invokes by name is registered in `generate_handler!`, so a rename or module move can't silently drop one.

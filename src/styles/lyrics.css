@@ -1,0 +1,103 @@
+/* Lyrics Panel — docked column to the right of the track list. */
+.lyrics-panel {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--fill-3);
+  background: var(--surface-panel);
+  padding: 1rem 1rem calc(var(--player-height) + 12px);
+}
+
+.lyrics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--fill-3);
+  padding-bottom: 0.5rem;
+}
+
+.lyrics-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lyrics-artist {
+  font-size: 0.9rem;
+  color: var(--text-2);
+  font-weight: 400;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.close-btn:hover {
+  color: var(--text-1);
+}
+
+.lyrics-body {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--surface-inset);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--line-soft);
+}
+
+.lyrics-display {
+  text-align: center;
+  line-height: 1.6;
+  font-size: 1.05rem;
+  color: var(--text-1);
+}
+
+.lyrics-panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.lyrics-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.lyrics-line {
+  margin: 0.5rem 0;
+}
+
+.no-lyrics {
+  color: var(--text-3);
+  font-style: italic;
+  margin-top: 2rem;
+}
+
+.lyrics-editor {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-1);
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  white-space: pre-wrap;
+}
