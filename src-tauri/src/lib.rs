@@ -1705,6 +1705,86 @@ mod tests {
         assert!(info.size_bytes > 0);
     }
 
+    /// A WAV that already carries a tag (set_track_artwork refuses untagged files).
+    fn tagged_wav(dir: &Path) -> PathBuf {
+        let path = dir.join("song.wav");
+        write_minimal_wav(&path, 44100);
+        let edit = TagEdit {
+            title: "T".to_string(),
+            artist: "A".to_string(),
+            album: "B".to_string(),
+            disc_no: Some(1),
+            track_no: Some(1),
+        };
+        write_track_tags(path.to_string_lossy().to_string(), edit).unwrap();
+        path
+    }
+
+    #[test]
+    fn set_track_artwork_embeds_the_image_and_a_second_call_replaces_it() {
+        let dir = tempdir().unwrap();
+        let path = tagged_wav(dir.path());
+        let path_str = path.to_string_lossy().to_string();
+
+        let first = dir.path().join("first.png");
+        std::fs::write(&first, b"\x89PNG-first").unwrap();
+        set_track_artwork(path_str.clone(), first.to_string_lossy().to_string()).unwrap();
+        let pic = read_embedded_picture(&path).expect("cover should be embedded");
+        assert_eq!(pic.data(), b"\x89PNG-first");
+
+        let second = dir.path().join("second.jpg");
+        std::fs::write(&second, b"\xff\xd8JPG-second").unwrap();
+        set_track_artwork(path_str, second.to_string_lossy().to_string()).unwrap();
+        let pic = read_embedded_picture(&path).expect("cover should still be embedded");
+        assert_eq!(pic.data(), b"\xff\xd8JPG-second");
+    }
+
+    #[test]
+    fn set_track_artwork_rejects_bad_input_and_leaves_the_audio_file_untouched() {
+        let dir = tempdir().unwrap();
+        let path = tagged_wav(dir.path());
+        let path_str = path.to_string_lossy().to_string();
+        let before = std::fs::read(&path).unwrap();
+
+        let gif = dir.path().join("cover.gif");
+        std::fs::write(&gif, b"GIF89a").unwrap();
+        let err = set_track_artwork(path_str.clone(), gif.to_string_lossy().to_string()).unwrap_err();
+        assert!(err.contains("Unsupported image format"), "{err}");
+
+        let missing_img = dir.path().join("nope.png");
+        let err = set_track_artwork(path_str.clone(), missing_img.to_string_lossy().to_string()).unwrap_err();
+        assert!(err.contains("File not found"), "{err}");
+
+        let png = dir.path().join("cover.png");
+        std::fs::write(&png, b"\x89PNG").unwrap();
+        let err = set_track_artwork(
+            dir.path().join("missing.wav").to_string_lossy().to_string(),
+            png.to_string_lossy().to_string(),
+        )
+        .unwrap_err();
+        assert!(err.contains("File not found"), "{err}");
+
+        assert_eq!(std::fs::read(&path).unwrap(), before);
+    }
+
+    #[test]
+    fn set_track_artwork_refuses_a_file_with_no_tags() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("bare.wav");
+        write_minimal_wav(&path, 44100);
+        let before = std::fs::read(&path).unwrap();
+        let png = dir.path().join("cover.png");
+        std::fs::write(&png, b"\x89PNG").unwrap();
+
+        let err = set_track_artwork(
+            path.to_string_lossy().to_string(),
+            png.to_string_lossy().to_string(),
+        )
+        .unwrap_err();
+        assert!(err.contains("No tags found"), "{err}");
+        assert_eq!(std::fs::read(&path).unwrap(), before);
+    }
+
     #[test]
     fn get_track_file_info_reports_missing_file() {
         let result = get_track_file_info("/nonexistent/voynix/test/silence.wav".to_string());
