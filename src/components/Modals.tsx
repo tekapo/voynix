@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getVersion } from '@tauri-apps/api/app';
 import { openUrl } from '@tauri-apps/plugin-opener';
@@ -299,6 +299,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         if (isOpen && initialTab) setActiveTab(initialTab);
     }, [isOpen, initialTab]);
 
+    const bodyRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        // A new tab starts at the top instead of inheriting the previous tab's scroll.
+        if (bodyRef.current) bodyRef.current.scrollTop = 0;
+    }, [activeTab]);
+
     const dialogRef = useDialogFocus(isOpen);
     if (!isOpen) return null;
 
@@ -316,13 +322,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="modal-content settings-modal" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={e => e.stopPropagation()}>
                 <h3 id="settings-title">{t('settings.title')}</h3>
 
-                <div className="settings-tabs" role="tablist">
+                <div className="settings-layout">
+                <div
+                    className="settings-tabs"
+                    role="tablist"
+                    aria-orientation="vertical"
+                    onKeyDown={e => {
+                        const dir = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
+                        if (!dir) return;
+                        e.preventDefault();
+                        const i = tabs.findIndex(tb => tb.id === activeTab);
+                        const next = tabs[(i + dir + tabs.length) % tabs.length];
+                        setActiveTab(next.id);
+                        const buttons = e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+                        buttons[tabs.indexOf(next)]?.focus();
+                    }}
+                >
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
                             type="button"
                             role="tab"
                             aria-selected={activeTab === tab.id}
+                            tabIndex={activeTab === tab.id ? 0 : -1}
                             className={`settings-tab${activeTab === tab.id ? ' active' : ''}`}
                             onClick={() => setActiveTab(tab.id)}
                         >
@@ -330,6 +352,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         </button>
                     ))}
                 </div>
+
+                <div className="settings-body" role="tabpanel" ref={bodyRef}>
 
                 {activeTab === 'general' && <>
                 <div className="settings-section">
@@ -658,6 +682,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     )}
                 </div>
                 </>}
+                </div>
+                </div>
 
                 <div className="modal-actions">
                     <button type="button" className="modal-btn confirm" onClick={onClose}>{t('settings.close')}</button>

@@ -2513,8 +2513,87 @@ button {
 }
 
 /* Settings Modal */
+/* Fixed-size shell with a left tab column: title, tabs and Close never move
+   when switching tabs; only the right-hand body scrolls. */
 .settings-modal {
-  max-width: 560px;
+  width: min(720px, 92vw);
+  max-width: 720px;
+  height: min(600px, calc(100dvh - 2rem));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.settings-modal > h3,
+.settings-modal > .modal-actions {
+  flex-shrink: 0;
+}
+
+.settings-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 1rem;
+}
+
+.settings-modal .settings-tabs {
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 150px;
+  gap: 0.15rem;
+  margin-bottom: 0;
+  padding-right: 0.75rem;
+  border-bottom: none;
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+
+.settings-modal .settings-tab {
+  text-align: left;
+  border-bottom: none;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+}
+
+.settings-modal .settings-tab.active {
+  background: var(--fill-2);
+}
+
+.settings-body {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 640px) {
+  .settings-layout {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .settings-modal .settings-tabs {
+    flex-direction: row;
+    width: auto;
+    padding-right: 0;
+    margin-bottom: 1rem;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .settings-modal .settings-tab {
+    border-radius: 0;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+
+  .settings-modal .settings-tab.active {
+    background: transparent;
+    border-bottom-color: var(--accent-text);
+  }
 }
 
 /* "Get Info…" dialogs (TrackInfoModal, AlbumInfoModal) — shared shell: fixed
