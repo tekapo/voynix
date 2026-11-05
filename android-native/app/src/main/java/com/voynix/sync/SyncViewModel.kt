@@ -14,6 +14,7 @@ import com.voynix.logic.SyncProgress
 import com.voynix.logic.SyncSummary
 import com.voynix.logic.checkPeerConnection
 import com.voynix.logic.hostOfUrl
+import com.voynix.logic.subnetCandidates
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -133,6 +134,7 @@ class SyncViewModel(private val context: Context, private val db: VoynixDatabase
                 peer = currentPeer,
                 probe = { url, token, pin -> api.ping(url, token, pin) },
                 discover = { nsd.discover() },
+                scan = { port -> subnetCandidates(LocalSubnets.ipv4Addresses(), port) },
                 onPeerMoved = { moved -> peerStore.save(moved.url, moved.token, moved.pin.orEmpty()) },
             )
             _peer.value = peerStore.get()
@@ -315,6 +317,7 @@ class SyncViewModel(private val context: Context, private val db: VoynixDatabase
                 peer = currentPeer,
                 probe = { url, token, pin -> api.ping(url, token, pin) },
                 discover = { nsd.discover() },
+                scan = { port -> subnetCandidates(LocalSubnets.ipv4Addresses(), port) },
                 runSync = { peer, onProgress -> engine.runSync(peer, onProgress) },
                 onPeerMoved = { moved -> peerStore.save(moved.url, moved.token, moved.pin.orEmpty()) },
             )) {

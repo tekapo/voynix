@@ -3,6 +3,7 @@ package com.voynix.sync
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import android.net.wifi.WifiManager
 import android.util.Log
 import com.voynix.logic.DiscoveredPeer
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -24,6 +25,8 @@ private const val TAG = "NsdDiscovery"
 @Suppress("DEPRECATION") // minSdk 26 needs the pre-API-34 resolveService/host overloads.
 class NsdDiscovery(context: Context) {
     private val nsdManager = context.applicationContext.getSystemService(Context.NSD_SERVICE) as NsdManager
+
+    private val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
 
     suspend fun discover(timeoutMs: Long = 3000): List<DiscoveredPeer> {
         val found = ConcurrentHashMap<String, DiscoveredPeer>()
@@ -78,6 +81,9 @@ class NsdDiscovery(context: Context) {
             override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {}
         }
 
+        // Some devices drop incoming multicast on Wi-Fi to save power unless a lock is held,
+        // which silently breaks mDNS. Hold one only while browsing.
+        val multicastLock = runCatching { wifiManager?.createMulticastLock("voynix-nsd")?.apply { setReferenceCounted(false); acquire() } }.getOrNull()
         try {
             startDiscovery(discoveryListener)
             withTimeoutOrNull(timeoutMs) {
@@ -87,6 +93,7 @@ class NsdDiscovery(context: Context) {
             }
         } finally {
             runCatching { nsdManager.stopServiceDiscovery(discoveryListener) }
+            runCatching { multicastLock?.takeIf { it.isHeld }?.release() }
         }
 
         return found.values.sortedBy { it.url }
