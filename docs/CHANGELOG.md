@@ -13,6 +13,10 @@ android-native/app/build.gradle.kts in one go.
 ## 0.32.0 — 2026-11-05
 - Settings > About now shows the library totals (tracks, artists, albums), unaffected by search or the current view.
 
+## 0.31.0 — 2026-11-05
+- A track with no cover now shows its artist's image, then the artist's initial on a colored tile, instead of a music-note icon: Mac player bar, album grid and info dialogs, and Android track rows, mini player and Now Playing.
+- Notifications, Android Auto and the widget still show only the album's own art.
+
 ## 0.30.6 — 2026-11-05
 - Fixed a race where the "arm the view's first track" effect could replace a track the user had just asked to play while it was still loading, so playback never started.
 - Tests: raised the Vitest test timeout above the waitFor timeout so a stuck assertion reports its own error (this removes the flaky `App.stats.test.tsx` timeout).

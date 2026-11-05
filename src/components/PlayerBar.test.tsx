@@ -159,3 +159,15 @@ describe("PlayerBar now-playing info", () => {
         expect(screen.getByRole("slider", { name: "Seek" })).toBeEnabled();
     });
 });
+
+describe("PlayerBar cover", () => {
+    it("shows the artist's initial when the track has no cover", () => {
+        render(<PlayerBar {...base} currentTrack={{ ...music, artist: "ann" }} artworkUrl={null} />);
+        expect(screen.getByText("A")).toHaveClass("library-thumb-placeholder");
+    });
+
+    it("shows the cover image when there is one", () => {
+        render(<PlayerBar {...base} currentTrack={music} artworkUrl="data:cover" />);
+        expect(screen.getByAltText("Album Art")).toHaveAttribute("src", "data:cover");
+    });
+});

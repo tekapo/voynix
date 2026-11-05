@@ -5,29 +5,7 @@ import { albumOf } from '../albumName';
 import { UNKNOWN_ARTIST } from '../names';
 import { useAlbumThumb } from '../albumArt';
 import { useArtistThumb } from '../artistArt';
-
-/** Deterministic background hue for a name's initial-letter placeholder, so
- *  the same artist/album always gets the same color across views. */
-const placeholderHue = (name: string): number => {
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-    return hash % 360;
-};
-
-const initialOf = (name: string): string => name.trim().charAt(0).toUpperCase() || '?';
-
-/** A colored initial-letter placeholder for a missing artist/album image,
- *  sized/shaped by the same `className` the image itself would use so it
- *  lines up in every context (grid cards, LibraryColumns' left-pane rows,
- *  section/columns headers). */
-const ThumbPlaceholder: React.FC<{ name: string; className: string }> = ({ name, className }) => (
-    <span
-        className={`${className} library-thumb-placeholder`}
-        style={{ background: `hsl(${placeholderHue(name)}, 38%, 28%)` }}
-    >
-        {initialOf(name)}
-    </span>
-);
+import { ThumbPlaceholder } from './CoverArt';
 
 interface LibraryViewProps {
     viewMode: ViewMode;
@@ -46,8 +24,8 @@ interface LibraryViewProps {
 
 const THUMB_SIZE = 256;
 
-/** One album card's artwork: a cover thumbnail if one resolves, else an
- *  initial-letter placeholder (of the album name) — never a loading spinner,
+/** One album card's artwork: a cover thumbnail if one resolves, else the
+ *  artist's image, else an initial-letter placeholder (of the album name) — never a loading spinner,
  *  since a cache miss (no embedded/override art) looks identical to "still
  *  loading" and a flash is not worth the complexity. Also used (at smaller
  *  sizes, via `className`) by LibraryColumns' left-pane rows and album
@@ -55,8 +33,11 @@ const THUMB_SIZE = 256;
 export const AlbumThumb: React.FC<{ track: Track; size?: number; className?: string; iconSize?: number }> =
     ({ track, size = THUMB_SIZE, className = 'library-list-art' }) => {
         const art = useAlbumThumb(track, size);
-        return art
-            ? <img className={className} src={art} alt="" loading="lazy" />
+        // No cover of its own: borrow the artist's image, else the album's initial.
+        const artistArt = useArtistThumb(art ? null : track.artist ?? null);
+        const src = art || artistArt;
+        return src
+            ? <img className={className} src={src} alt="" loading="lazy" />
             : <ThumbPlaceholder name={albumOf(track)} className={className} />;
     };
 

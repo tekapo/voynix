@@ -6,6 +6,7 @@ import { formatSpeed } from '../playback';
 import { PlaybackClock } from '../playbackClock';
 import { RepeatMode } from '../queue';
 import { Track } from '../types';
+import { TrackCover } from './CoverArt';
 import { Icon } from './Icon';
 
 interface PlayerBarProps {
@@ -179,11 +180,12 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
                     {currentTrack ? (
                         <>
                             <div className="player-art-placeholder">
-                                {artworkUrl ? (
-                                    <img src={artworkUrl} alt={t('player.albumArtAlt')} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
-                                ) : (
-                                    <Icon name="music" size={22} />
-                                )}
+                                <TrackCover
+                                    track={currentTrack}
+                                    artUrl={artworkUrl}
+                                    alt={t('player.albumArtAlt')}
+                                    className="player-art"
+                                />
                             </div>
                             <div className="player-text">
                                 <div className="player-track-title">{currentTrack.title}</div>
