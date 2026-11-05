@@ -271,6 +271,23 @@ class SyncApiTest {
     }
 
     @Test
+    fun `downloadFile refuses a track key that would write outside the sync folder`() = runTest {
+        val dir = File(tmpDir, "synced")
+        val outside = File(tmpDir, "outside").apply { mkdirs() }
+        for (key in listOf("../../x", "../outside/", "a/b", "..", "k.ey", "")) {
+            try {
+                api.downloadFile(dir, url(), "tok", pin, trackKey = key, fileName = "song.mp3", expectedHash = "")
+                fail("expected an IOException for track key '$key'")
+            } catch (e: java.io.IOException) {
+                // expected
+            }
+        }
+        assertEquals(0, server.requestCount)
+        assertTrue(outside.listFiles().orEmpty().isEmpty())
+        assertTrue(dir.listFiles().orEmpty().isEmpty())
+    }
+
+    @Test
     fun `downloadFile deletes the part file and throws on a hash mismatch`() = runTest {
         server.enqueue(MockResponse().setResponseCode(200).setBody("corrupted"))
         try {
