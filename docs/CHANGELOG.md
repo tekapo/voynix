@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.30.1 — 2026-11-05
+- Settings: action buttons (Check for Updates, Add Folder, Rescan, backup, etc.) now have a visible fill and border instead of looking like plain text until hovered.
+- Japanese: the Ko-fi link label is now "作者にコーヒーをおごる".
+
 ## 0.30.0 — 2026-11-04
 - Android sync: when the Mac moved and mDNS can't find it (e.g. the Mac joined the phone's hotspot on the road), "Sync now" and the connection check now probe the other hosts on the phone's own subnets. The pinned TLS key still decides who is the Mac, so the token never reaches other hosts. Background auto sync does not scan.
 - Android sync: mDNS discovery now holds a Wi-Fi multicast lock while browsing. Docs explain syncing over tethering on hotel Wi-Fi.

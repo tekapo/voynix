@@ -1970,6 +1970,20 @@ button {
   background: var(--line-soft);
 }
 
+.modal-btn.secondary {
+  background: var(--fill-2);
+  border: 1px solid var(--fill-3);
+  color: var(--text-1);
+}
+
+.modal-btn.secondary:hover {
+  background: var(--fill-4);
+}
+
+.modal-btn.secondary:disabled:hover {
+  background: var(--fill-2);
+}
+
 .modal-btn.confirm {
   background: var(--text-1);
   color: var(--on-text-1);
