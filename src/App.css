@@ -3350,3 +3350,14 @@ button {
   font: inherit;
   font-size: 0.85rem;
 }
+
+.settings-about-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.settings-about-actions .modal-btn {
+  width: 100%;
+}
