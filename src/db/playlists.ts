@@ -164,7 +164,7 @@ async function deleteOrphanedTracks(db: Awaited<ReturnType<typeof getDb>>) {
 // folder: a rescan's clearPlaylistTracks-then-re-add drops a since-deleted
 // file's playlist link but not its `tracks` row (so a scan_music_dir failure,
 // e.g. an unmounted cloud volume, can't wipe the library — see
-// missing_folder_error in lib.rs). Call this after a *successful* rescan to
+// missing_folder_error in scan.rs). Call this after a *successful* rescan to
 // prune the rows for files genuinely gone from that folder, without touching
 // orphans elsewhere (another folder, or a deleted playlist not yet swept).
 // substr(...) = $1 (not LIKE) so `%`/`_` in a real path can't be misread as

@@ -28,7 +28,7 @@ pub(crate) fn bearer_matches(header_value: Option<&str>, token: &str) -> bool {
 /// Folds a free-text field (artist/album/title, …) so cosmetic differences —
 /// case, leading/trailing space, doubled internal space — collapse to the
 /// same value before it's hashed into an identity or cache key. Shared by
-/// `compute_track_key` (cross-device track identity, lib.rs) and
+/// `compute_track_key` (cross-device track identity, identity.rs) and
 /// `metadata::cache_key` (local album-art/lyrics cache key) — these used to
 /// be two near-identical copies that quietly disagreed on internal
 /// whitespace.

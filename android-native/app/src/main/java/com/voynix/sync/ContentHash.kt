@@ -8,7 +8,7 @@ import java.security.MessageDigest
 
 /**
  * Cheap change-detector: file size + first 64KB + last 64KB, SHA-256 hex.
- * Must match `compute_content_hash` in src-tauri/src/lib.rs bit-for-bit —
+ * Must match `compute_content_hash` in src-tauri/src/identity.rs bit-for-bit —
  * this is how a downloaded file is verified against the manifest's
  * `content_hash` (see SyncApi.downloadFile).
  */
@@ -41,7 +41,7 @@ fun computeContentHash(file: File): String {
 }
 
 // U+001F INFORMATION SEPARATOR ONE — the exact delimiter metadata.rs's
-// cache_key() and lib.rs's compute_track_key() both hash with.
+// cache_key() and identity.rs's compute_track_key() both hash with.
 private const val UNIT_SEPARATOR = ""
 
 /**

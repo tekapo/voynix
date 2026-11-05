@@ -616,7 +616,7 @@ pub struct ThumbPrewarmItem {
 const PREWARM_SIZES: [u32; 2] = [256, 64];
 
 /// Shared cancel flag for an in-flight `prewarm_album_thumbs`, mirroring
-/// `ScanState` in lib.rs (a separate flag: prewarming runs after a scan
+/// `ScanState` in scan.rs (a separate flag: prewarming runs after a scan
 /// completes, not concurrently with one, but the two are otherwise unrelated
 /// long-running jobs).
 #[derive(Default)]
@@ -625,7 +625,7 @@ pub struct ThumbPrewarmState {
 }
 
 /// Per-item progress for a running prewarm, emitted as `thumb-progress` —
-/// same shape as lib.rs's `ScanProgress`/`scan-progress`.
+/// same shape as scan.rs's `ScanProgress`/`scan-progress`.
 #[derive(Debug, Clone, Serialize)]
 struct ThumbProgress {
     done: usize,
