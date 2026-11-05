@@ -334,6 +334,28 @@
     "setArtistImageFailed": "アーティスト画像の設定に失敗しました: {{error}}",
     "resetArtistImageFailed": "アーティスト画像のリセットに失敗しました: {{error}}"
   },
+  "appMenu": {
+    "about": "{{name}}について",
+    "services": "サービス",
+    "hide": "{{name}}を隠す",
+    "hideOthers": "ほかを隠す",
+    "quit": "{{name}}を終了",
+    "file": "ファイル",
+    "closeWindow": "ウインドウを閉じる",
+    "edit": "編集",
+    "undo": "取り消す",
+    "redo": "やり直す",
+    "cut": "切り取り",
+    "copy": "コピー",
+    "paste": "ペースト",
+    "selectAll": "すべてを選択",
+    "view": "表示",
+    "fullscreen": "フルスクリーンにする",
+    "window": "ウインドウ",
+    "minimize": "しまう",
+    "maximize": "拡大/縮小",
+    "help": "ヘルプ"
+  },
   "dock": {
     "playPause": "再生/一時停止",
     "next": "次へ",

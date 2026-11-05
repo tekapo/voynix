@@ -338,6 +338,28 @@
     "setArtistImageFailed": "Failed to set artist image: {{error}}",
     "resetArtistImageFailed": "Failed to reset artist image: {{error}}"
   },
+  "appMenu": {
+    "about": "About {{name}}",
+    "services": "Services",
+    "hide": "Hide {{name}}",
+    "hideOthers": "Hide Others",
+    "quit": "Quit {{name}}",
+    "file": "File",
+    "closeWindow": "Close Window",
+    "edit": "Edit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "selectAll": "Select All",
+    "view": "View",
+    "fullscreen": "Enter Full Screen",
+    "window": "Window",
+    "minimize": "Minimize",
+    "maximize": "Zoom",
+    "help": "Help"
+  },
   "dock": {
     "playPause": "Play/Pause",
     "next": "Next",
