@@ -1,11 +1,15 @@
 package com.voynix.playback
 
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import com.voynix.data.db.TrackEntity
 import com.voynix.logic.RepeatMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -140,5 +144,77 @@ class QueuePlayerTest {
 
         verify(listener).onTimelineChanged(org.mockito.kotlin.any(), org.mockito.kotlin.eq(Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED))
         verify(listener).onEvents(org.mockito.kotlin.eq(queuePlayer), org.mockito.kotlin.any())
+    }
+
+    // ---- Listeners hear the queue timeline, not ExoPlayer's two-item one ----
+    // Regression: media3's PlayerInfo requires the current index to be inside the
+    // timeline it is paired with. ExoPlayer's own onTimelineChanged carried its
+    // 1–2 window timeline while this class reported an index into the whole
+    // queue, so from the third track on the session threw IllegalStateException.
+
+    private fun registered(listener: Player.Listener): Player.Listener {
+        queuePlayer.addListener(listener)
+        val captor = argumentCaptor<Player.Listener>()
+        verify(player).addListener(captor.capture())
+        return captor.firstValue // what ExoPlayer would call
+    }
+
+    @Test
+    fun `a base timeline change reaches listeners as the queue timeline`() {
+        playQueue(pos = 2)
+        val delegate: Player.Listener = mock()
+        val fromExoPlayer = registered(delegate)
+
+        fromExoPlayer.onTimelineChanged(Timeline.EMPTY, Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED)
+
+        val captor = argumentCaptor<Timeline>()
+        verify(delegate).onTimelineChanged(captor.capture(), org.mockito.kotlin.eq(Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED))
+        assertSame(queuePlayer.currentTimeline, captor.firstValue)
+        assertEquals(3, captor.firstValue.windowCount)
+    }
+
+    @Test
+    fun `the delivered timeline always contains the reported current index`() {
+        for (pos in 0..2) {
+            val fresh = QueuePlayer(player, controller)
+            playQueue(pos = pos)
+            val delegate: Player.Listener = mock()
+            fresh.addListener(delegate)
+            val captor = argumentCaptor<Player.Listener>()
+            verify(player, org.mockito.kotlin.atLeastOnce()).addListener(captor.capture())
+            captor.lastValue.onTimelineChanged(Timeline.EMPTY, Player.TIMELINE_CHANGE_REASON_SOURCE_UPDATE)
+
+            val tl = argumentCaptor<Timeline>()
+            verify(delegate).onTimelineChanged(tl.capture(), org.mockito.kotlin.any())
+            assertTrue("index ${fresh.currentMediaItemIndex} not in ${tl.firstValue.windowCount} windows",
+                fresh.currentMediaItemIndex < tl.firstValue.windowCount)
+        }
+    }
+
+    @Test
+    fun `other callbacks pass through unchanged`() {
+        playQueue(pos = 1)
+        val delegate: Player.Listener = mock()
+        val fromExoPlayer = registered(delegate)
+
+        fromExoPlayer.onPlaybackStateChanged(Player.STATE_READY)
+        fromExoPlayer.onIsPlayingChanged(true)
+        fromExoPlayer.onMediaItemTransition(null, Player.MEDIA_ITEM_TRANSITION_REASON_AUTO)
+
+        verify(delegate).onPlaybackStateChanged(Player.STATE_READY)
+        verify(delegate).onIsPlayingChanged(true)
+        verify(delegate).onMediaItemTransition(null, Player.MEDIA_ITEM_TRANSITION_REASON_AUTO)
+    }
+
+    @Test
+    fun `removing a listener removes what was registered on the base player`() {
+        val delegate: Player.Listener = mock()
+        val registeredOnBase = registered(delegate)
+
+        queuePlayer.removeListener(delegate)
+
+        val removed = argumentCaptor<Player.Listener>()
+        verify(player).removeListener(removed.capture())
+        assertEquals(registeredOnBase, removed.firstValue)
     }
 }
