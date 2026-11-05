@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resetAppTestMocks } from "./test/renderApp";
 import { seedLibrary } from "./test/seedLibrary";
 import { FakeEngine, installFakeEngine } from "./test/fakeEngine";
-import { _resetInitForTests, getTrackPlayState, initDb } from "./db";
+import { _resetInitForTests, getTrackPlayState, initDb, loadLastPlayback, saveLastPlayback } from "./db";
 
 import App from "./App";
 
@@ -520,5 +520,212 @@ describe("playback clock render isolation", () => {
 
         await waitFor(() => expect(screen.getByText("0:08")).toBeInTheDocument());
         expect(sidebarRenders.count).toBe(0);
+    });
+});
+
+// Pinning tests written before deciding whether to extract the playback core
+// (the load effect, handleTimeUpdate, the restore/arm effects) out of App.tsx.
+// They fix behaviour nothing else exercised: cold-start restore, auto-skipping
+// unplayable tracks, and the persisted playback cursor.
+
+function playerBar(): HTMLElement {
+    return document.querySelector(".player-bar") as HTMLElement;
+}
+
+describe("cold-start restore", () => {
+    it("arms the saved track without playing it, then ▶ resumes from the saved position", async () => {
+        const lib = await seedLibrary();
+        await saveLastPlayback({
+            trackId: "t-a-2", position: 75, viewMode: "playlist", playlistId: lib.rockPlaylistId, viewFilter: null,
+        });
+        render(<App />);
+
+        // Armed: the saved track (not row 0) is in the player bar, nothing is loaded.
+        await waitFor(() => expect(within(playerBar()).getByText("Borealis")).toBeInTheDocument());
+        expect(playPauseButton()).toHaveAttribute("aria-label", "Play");
+        expect(engine.loadCalls).toHaveLength(0);
+
+        fireEvent.click(playPauseButton());
+        await waitFor(() => expect(playPauseButton()).toHaveAttribute("aria-label", "Pause"));
+        expect(engine.loadCalls.map(c => c.track.id)).toEqual(["t-a-2"]);
+        expect(engine.currentTime).toBe(75);
+    });
+
+    it("does not seek when the saved position is under a second", async () => {
+        const lib = await seedLibrary();
+        await saveLastPlayback({
+            trackId: "t-a-2", position: 0, viewMode: "playlist", playlistId: lib.rockPlaylistId, viewFilter: null,
+        });
+        render(<App />);
+        await waitFor(() => expect(within(playerBar()).getByText("Borealis")).toBeInTheDocument());
+
+        fireEvent.click(playPauseButton());
+        await waitFor(() => expect(playPauseButton()).toHaveAttribute("aria-label", "Pause"));
+        expect(engine.currentTime).toBe(0);
+    });
+
+    it("falls back to the view's first track when the saved track is gone", async () => {
+        const lib = await seedLibrary();
+        await saveLastPlayback({
+            trackId: "t-deleted", position: 75, viewMode: "playlist", playlistId: lib.rockPlaylistId, viewFilter: null,
+        });
+        render(<App />);
+
+        await waitFor(() => expect(within(playerBar()).getByText("Aurora")).toBeInTheDocument());
+        expect(playPauseButton()).toHaveAttribute("aria-label", "Play");
+        expect(engine.loadCalls).toHaveLength(0);
+    });
+
+    it("reopens the saved playlist view", async () => {
+        const lib = await seedLibrary();
+        await saveLastPlayback({
+            trackId: "t-pod-2", position: 10, viewMode: "playlist", playlistId: lib.podcastPlaylistId, viewFilter: null,
+        });
+        render(<App />);
+
+        await waitFor(() => expect(within(playerBar()).getByText("Episode 2")).toBeInTheDocument());
+        expect(within(trackList()).getByText("Episode 1")).toBeInTheDocument();
+        expect(within(trackList()).queryByText("Aurora")).not.toBeInTheDocument();
+    });
+});
+
+describe("unplayable tracks are skipped", () => {
+    /** The view's first track is armed into the player bar a tick after the list
+     *  renders; double-clicking before that races the arm effect (two loads of
+     *  the same track), which a human can't do. */
+    const waitForArmed = (title: string) =>
+        waitFor(() => expect(within(playerBar()).getByText(title)).toBeInTheDocument());
+
+    /** Makes engine.load fail for the given track ids (all of them if omitted). */
+    function failLoads(ids?: string[]): string[] {
+        const attempts: string[] = [];
+        const realLoad = engine.load.bind(engine);
+        engine.load = async (track: Parameters<FakeEngine["load"]>[0], opts: Parameters<FakeEngine["load"]>[1]) => {
+            attempts.push(track.id);
+            if (!ids || ids.includes(track.id)) throw new Error("decode failed");
+            return realLoad(track, opts);
+        };
+        return attempts;
+    }
+
+    it("moves on to the next track when one fails to load, and keeps playing", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+        await waitForArmed("Aurora");
+        const attempts = failLoads(["t-a-fav"]);
+
+        fireEvent.doubleClick(within(trackList()).getByText("Aurora").closest("li") as HTMLElement);
+
+        await waitFor(() => expect(playPauseButton()).toHaveAttribute("aria-label", "Pause"));
+        expect(attempts).toEqual(["t-a-fav", "t-a-2"]);
+        expect(within(playerBar()).getByText("Borealis")).toBeInTheDocument();
+    });
+
+    it("gives up after five consecutive failures instead of cycling forever", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+        await waitForArmed("Aurora");
+        const attempts = failLoads(); // every track is broken
+        fireEvent.click(screen.getByRole("button", { name: "Repeat" })); // off -> all, so skipping never runs out of queue
+
+        fireEvent.doubleClick(within(trackList()).getByText("Aurora").closest("li") as HTMLElement);
+
+        await waitFor(() => expect(attempts).toHaveLength(5));
+        // Nothing more is tried once it has given up.
+        await new Promise(r => setTimeout(r, 100));
+        expect(attempts).toHaveLength(5);
+        expect(playPauseButton()).toHaveAttribute("aria-label", "Play");
+        expect(screen.getAllByText(/Playback prep error: decode failed/).length).toBeGreaterThan(0);
+    });
+
+    it("stops at the end of the queue when the last track fails (repeat off)", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+        await waitForArmed("Aurora");
+        const attempts = failLoads();
+
+        fireEvent.doubleClick(within(trackList()).getByText("Aurora").closest("li") as HTMLElement);
+
+        await waitFor(() => expect(attempts).toEqual(["t-a-fav", "t-a-2", "t-b-1"]));
+        await new Promise(r => setTimeout(r, 100));
+        expect(attempts).toHaveLength(3);
+        expect(playPauseButton()).toHaveAttribute("aria-label", "Play");
+    });
+
+    it("a successful load resets the failure count", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+        await waitForArmed("Aurora");
+        // Aurora fails (1 skip), Borealis plays; later Cascade and Aurora fail again.
+        // If the count weren't reset by Borealis, the run below would hit the cap early.
+        const attempts = failLoads(["t-a-fav"]);
+        fireEvent.doubleClick(within(trackList()).getByText("Aurora").closest("li") as HTMLElement);
+        await waitFor(() => expect(playPauseButton()).toHaveAttribute("aria-label", "Pause"));
+        expect(attempts).toEqual(["t-a-fav", "t-a-2"]);
+
+        // Four more failures in a row still don't exhaust the cap of five
+        // (fresh streak), so the fifth track attempt is still made.
+        const more = failLoads();
+        fireEvent.click(screen.getByRole("button", { name: "Repeat" })); // off -> all
+        fireEvent.click(screen.getByRole("button", { name: "Next" }));
+        await waitFor(() => expect(more).toHaveLength(5));
+    });
+});
+
+describe("playback cursor persistence", () => {
+    it("pausing saves the exact position, track and view", async () => {
+        const lib = await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+        await waitFor(() => expect(within(playerBar()).getByText("Aurora")).toBeInTheDocument());
+        await playRow("Borealis");
+
+        engine.currentTime = 37.9;
+        engine.pause();
+
+        await waitFor(async () => {
+            expect(await loadLastPlayback()).toEqual({
+                trackId: "t-a-2", position: 37, viewMode: "playlist", playlistId: lib.rockPlaylistId, viewFilter: null,
+            });
+        });
+    });
+
+    it("leaving the page flushes the cursor even while still playing", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+        await waitFor(() => expect(within(playerBar()).getByText("Aurora")).toBeInTheDocument());
+        await playRow("Aurora");
+
+        engine.currentTime = 12;
+        window.dispatchEvent(new Event("pagehide"));
+
+        await waitFor(async () => expect((await loadLastPlayback())?.position).toBe(12));
+    });
+
+    it("while playing it saves at most about every five seconds", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+        await waitFor(() => expect(within(playerBar()).getByText("Aurora")).toBeInTheDocument());
+        await playRow("Aurora");
+
+        engine.fireTick(3, 180); // < 5s since the baseline: not saved
+        await new Promise(r => setTimeout(r, 50));
+        expect(await loadLastPlayback()).toBeNull();
+
+        engine.fireTick(6, 180); // >= 5s: saved
+        await waitFor(async () => expect((await loadLastPlayback())?.position).toBe(6));
+
+        engine.fireTick(8, 180); // only 2s after the last save: skipped
+        await new Promise(r => setTimeout(r, 50));
+        expect((await loadLastPlayback())?.position).toBe(6);
+
+        engine.fireTick(12, 180); // 6s after the last save: saved
+        await waitFor(async () => expect((await loadLastPlayback())?.position).toBe(12));
     });
 });
