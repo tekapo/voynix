@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { activatable } from '../lib/a11y';
 import { Track, ViewMode } from '../types';
 import { albumOf } from '../albumName';
 import { UNKNOWN_ARTIST } from '../names';
@@ -61,7 +62,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ viewMode, items, onIte
                     <li
                         key={item}
                         className="library-list-item"
-                        onClick={() => onItemClick(item)}
+                        {...activatable(() => onItemClick(item))}
                         onContextMenu={onItemContextMenu ? (e) => onItemContextMenu(e, item, track) : undefined}
                     >
                         {viewMode === 'artists'

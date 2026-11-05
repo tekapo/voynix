@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Portal } from './Modals';
+import { useDialogFocus } from '../hooks/useDialogFocus';
 import { useAlbumThumb } from '../albumArt';
 import { TrackCover } from './CoverArt';
 import { Track } from '../types';
@@ -178,17 +179,18 @@ export const TrackInfoModal: React.FC<TrackInfoModalProps> = ({ track, onClose, 
         }).catch(() => {});
     };
 
+    const dialogRef = useDialogFocus(!!track);
     if (!track) return null;
 
     return (
         <Portal><div className="modal-overlay" onClick={requestClose}>
-            <div className="modal-content info-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-content info-modal" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="track-info-title" onClick={e => e.stopPropagation()}>
                 <div className="info-modal-header">
                     {track
                         ? <TrackCover track={track} artUrl={art} className="info-modal-art" />
                         : <div className="info-modal-art info-modal-art-placeholder"><Icon name="music" size={28} /></div>}
                     <div className="info-modal-header-text">
-                        <div className="info-modal-title" title={title || track.file_name}>{title || track.file_name}</div>
+                        <div className="info-modal-title" id="track-info-title" title={title || track.file_name}>{title || track.file_name}</div>
                         <div className="info-modal-subtitle">
                             {[artist, album].filter(Boolean).join(' — ') || track.file_name}
                         </div>

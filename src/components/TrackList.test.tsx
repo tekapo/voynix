@@ -1,3 +1,4 @@
+import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TrackList } from "./TrackList";
@@ -169,7 +170,7 @@ describe("TrackList drag-and-drop reorder", () => {
     it("dragging row 0 onto row 2 calls onReorder(0, 2) with the rendered indices", () => {
         const onReorder = vi.fn();
         render(<TrackList {...reorderBase} onReorder={onReorder} />);
-        const rows = () => screen.getAllByRole("listitem");
+        const rows = () => screen.getAllByRole("option");
 
         const dt = fakeDataTransfer();
         fireEvent.dragStart(rows()[0], { dataTransfer: dt });
@@ -183,7 +184,7 @@ describe("TrackList drag-and-drop reorder", () => {
     it("dragging a row onto itself does not call onReorder", () => {
         const onReorder = vi.fn();
         render(<TrackList {...reorderBase} onReorder={onReorder} />);
-        const rows = () => screen.getAllByRole("listitem");
+        const rows = () => screen.getAllByRole("option");
 
         const dt = fakeDataTransfer();
         fireEvent.dragStart(rows()[1], { dataTransfer: dt });
@@ -195,7 +196,7 @@ describe("TrackList drag-and-drop reorder", () => {
 
     it("marks the dragged row is-dragging and the hovered row drop-target", () => {
         render(<TrackList {...reorderBase} />);
-        const rows = () => screen.getAllByRole("listitem");
+        const rows = () => screen.getAllByRole("option");
 
         fireEvent.dragStart(rows()[0], { dataTransfer: fakeDataTransfer() });
         expect(rows()[0]).toHaveClass("is-dragging");
@@ -551,5 +552,89 @@ describe("TrackList column resizing", () => {
     it("leaves the default proportions alone when nothing is customised", () => {
         const { container } = render(<TrackList {...base} columnWidths={{}} onColumnWidthsChange={noop} />);
         expect((container.firstChild as HTMLElement).getAttribute("style")).toBeNull();
+    });
+});
+
+describe("TrackList keyboard access", () => {
+    const tracks: Track[] = ["a", "b", "c"].map(id => ({
+        ...track, id, title: `Song ${id}`, file_path: `/m/${id}.flac`, file_name: `${id}.flac`,
+    }));
+    const setup = (props: Partial<React.ComponentProps<typeof TrackList>> = {}) => {
+        const onTrackActivate = vi.fn();
+        const onContextMenu = vi.fn();
+        render(<TrackList {...base} tracks={tracks} onTrackActivate={onTrackActivate} onContextMenu={onContextMenu} {...props} />);
+        const list = screen.getByRole("listbox");
+        return { list, onTrackActivate, onContextMenu };
+    };
+
+    it("is a focusable listbox of options", () => {
+        const { list } = setup();
+        expect(list).toHaveAttribute("tabindex", "0");
+        expect(screen.getAllByRole("option")).toHaveLength(3);
+    });
+
+    it("puts the cursor on the first row when focused", () => {
+        const { list } = setup();
+        fireEvent.focus(list);
+        expect(list).toHaveAttribute("aria-activedescendant", "track-row-a");
+    });
+
+    it("moves the cursor with the arrow keys and stops at the ends", () => {
+        const { list } = setup();
+        fireEvent.focus(list);
+        fireEvent.keyDown(list, { key: "ArrowDown" });
+        expect(list).toHaveAttribute("aria-activedescendant", "track-row-b");
+        fireEvent.keyDown(list, { key: "End" });
+        expect(list).toHaveAttribute("aria-activedescendant", "track-row-c");
+        fireEvent.keyDown(list, { key: "ArrowDown" });
+        expect(list).toHaveAttribute("aria-activedescendant", "track-row-c");
+        fireEvent.keyDown(list, { key: "Home" });
+        expect(list).toHaveAttribute("aria-activedescendant", "track-row-a");
+    });
+
+    it("plays the row under the cursor on Enter", () => {
+        const { list, onTrackActivate } = setup();
+        fireEvent.focus(list);
+        fireEvent.keyDown(list, { key: "ArrowDown" });
+        fireEvent.keyDown(list, { key: "Enter" });
+        expect(onTrackActivate).toHaveBeenCalledWith(expect.objectContaining({ id: "b" }));
+    });
+
+    it("opens the context menu for the cursor row on the Menu key and Shift+F10", () => {
+        const { list, onContextMenu } = setup();
+        fireEvent.focus(list);
+        fireEvent.keyDown(list, { key: "ContextMenu" });
+        fireEvent.keyDown(list, { key: "F10" }); // plain F10 is not a menu request
+        expect(onContextMenu).toHaveBeenCalledTimes(1);
+        fireEvent.keyDown(list, { key: "F10", shiftKey: true });
+        expect(onContextMenu).toHaveBeenCalledTimes(2);
+        expect(onContextMenu.mock.calls[0][1]).toEqual(expect.objectContaining({ id: "a" }));
+    });
+
+    it("extends a range with Shift+arrow when multi-select is enabled", () => {
+        const onSelectionContextMenu = vi.fn();
+        const { list } = setup({ onSelectionContextMenu });
+        expect(list).toHaveAttribute("aria-multiselectable", "true");
+        fireEvent.focus(list);
+        fireEvent.keyDown(list, { key: "ArrowDown", shiftKey: true });
+        fireEvent.keyDown(list, { key: "ArrowDown", shiftKey: true });
+        const selected = screen.getAllByRole("option").filter(o => o.getAttribute("aria-selected") === "true");
+        expect(selected).toHaveLength(3);
+    });
+
+    it("continues from a clicked row", () => {
+        const { list } = setup();
+        fireEvent.click(screen.getAllByRole("option")[1]);
+        expect(list).toHaveAttribute("aria-activedescendant", "track-row-b");
+        fireEvent.keyDown(list, { key: "ArrowDown" });
+        expect(list).toHaveAttribute("aria-activedescendant", "track-row-c");
+    });
+
+    it("does nothing on an empty list", () => {
+        render(<TrackList {...base} tracks={[]} />);
+        const list = screen.getByRole("listbox");
+        fireEvent.focus(list);
+        fireEvent.keyDown(list, { key: "ArrowDown" });
+        expect(list).not.toHaveAttribute("aria-activedescendant");
     });
 });

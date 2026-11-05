@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Portal } from './Modals';
+import { useDialogFocus } from '../hooks/useDialogFocus';
 import type { SelfUpdate } from '../hooks/useUpdater';
 
 /** "Voynix X.Y.Z is available" — install is always the user's call. */
@@ -8,7 +9,9 @@ export const UpdateModal: React.FC<{ updater: SelfUpdate }> = ({ updater }) => {
     const { t } = useTranslation();
     const { status } = updater;
     const downloading = status.kind === 'downloading';
-    if (!updater.dialogOpen || (status.kind !== 'available' && !downloading)) return null;
+    const open = updater.dialogOpen && (status.kind === 'available' || downloading);
+    const dialogRef = useDialogFocus(open);
+    if (!open) return null;
 
     const close = downloading ? () => {} : updater.dismiss;
     const percent = downloading && status.total ? Math.min(100, Math.floor((status.done / status.total) * 100)) : null;
@@ -16,6 +19,7 @@ export const UpdateModal: React.FC<{ updater: SelfUpdate }> = ({ updater }) => {
         <Portal>
             <div className="modal-overlay" onClick={close}>
                 <div
+                    ref={dialogRef}
                     className="modal-content update-modal"
                     role="dialog"
                     aria-modal="true"

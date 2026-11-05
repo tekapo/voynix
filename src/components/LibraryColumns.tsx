@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
+import { activatable } from '../lib/a11y';
 import { albumOf } from '../albumName';
 import { artistOf, artistLabel, UNKNOWN_ARTIST } from '../names';
 import { Track } from '../types';
@@ -121,7 +122,7 @@ const AlbumSection: React.FC<{
                         <li
                             key={track.id}
                             className={`album-track-row ${isPlaying ? 'active' : ''} ${isCued ? 'selected' : ''}`}
-                            onClick={() => onTrackClick(track)}
+                            {...activatable(() => onTrackClick(track), () => onTrackActivate(track))}
                             onDoubleClick={() => onTrackActivate(track)}
                             onContextMenu={(e) => onTrackContextMenu(e, track)}
                         >
@@ -193,7 +194,8 @@ export const LibraryColumns: React.FC<LibraryColumnsProps> = ({
                 data-index={items.indexOf(item)}
                 style={extra?.style}
                 className={`library-col-item ${selected === item ? 'active' : ''}`}
-                onClick={() => onSelect(item)}
+                {...activatable(() => onSelect(item))}
+                aria-current={selected === item ? 'true' : undefined}
                 onContextMenu={(e) => onItemContextMenu(e, item, track)}
             >
                 {viewMode === 'artists'

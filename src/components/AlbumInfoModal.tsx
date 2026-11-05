@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Portal } from './Modals';
+import { useDialogFocus } from '../hooks/useDialogFocus';
 import { useAlbumThumb } from '../albumArt';
 import { TrackCover } from './CoverArt';
 import { effectiveAlbum } from '../albumName';
@@ -105,6 +106,7 @@ export const AlbumInfoModal: React.FC<AlbumInfoModalProps> = ({ tracks, onClose,
 
     useModalKeys({ onEscape: requestClose, onSave: handleSave, canSave: dirty && !saving });
 
+    const dialogRef = useDialogFocus(tracks.length > 0);
     if (tracks.length === 0) return null;
 
     // The `album` field above is the raw, editable tag (blank when untagged,
@@ -115,13 +117,13 @@ export const AlbumInfoModal: React.FC<AlbumInfoModalProps> = ({ tracks, onClose,
 
     return (
         <Portal><div className="modal-overlay" onClick={requestClose}>
-            <div className="modal-content info-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-content info-modal" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="album-info-title" onClick={e => e.stopPropagation()}>
                 <div className="info-modal-header">
                     {first
                         ? <TrackCover track={first} artUrl={art} className="info-modal-art" />
                         : <div className="info-modal-art info-modal-art-placeholder"><Icon name="disc" size={28} /></div>}
                     <div className="info-modal-header-text">
-                        <div className="info-modal-title" title={album || albumFallback}>{album || albumFallback}</div>
+                        <div className="info-modal-title" id="album-info-title" title={album || albumFallback}>{album || albumFallback}</div>
                         <div className="info-modal-subtitle">{artistLabel({ artist }, t)}</div>
                     </div>
                 </div>

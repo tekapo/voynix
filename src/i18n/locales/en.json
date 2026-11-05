@@ -77,6 +77,7 @@
     "playCount": "play count",
     "time": "Time",
     "sortBy": "Sort by {{label}}",
+    "listLabel": "Tracks",
     "noTracksFound": "No tracks found.",
     "nowPlaying": "Now Playing",
     "addToFavorites": "Add to Favorites",

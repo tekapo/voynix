@@ -4,6 +4,7 @@ import { TrackKind } from '../types';
 import { KINDS } from './ContextMenu';
 import { Icon } from './Icon';
 import { useMenuPosition } from '../hooks/useMenuPosition';
+import { useMenuKeyboard } from '../hooks/useMenuKeyboard';
 import { MenuDivider } from './Menu';
 
 interface PlaylistContextMenuProps {
@@ -25,6 +26,7 @@ interface PlaylistContextMenuProps {
     onResetManualOrder: (id: string) => void;
     onEditSmartPlaylist: (id: string) => void;
     onDelete: (id: string) => void;
+    onClose: () => void;
 }
 
 export const PlaylistContextMenu: React.FC<PlaylistContextMenuProps> = ({
@@ -40,28 +42,31 @@ export const PlaylistContextMenu: React.FC<PlaylistContextMenuProps> = ({
     onSetKind,
     onResetManualOrder,
     onEditSmartPlaylist,
-    onDelete
+    onDelete,
+    onClose
 }) => {
     const { t } = useTranslation();
     const { ref, style } = useMenuPosition(visible, x, y);
+    const menuProps = useMenuKeyboard(ref, visible, onClose);
     if (!visible) return null;
 
     return (
         <div
             ref={ref}
-            className="context-menu"
+            className="context-menu" {...menuProps}
             style={style}
             onClick={(e) => e.stopPropagation()}
         >
             {isSmart && (
                 <>
-                    <div className="context-menu-item" onClick={() => playlistId && onEditSmartPlaylist(playlistId)}>
+                    <div role="menuitem" tabIndex={-1} className="context-menu-item" onClick={() => playlistId && onEditSmartPlaylist(playlistId)}>
                         {t('playlistMenu.editSmartPlaylist')}
                     </div>
                     <MenuDivider />
                 </>
             )}
             <div
+                role="menuitem" tabIndex={-1}
                 className="context-menu-item context-menu-item-check"
                 onClick={() => playlistId && onToggleSyncToDevice(playlistId)}
             >
@@ -75,6 +80,8 @@ export const PlaylistContextMenu: React.FC<PlaylistContextMenuProps> = ({
                     {KINDS.map(k => (
                         <div
                             key={k.value}
+                            role="menuitem"
+                            tabIndex={-1}
                             className="context-menu-item"
                             onClick={() => playlistId && onSetKind(playlistId, k.value)}
                         >
@@ -86,13 +93,13 @@ export const PlaylistContextMenu: React.FC<PlaylistContextMenuProps> = ({
             {!isSmart && manualOrder && (
                 <>
                     <MenuDivider />
-                    <div className="context-menu-item" onClick={() => playlistId && onResetManualOrder(playlistId)}>
+                    <div role="menuitem" tabIndex={-1} className="context-menu-item" onClick={() => playlistId && onResetManualOrder(playlistId)}>
                         {t('playlistMenu.resetManualOrder')}
                     </div>
                 </>
             )}
             <MenuDivider />
-            <div className="context-menu-item" onClick={() => playlistId && onDelete(playlistId)}>
+            <div role="menuitem" tabIndex={-1} className="context-menu-item" onClick={() => playlistId && onDelete(playlistId)}>
                 {t('playlistMenu.deletePlaylist')}
             </div>
         </div>

@@ -137,3 +137,29 @@ describe("Sidebar smart playlists", () => {
         expect(container.querySelectorAll(".playlist-list .playlist-item .playlist-icon svg")).toHaveLength(1);
     });
 });
+
+describe("Sidebar keyboard access", () => {
+    it("exposes library entries as buttons and marks the current view", () => {
+        render(<Sidebar {...base} viewMode="favorites" />);
+        expect(screen.getByRole("button", { name: "Favorites" })).toHaveAttribute("aria-current", "page");
+        expect(screen.getByRole("button", { name: "All Songs" })).not.toHaveAttribute("aria-current");
+    });
+
+    it("opens a library entry with Enter and Space", () => {
+        const onLibraryClick = vi.fn();
+        render(<Sidebar {...base} onLibraryClick={onLibraryClick} />);
+        const entry = screen.getByRole("button", { name: "Favorites" });
+        fireEvent.keyDown(entry, { key: "Enter" });
+        fireEvent.keyDown(entry, { key: " " });
+        expect(onLibraryClick).toHaveBeenCalledTimes(2);
+        expect(onLibraryClick).toHaveBeenCalledWith("favorites");
+    });
+
+    it("opens a playlist with the keyboard", () => {
+        const onPlaylistClick = vi.fn();
+        const pl = { id: "p1", name: "Road Trip", type: "custom" } as never;
+        render(<Sidebar {...base} playlists={[pl]} onPlaylistClick={onPlaylistClick} />);
+        fireEvent.keyDown(screen.getByRole("button", { name: /Road Trip/ }), { key: "Enter" });
+        expect(onPlaylistClick).toHaveBeenCalledWith("p1");
+    });
+});

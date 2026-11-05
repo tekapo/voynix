@@ -1888,9 +1888,12 @@ function App() {
           }
         />
 
+        {/* Always mounted so assistive tech announces the text when it appears
+            (a region inserted together with its content is often missed). */}
+        <div className="sr-only" role="status" aria-live="polite">{error}</div>
         {error && (
           <div className="error-banner">
-            <span className="error-banner-text">{error}</span>
+            <span className="error-banner-text" aria-hidden="true">{error}</span>
             <button
               type="button"
               className="error-banner-dismiss"
@@ -2037,6 +2040,7 @@ function App() {
           source={libraryContextMenu.source}
           syncToDevice={!!libraryContextMenu.source && librarySyncSources.includes(libraryContextMenu.source)}
           onToggleSyncToDevice={handleToggleLibrarySync}
+          onClose={closeLibraryMenu}
         />
 
         <PlaylistContextMenu
@@ -2053,6 +2057,7 @@ function App() {
           onResetManualOrder={handleResetManualOrder}
           onEditSmartPlaylist={openEditSmartModal}
           onDelete={deletePlaylist}
+          onClose={closePlaylistMenu}
         />
 
         <AlbumContextMenu
