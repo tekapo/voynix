@@ -36,17 +36,32 @@ fn load_or_generate_keypair(dir: &Path) -> Result<KeyPair, String> {
     }
     let kp = KeyPair::generate().map_err(|e| e.to_string())?;
     std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
-    std::fs::write(&path, kp.serialize_pem()).map_err(|e| e.to_string())?;
-    // Private key material: owner read/write only. `std::fs::write`'s default
-    // mode is whatever the umask leaves (typically 0644), which would let any
-    // other local user on the machine read it.
+    write_private_key_file(&path, &kp.serialize_pem())?;
+    Ok(kp)
+}
+
+/// Writes private key material readable by the owner only. A plain
+/// `std::fs::write` creates the file with whatever the umask leaves (typically
+/// 0644), so the key would be world-readable until a later chmod; creating it
+/// with mode 0600 means it never is. The chmod afterwards also tightens a file
+/// that already existed with a looser mode (create-with-mode doesn't change that).
+fn write_private_key_file(path: &Path, pem: &str) -> Result<(), String> {
+    use std::io::Write;
+    #[cfg(unix)]
+    let mut file = {
+        use std::os::unix::fs::OpenOptionsExt;
+        std::fs::OpenOptions::new().write(true).create(true).truncate(true).mode(0o600).open(path)
+    }
+    .map_err(|e| e.to_string())?;
+    #[cfg(not(unix))]
+    let mut file = std::fs::File::create(path).map_err(|e| e.to_string())?;
+    file.write_all(pem.as_bytes()).map_err(|e| e.to_string())?;
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))
-            .map_err(|e| e.to_string())?;
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600)).map_err(|e| e.to_string())?;
     }
-    Ok(kp)
+    Ok(())
 }
 
 fn spki_fingerprint(key_pair: &KeyPair) -> String {
@@ -194,6 +209,23 @@ fn stamp_of(cert: &Path, key: &Path) -> Stamp {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn a_generated_key_file_is_owner_only_even_over_a_looser_existing_file() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = tempfile::tempdir().unwrap();
+
+        load_or_generate_keypair(dir.path()).unwrap();
+        let mode = |p: &Path| std::fs::metadata(p).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode(&key_path(dir.path())), 0o600);
+
+        // A corrupt, world-readable key from an older run is regenerated and tightened.
+        std::fs::write(key_path(dir.path()), "not a key").unwrap();
+        std::fs::set_permissions(key_path(dir.path()), std::fs::Permissions::from_mode(0o644)).unwrap();
+        load_or_generate_keypair(dir.path()).unwrap();
+        assert_eq!(mode(&key_path(dir.path())), 0o600);
+    }
 
     fn write_self_signed(dir: &Path, name: &str) -> (PathBuf, PathBuf) {
         let key_pair = KeyPair::generate().unwrap();

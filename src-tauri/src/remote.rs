@@ -41,7 +41,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Manager};
 use tokio::net::TcpListener;
-use tokio::sync::{oneshot, watch};
+use tokio::sync::{oneshot, watch, Semaphore};
 use tower::ServiceExt;
 use tower_http::services::ServeFile;
 use unicode_normalization::UnicodeNormalization;
@@ -233,6 +233,10 @@ pub async fn start(
     let (closed_tx, closed_rx) = oneshot::channel::<()>();
     let router = build_router(state.clone());
     tokio::spawn(async move {
+        // Same caps as the LAN sync server: a host that opens connections and sits
+        // on them must not be able to use up every file descriptor.
+        let connections = Arc::new(Semaphore::new(crate::server::MAX_CONNECTIONS));
+        let per_ip: crate::server::IpCounts = Arc::default();
         loop {
             tokio::select! {
                 _ = rx.changed() => break,
@@ -245,11 +249,17 @@ pub async fn start(
                             continue;
                         }
                     };
+                    // Over a cap: drop the socket instead of queueing; a real client reconnects.
+                    let Some(ip_slot) = crate::server::admit_ip(&per_ip, addr.ip()) else { continue };
+                    let Ok(permit) = connections.clone().try_acquire_owned() else { continue };
                     let acceptor = acceptor.current();
                     let router = router.clone().layer(Extension(Peer(addr.ip())));
                     let stop = rx.clone();
                     // One connection's handshake/serve failure must not stop the accept loop.
-                    tokio::spawn(serve_connection(stream, acceptor, router, stop));
+                    tokio::spawn(async move {
+                        let _held = (permit, ip_slot);
+                        serve_connection(stream, acceptor, router, stop).await;
+                    });
                 }
             }
         }
@@ -1004,6 +1014,38 @@ mod tests {
         tokio::time::sleep(Duration::from_millis(200)).await;
         let after = http.get(format!("https://127.0.0.1:{}{uri}", status.port)).send().await;
         assert!(after.is_err(), "a stopped server answers nothing, even on an already-open connection");
+    }
+
+    #[tokio::test]
+    async fn one_address_cannot_hold_more_than_its_share_of_connections() {
+        use tokio::io::AsyncReadExt;
+        let dir = tempfile::tempdir().unwrap();
+        let (c, k) = test_cert_files(dir.path());
+        let state = Arc::new(Mutex::new(RemoteServer::new()));
+        let status = start(state.clone(), 0, SECRET.into(), c, k, None).await.unwrap();
+        let addr = ("127.0.0.1", status.port);
+
+        // Idle connections (no TLS handshake) that fill this address's slots.
+        let mut held = Vec::new();
+        for _ in 0..crate::server::MAX_CONNECTIONS_PER_IP {
+            held.push(tokio::net::TcpStream::connect(addr).await.unwrap());
+        }
+        // One more connects at the TCP level but the server drops it at once (EOF/reset),
+        // instead of waiting out the TLS handshake timeout.
+        let mut extra = tokio::net::TcpStream::connect(addr).await.unwrap();
+        let mut buf = [0u8; 1];
+        let dropped = tokio::time::timeout(Duration::from_secs(3), extra.read(&mut buf)).await;
+        assert!(matches!(dropped, Ok(Ok(0)) | Ok(Err(_))), "the over-cap connection is closed promptly: {dropped:?}");
+
+        // Freeing a slot lets a new connection in again: it is held open, so reads time out.
+        held.pop();
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        let mut again = tokio::net::TcpStream::connect(addr).await.unwrap();
+        let waiting = tokio::time::timeout(Duration::from_millis(500), again.read(&mut buf)).await;
+        assert!(waiting.is_err(), "an admitted connection stays open until the handshake times out");
+
+        drop(held);
+        stop(state).await.unwrap();
     }
 
     fn test_cert_files(dir: &Path) -> (String, String) {

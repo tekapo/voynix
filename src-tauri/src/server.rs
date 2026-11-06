@@ -176,6 +176,19 @@ pub struct IncomingStats {
 }
 
 impl IncomingStats {
+    /// Whether every string a paired device sent is of a sane size. Real track keys
+    /// are 64-char hex and play states are `unplayed|in_progress|played`; capping
+    /// them keeps the 500k-entry inbox cap a real bound on memory, instead of
+    /// entries that could each hold up to the 2 MiB request body.
+    fn fields_within_limits(&self) -> bool {
+        self.events.iter().all(|e| e.track_key.len() <= MAX_TRACK_KEY_LEN)
+            && self.favorites.iter().all(|f| f.track_key.len() <= MAX_TRACK_KEY_LEN)
+            && self
+                .play_states
+                .iter()
+                .all(|p| p.track_key.len() <= MAX_TRACK_KEY_LEN && p.play_state.len() <= MAX_PLAY_STATE_LEN)
+    }
+
     /// Counts an empty push as 1, so a stream of them can't grow the inbox past its cap.
     fn entry_count(&self) -> usize {
         (self.events.len() + self.favorites.len() + self.play_states.len()).max(1)
@@ -662,21 +675,23 @@ fn shutdown_mdns_blocking(daemon: ServiceDaemon) {
 const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
 const HEADER_READ_TIMEOUT: Duration = Duration::from_secs(30);
 /// Concurrent connections the sync server serves; extra ones are dropped on accept.
-const MAX_CONNECTIONS: usize = 64;
+pub(crate) const MAX_CONNECTIONS: usize = 64;
 /// Per client address, so one device on the LAN can't use up all of `MAX_CONNECTIONS`.
 /// The Android client downloads four files at a time.
-const MAX_CONNECTIONS_PER_IP: usize = 16;
+pub(crate) const MAX_CONNECTIONS_PER_IP: usize = 16;
 /// Cap on queued stats entries (events + favorites + play states) awaiting the frontend.
 const MAX_INBOX_ENTRIES: usize = 500_000;
 const MAX_PEERS: usize = 32;
 const MAX_DEVICE_ID_LEN: usize = 128;
+const MAX_TRACK_KEY_LEN: usize = 128;
+const MAX_PLAY_STATE_LEN: usize = 32;
 /// How long an in-flight response (e.g. a file download) may finish after the server is stopped.
 const SHUTDOWN_GRACE: Duration = Duration::from_secs(5);
 
-type IpCounts = Arc<Mutex<HashMap<IpAddr, usize>>>;
+pub(crate) type IpCounts = Arc<Mutex<HashMap<IpAddr, usize>>>;
 
 /// Holds one of an address's `MAX_CONNECTIONS_PER_IP` slots until dropped.
-struct PerIpGuard {
+pub(crate) struct PerIpGuard {
     counts: IpCounts,
     ip: IpAddr,
 }
@@ -693,7 +708,7 @@ impl Drop for PerIpGuard {
     }
 }
 
-fn admit_ip(counts: &IpCounts, ip: IpAddr) -> Option<PerIpGuard> {
+pub(crate) fn admit_ip(counts: &IpCounts, ip: IpAddr) -> Option<PerIpGuard> {
     let mut map = counts.lock().unwrap();
     let n = map.entry(ip).or_insert(0);
     if *n >= MAX_CONNECTIONS_PER_IP {
@@ -872,6 +887,9 @@ async fn get_album_art(State(state): State<Shared>, AxumPath(key): AxumPath<Stri
 async fn post_stats(State(state): State<Shared>, Json(payload): Json<IncomingStats>) -> Response {
     if payload.device_id.len() > MAX_DEVICE_ID_LEN {
         return (StatusCode::BAD_REQUEST, "device_id too long").into_response();
+    }
+    if !payload.fields_within_limits() {
+        return (StatusCode::BAD_REQUEST, "track_key or play_state too long").into_response();
     }
     let mut s = state.lock().unwrap();
     // The phone keeps its un-acked events and resends them on a later sync, so
@@ -1249,6 +1267,32 @@ mod tests {
         let body = format!(r#"{{"device_id":"{}","events":[]}}"#, "x".repeat(MAX_DEVICE_ID_LEN + 1));
         assert_eq!(post_stats_body(app, body).await, StatusCode::BAD_REQUEST);
         assert!(state.lock().unwrap().inbox.is_empty());
+    }
+
+    #[tokio::test]
+    async fn stats_rejects_an_overlong_track_key_or_play_state() {
+        let state = serving("secret", sample_snapshot());
+        let long_key = "k".repeat(MAX_TRACK_KEY_LEN + 1);
+        let long_state = "s".repeat(MAX_PLAY_STATE_LEN + 1);
+        let bodies = [
+            format!(r#"{{"device_id":"d","events":[{{"track_key":"{long_key}","played_at":1}}]}}"#),
+            format!(r#"{{"device_id":"d","favorites":[{{"track_key":"{long_key}","favorite":1,"updated_at":1}}]}}"#),
+            format!(r#"{{"device_id":"d","play_states":[{{"track_key":"k","play_state":"{long_state}","resume_position":0,"updated_at":1}}]}}"#),
+            format!(r#"{{"device_id":"d","play_states":[{{"track_key":"{long_key}","play_state":"played","resume_position":0,"updated_at":1}}]}}"#),
+        ];
+        for body in bodies {
+            assert_eq!(post_stats_body(build_router(state.clone()), body).await, StatusCode::BAD_REQUEST);
+        }
+        assert!(state.lock().unwrap().inbox.is_empty());
+
+        // Real-sized values are still accepted.
+        let ok = format!(
+            r#"{{"device_id":"d","events":[{{"track_key":"{}","played_at":1}}],"play_states":[{{"track_key":"{}","play_state":"in_progress","resume_position":1.5,"updated_at":2}}]}}"#,
+            "a".repeat(64),
+            "b".repeat(64)
+        );
+        assert_eq!(post_stats_body(build_router(state.clone()), ok).await, StatusCode::OK);
+        assert_eq!(state.lock().unwrap().inbox.len(), 1);
     }
 
     #[test]
