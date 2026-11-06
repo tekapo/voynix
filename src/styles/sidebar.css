@@ -218,6 +218,38 @@
   color: var(--text-2);
 }
 
+.sidebar-update-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.sidebar-update-open {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sidebar-update-open span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-update-open:hover {
+  text-decoration: underline;
+}
+
 .sidebar-scan-label {
   white-space: nowrap;
   overflow: hidden;

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 
 const invoke = vi.hoisted(() => vi.fn());
@@ -51,5 +51,68 @@ describe("useUpdater install", () => {
     await waitFor(() => expect(hook.result.current.status.kind).toBe("error"));
     expect(invoke).not.toHaveBeenCalled();
     expect(relaunch).not.toHaveBeenCalled();
+  });
+});
+
+describe("useUpdater periodic check", () => {
+  const HOUR = 60 * 60 * 1000;
+
+  async function advance(ms: number) {
+    await act(async () => { await vi.advanceTimersByTimeAsync(ms); });
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubEnv("DEV", false);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllEnvs();
+  });
+
+  it("checks after launch and every 6 hours without opening the dialog", async () => {
+    check.mockResolvedValue(null);
+    renderHook(() => useUpdater(true));
+    await advance(5000);
+    expect(check).toHaveBeenCalledTimes(1);
+    await advance(6 * HOUR);
+    expect(check).toHaveBeenCalledTimes(2);
+  });
+
+  it("raises the notice but not the dialog on a background hit", async () => {
+    check.mockResolvedValue(fakeUpdate());
+    const { result } = renderHook(() => useUpdater(true));
+    await advance(5000);
+    expect(result.current.status.kind).toBe("available");
+    expect(result.current.dialogOpen).toBe(false);
+    act(() => result.current.openDialog());
+    expect(result.current.dialogOpen).toBe(true);
+  });
+
+  it("does not check when auto-check is off", async () => {
+    renderHook(() => useUpdater(false));
+    await advance(12 * HOUR);
+    expect(check).not.toHaveBeenCalled();
+  });
+
+  it("does not re-check while an update is already waiting", async () => {
+    check.mockResolvedValue(fakeUpdate());
+    renderHook(() => useUpdater(true));
+    await advance(5000);
+    await advance(6 * HOUR);
+    expect(check).toHaveBeenCalledTimes(1);
+  });
+
+  it("brings the notice back only for a newer version", async () => {
+    check.mockResolvedValue(fakeUpdate());
+    const { result } = renderHook(() => useUpdater(true));
+    await advance(5000);
+    act(() => result.current.dismissNotice());
+    expect(result.current.noticeDismissed).toBe(true);
+    await act(async () => { result.current.checkNow(); });
+    expect(result.current.noticeDismissed).toBe(true);
+    check.mockResolvedValue({ ...fakeUpdate(), version: "10.0.0" });
+    await act(async () => { result.current.checkNow(); });
+    expect(result.current.noticeDismissed).toBe(false);
   });
 });

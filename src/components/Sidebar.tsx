@@ -35,6 +35,8 @@ interface SidebarProps {
      *  useScanFolders' prewarmForTracks) — shown once scanning itself has
      *  finished, so the two statuses never compete for the same slot. */
     artworkProgress?: { done: number; total: number } | null;
+    /** Rendered at the top of the bottom-left actions area (the self-update notice). */
+    updateNotice?: React.ReactNode;
     onCancelThumbPrewarm?: () => void;
 }
 
@@ -58,6 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     scanProgress = null,
     onCancelScan,
     artworkProgress = null,
+    updateNotice = null,
     onCancelThumbPrewarm
 }) => {
     const { t } = useTranslation();
@@ -223,6 +226,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
 
             <div className="sidebar-actions">
+                {updateNotice}
                 {isScanning && (
                     <div className="sidebar-scan-status">
                         <span className="sidebar-scan-label">{scanLabel}</span>

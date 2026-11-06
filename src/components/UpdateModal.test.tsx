@@ -10,6 +10,9 @@ function make(over: Partial<SelfUpdate> = {}): SelfUpdate {
         checkNow: () => {},
         install: () => {},
         dismiss: () => {},
+        noticeDismissed: false,
+        openDialog: () => {},
+        dismissNotice: () => {},
         ...over,
     };
 }

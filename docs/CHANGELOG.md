@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.36.0 — 2026-11-06
+- Self-update: the app now re-checks for updates every 6 hours while it is open (besides at launch). A background check no longer pops up the dialog; it shows a "Voynix X.Y.Z available" notice at the bottom left of the sidebar, which opens the update dialog when clicked and can be dismissed with ×.
+
 ## 0.35.6 — 2026-11-06
 - Hardening from the security audit: the sync TLS key file is created owner-only (0600) from the start; the Echo `/play` server now caps concurrent connections like the sync server; stats pushed from a phone have length limits on track keys and play states.
 - The Echo skill's Lambda now has a lockfile and CI uses `npm ci`; added Dependabot version updates (monthly, grouped) for GitHub Actions and the Lambda.

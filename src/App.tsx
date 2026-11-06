@@ -28,6 +28,7 @@ import { useTauriEvent } from "./hooks/useTauriEvent";
 import { AlbumContextMenu } from "./components/AlbumContextMenu";
 import { WelcomeModal } from "./components/WelcomeModal";
 import { UpdateModal } from "./components/UpdateModal";
+import { UpdateNotice } from "./components/UpdateNotice";
 import { useUpdater } from "./hooks/useUpdater";
 import { AlbumInfoModal } from "./components/AlbumInfoModal";
 import { ArtistContextMenu } from "./components/ArtistContextMenu";
@@ -1469,6 +1470,7 @@ function App() {
         onCancelThumbPrewarm={cancelThumbPrewarm}
         onSync={openSyncModal}
         onSettings={() => { setSettingsInitialTab(undefined); setIsSettingsModalOpen(true); }}
+        updateNotice={<UpdateNotice updater={updater} />}
       />
 
       <div className={`sidebar-overlay ${isSidebarOpen ? 'visible' : ''}`} onClick={closeSidebar}></div>
