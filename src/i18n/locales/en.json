@@ -399,7 +399,9 @@
     "install": "Update and Restart",
     "later": "Later",
     "downloading": "Downloading… {{percent}}%",
-    "downloadingUnknown": "Downloading…"
+    "downloadingUnknown": "Downloading…",
+    "noticeAvailable": "Voynix {{version}} available",
+    "dismissNotice": "Dismiss"
   },
   "welcome": {
     "step1Title": "Welcome to Voynix",
@@ -489,8 +491,8 @@
     "themeSystem": "Follow system",
     "themeLight": "Light",
     "themeDark": "Dark",
-    "autoUpdateCheck": "Check for updates at launch",
-    "autoUpdateHint": "Connects to GitHub to look for a newer version. Nothing is installed without your confirmation.",
+    "autoUpdateCheck": "Automatically check for updates",
+    "autoUpdateHint": "Connects to GitHub at launch and every 6 hours to look for a newer version. Nothing is installed without your confirmation.",
     "checkForUpdates": "Check for Updates",
     "updateChecking": "Checking…",
     "updateUpToDate": "You're up to date.",

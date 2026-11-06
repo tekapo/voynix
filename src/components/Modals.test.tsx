@@ -42,6 +42,9 @@ function makeProps(over: Partial<React.ComponentProps<typeof SettingsModal>> = {
             checkNow: () => {},
             install: () => {},
             dismiss: () => {},
+            noticeDismissed: false,
+            openDialog: () => {},
+            dismissNotice: () => {},
         },
         onExportBackup: () => {},
         onImportBackup: () => {},
@@ -119,13 +122,13 @@ describe("SettingsModal self-update", () => {
     it("toggles the launch-time check", () => {
         const onToggleAutoUpdateCheck = vi.fn();
         render(<SettingsModal {...makeProps({ onToggleAutoUpdateCheck })} />);
-        fireEvent.click(screen.getByLabelText("Check for updates at launch"));
+        fireEvent.click(screen.getByLabelText("Automatically check for updates"));
         expect(onToggleAutoUpdateCheck).toHaveBeenCalledWith(false);
     });
 
     it("runs a manual check from General and shows the result", () => {
         const checkNow = vi.fn();
-        const updater = { status: { kind: "upToDate" } as const, dialogOpen: false, checkNow, install: () => {}, dismiss: () => {} };
+        const updater = { status: { kind: "upToDate" } as const, dialogOpen: false, checkNow, install: () => {}, dismiss: () => {}, noticeDismissed: false, openDialog: () => {}, dismissNotice: () => {} };
         render(<SettingsModal {...makeProps({ updater })} />);
         fireEvent.click(screen.getByText("Check for Updates"));
         expect(checkNow).toHaveBeenCalled();

@@ -395,7 +395,9 @@
     "install": "更新して再起動",
     "later": "あとで",
     "downloading": "ダウンロード中… {{percent}}%",
-    "downloadingUnknown": "ダウンロード中…"
+    "downloadingUnknown": "ダウンロード中…",
+    "noticeAvailable": "Voynix {{version}} が利用できます",
+    "dismissNotice": "通知を閉じる"
   },
   "welcome": {
     "step1Title": "Voynix へようこそ",
@@ -482,8 +484,8 @@
     "themeSystem": "システムに従う",
     "themeLight": "ライト",
     "themeDark": "ダーク",
-    "autoUpdateCheck": "起動時にアップデートを確認する",
-    "autoUpdateHint": "GitHub に接続して新しいバージョンを確認します。インストールは確認のうえで行います。",
+    "autoUpdateCheck": "アップデートを自動で確認する",
+    "autoUpdateHint": "GitHub に接続して新しいバージョンを確認します（起動時と6時間ごと）。インストールは確認のうえで行います。",
     "checkForUpdates": "アップデートを確認",
     "updateChecking": "確認中…",
     "updateUpToDate": "最新バージョンです。",

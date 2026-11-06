@@ -5,6 +5,8 @@ import { relaunch } from "@tauri-apps/plugin-process";
 
 /** Wait this long after launch before the automatic check, so it never competes with startup. */
 const STARTUP_CHECK_DELAY_MS = 5000;
+/** The app can stay open for days, so it re-checks on this interval after the launch check. */
+const PERIODIC_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 export type UpdaterStatus =
   | { kind: "idle" }
@@ -19,6 +21,10 @@ export interface SelfUpdate {
   status: UpdaterStatus;
   /** The "available" dialog is shown until dismissed; a manual check re-opens it. */
   dialogOpen: boolean;
+  /** The sidebar notice was closed with × (this session only; a newer version brings it back). */
+  noticeDismissed: boolean;
+  openDialog: () => void;
+  dismissNotice: () => void;
   checkNow: () => void;
   install: () => void;
   dismiss: () => void;
@@ -27,14 +33,19 @@ export interface SelfUpdate {
 /**
  * Self-update for the desktop app (tauri-plugin-updater): checks the signed
  * `latest.json` on GitHub Releases, and downloads + installs + relaunches only
- * when the user asks. The automatic check runs once, shortly after launch, and
- * only when `autoCheck` is on (read through a ref so the persisted setting has
- * loaded by the time the timer fires). Dev builds never auto-check — there is
- * no signed bundle to compare against.
+ * when the user asks. The automatic check runs shortly after launch and then
+ * every 6 hours, only when `autoCheck` is on (read through a ref so the
+ * persisted setting has loaded by the time the timer fires). It only raises a
+ * sidebar notice; the dialog opens on a click or a manual check. Dev builds
+ * never auto-check — there is no signed bundle to compare against.
  */
 export function useUpdater(autoCheck: boolean): SelfUpdate {
   const [status, setStatus] = useState<UpdaterStatus>({ kind: "idle" });
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
+  const notifiedVersion = useRef<string | null>(null);
+  const statusRef = useRef(status);
+  statusRef.current = status;
   const pending = useRef<Update | null>(null);
   const autoCheckRef = useRef(autoCheck);
   autoCheckRef.current = autoCheck;
@@ -49,7 +60,12 @@ export function useUpdater(autoCheck: boolean): SelfUpdate {
       }
       pending.current = update;
       setStatus({ kind: "available", version: update.version, notes: update.body ?? "" });
-      setDialogOpen(true);
+      if (notifiedVersion.current !== update.version) {
+        notifiedVersion.current = update.version;
+        setNoticeDismissed(false);
+      }
+      // A background check only raises the sidebar notice; it never interrupts.
+      if (manual) setDialogOpen(true);
     } catch (e) {
       // A failed background check (offline, rate-limited) is not worth interrupting for.
       if (manual) setStatus({ kind: "error", message: String(e) });
@@ -58,10 +74,14 @@ export function useUpdater(autoCheck: boolean): SelfUpdate {
 
   useEffect(() => {
     if (import.meta.env.DEV) return;
-    const timer = setTimeout(() => {
-      if (autoCheckRef.current) void runCheck(false);
-    }, STARTUP_CHECK_DELAY_MS);
-    return () => clearTimeout(timer);
+    const tick = () => {
+      // Never swap `pending` out from under an update the user is looking at or installing.
+      const kind = statusRef.current.kind;
+      if (autoCheckRef.current && kind !== "available" && kind !== "downloading") void runCheck(false);
+    };
+    const timer = setTimeout(tick, STARTUP_CHECK_DELAY_MS);
+    const interval = setInterval(tick, PERIODIC_CHECK_INTERVAL_MS);
+    return () => { clearTimeout(timer); clearInterval(interval); };
   }, [runCheck]);
 
   const install = useCallback(async () => {
@@ -91,5 +111,8 @@ export function useUpdater(autoCheck: boolean): SelfUpdate {
     checkNow: () => { setDialogOpen(false); void runCheck(true); },
     install: () => { void install(); },
     dismiss: () => setDialogOpen(false),
+    noticeDismissed,
+    openDialog: () => setDialogOpen(true),
+    dismissNotice: () => setNoticeDismissed(true),
   };
 }
