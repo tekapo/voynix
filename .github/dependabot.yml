@@ -1,0 +1,21 @@
+# Version updates for the two things that are otherwise easy to forget: the
+# SHA-pinned GitHub Actions and the Echo skill's Lambda dependencies. Monthly
+# and grouped to keep the pull-request noise low. The root npm, Cargo and Gradle
+# dependencies stay on Dependabot security updates only (repository settings).
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: "npm"
+    directory: "/alexa-skill/lambda"
+    schedule:
+      interval: "monthly"
+    groups:
+      lambda:
+        patterns: ["*"]

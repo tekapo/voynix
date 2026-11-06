@@ -24,8 +24,8 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm test
 
-      # The Echo skill's Lambda (signing / token tests); its own package, no lockfile.
-      - run: npm install --no-package-lock
+      # The Echo skill's Lambda (signing / token tests); its own package with its own lockfile.
+      - run: npm ci
         working-directory: alexa-skill/lambda
       - run: npm test
         working-directory: alexa-skill/lambda

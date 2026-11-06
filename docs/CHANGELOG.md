@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.35.6 — 2026-11-06
+- Hardening from the security audit: the sync TLS key file is created owner-only (0600) from the start; the Echo `/play` server now caps concurrent connections like the sync server; stats pushed from a phone have length limits on track keys and play states.
+- The Echo skill's Lambda now has a lockfile and CI uses `npm ci`; added Dependabot version updates (monthly, grouped) for GitHub Actions and the Lambda.
+
 ## 0.35.5 — 2026-11-05
 - Security: mDNS pairing now refuses to hand out the token unless the phone reports the same TLS key the Mac presented (a relay on the LAN can no longer obtain it). This needs both the Mac and Android apps updated for mDNS auto-pairing; QR and manual pairing and already-paired phones are unaffected.
 - Security (Android): a track key from the Mac's manifest can no longer point a download or a delete outside the sync folder; unsafe keys are ignored.
