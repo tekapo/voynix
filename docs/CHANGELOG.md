@@ -10,6 +10,11 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.39.2 — 2026-11-09
+
+- User manual and READMEs now describe thumbs up/down ratings and the "hide thumbs-down songs" setting; leftover star wording is gone.
+- Smart playlist conditions and the album info count now say "Thumbs up" instead of "Favorite"; unused star strings removed.
+
 ## 0.39.1 — 2026-11-09
 
 - The track list header, sidebar Favorites entry and album info now use thumbs-up/down icons instead of the old star.

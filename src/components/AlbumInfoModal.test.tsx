@@ -34,7 +34,7 @@ describe("AlbumInfoModal", () => {
         expect(await screen.findByDisplayValue("The Artist")).toBeInTheDocument();
         expect(screen.getByDisplayValue("The Album")).toBeInTheDocument();
         expect(screen.getByText("2 tracks")).toBeInTheDocument();
-        expect(screen.getByText("1 favorite")).toBeInTheDocument();
+        expect(screen.getByText("1 thumbs up")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
     });
 
