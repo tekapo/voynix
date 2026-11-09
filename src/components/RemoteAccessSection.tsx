@@ -130,7 +130,7 @@ export const RemoteAccessSection: React.FC<{ remote: RemoteAccess }> = ({ remote
                     onChange={e => setKeyDraft(e.target.value)}
                 />
             </label>
-            <button type="button" className="modal-btn cancel" onClick={applyPaths} disabled={!pathsChanged} style={{ marginTop: '0.5rem' }}>
+            <button type="button" className="modal-btn secondary settings-btn-row-single" onClick={applyPaths} disabled={!pathsChanged}>
                 {t('remote.applyPaths')}
             </button>
             <p className="settings-hint">{t('remote.certHint')}</p>
@@ -140,22 +140,24 @@ export const RemoteAccessSection: React.FC<{ remote: RemoteAccess }> = ({ remote
                 <p className="settings-hint" style={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
                     {secret ?? '••••••••••••••••'}
                 </p>
-                <button type="button" className="modal-btn cancel" onClick={toggleSecret}>
-                    {secret !== null ? t('remote.hideSecret') : t('remote.showSecret')}
-                </button>
-                <button type="button" className="modal-btn cancel" onClick={copySecret} style={{ marginLeft: '0.5rem' }}>
-                    {copied ? t('remote.copied') : t('remote.copySecret')}
-                </button>
-                <button type="button" className="modal-btn cancel" onClick={regenerate} style={{ marginLeft: '0.5rem' }}>
-                    {t('remote.regenerate')}
-                </button>
+                <div className="settings-btn-row">
+                    <button type="button" className="modal-btn secondary" onClick={toggleSecret}>
+                        {secret !== null ? t('remote.hideSecret') : t('remote.showSecret')}
+                    </button>
+                    <button type="button" className="modal-btn secondary" onClick={copySecret}>
+                        {copied ? t('remote.copied') : t('remote.copySecret')}
+                    </button>
+                    <button type="button" className="modal-btn secondary" onClick={regenerate}>
+                        {t('remote.regenerate')}
+                    </button>
+                </div>
                 <p className="settings-hint">{t('remote.regenerateHint')}</p>
             </div>
 
             <div style={{ marginTop: '0.75rem' }}>
                 <strong>{t('remote.playlistNames')}</strong>
                 <p className="settings-hint">{t('remote.playlistNamesHint')}</p>
-                <button type="button" className="modal-btn cancel" onClick={copyPlaylistNames}>
+                <button type="button" className="modal-btn secondary" onClick={copyPlaylistNames}>
                     {namesCopied ? t('remote.copied') : t('remote.copyPlaylistNames')}
                 </button>
             </div>

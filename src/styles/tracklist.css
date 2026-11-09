@@ -407,6 +407,13 @@
   color: var(--accent-text);
 }
 
+.th-fav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
 .rating-cell {
   display: flex;
   justify-content: center;

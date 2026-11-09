@@ -164,7 +164,7 @@ export const AlbumInfoModal: React.FC<AlbumInfoModalProps> = ({ tracks, onClose,
                                 </span>
                                 {stats.favorites > 0 && (
                                     <span className="info-modal-chip">
-                                        <Icon name="star-filled" size={12} /> {t('albumInfo.favoritesCount', { count: stats.favorites })}
+                                        <Icon name="thumb-up-filled" size={12} /> {t('albumInfo.favoritesCount', { count: stats.favorites })}
                                     </span>
                                 )}
                                 {stats.earliestAdded && (
