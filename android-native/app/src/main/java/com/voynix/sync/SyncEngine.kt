@@ -41,7 +41,13 @@ class SyncEngine(
     private val albumArtDir = File(context.cacheDir, "album_art")
     private val peerStore = SyncPeerStore(db)
 
-    suspend fun runSync(peer: SyncPeer, onProgress: (SyncProgress) -> Unit = {}): SyncSummary {
+    /**
+     * [syncFiles] = false is the metadata-only mode: playlists, play history,
+     * favorites, podcast positions and covers are synced, but no song file is
+     * downloaded or deleted. Tracks that aren't on the phone stay absent (no
+     * placeholder rows) until a sync with files turned on.
+     */
+    suspend fun runSync(peer: SyncPeer, onProgress: (SyncProgress) -> Unit = {}, syncFiles: Boolean = true): SyncSummary {
         val errors = mutableListOf<String>()
 
         onProgress(SyncProgress("manifest", "Fetching manifest"))
@@ -63,19 +69,23 @@ class SyncEngine(
             }
         val plan = diffTracks(manifestTracks, localTracks)
 
+        // Metadata-only mode touches no song file, so nothing is deleted either.
+        val toDelete = if (syncFiles) plan.toDelete else emptyList()
         // Only ever delete inside the sync folder, whatever path the row holds.
         val syncedRoot = syncedDir.canonicalFile
-        for (t in plan.toDelete) runCatching {
+        for (t in toDelete) runCatching {
             val f = File(t.filePath).canonicalFile
             if (f.startsWith(syncedRoot)) f.delete()
         }
         db.withTransaction {
-            for (t in plan.toDelete) db.trackDao().deleteMirrorTrack(t.id)
+            for (t in toDelete) db.trackDao().deleteMirrorTrack(t.id)
         }
-        val deleted = plan.toDelete.size
+        val deleted = toDelete.size
 
         // One download per track key: two workers on the same key would share one `.part` file.
-        val toDownload = (plan.toAdd + plan.toRefetch).distinctBy { it.trackKey }
+        val wanted = (plan.toAdd + plan.toRefetch).distinctBy { it.trackKey }
+        val toDownload = if (syncFiles) wanted else emptyList()
+        val skippedFiles = if (syncFiles) 0 else wanted.size
         checkFreeSpace(toDownload)
         // Workers run concurrently (pool), so the counters and the error list must be thread-safe.
         val doneDownloads = AtomicInteger(0)
@@ -126,6 +136,7 @@ class SyncEngine(
             deleted = deleted,
             playlists = manifestPlaylists.size,
             errors = errors,
+            skippedFiles = skippedFiles,
         )
     }
 

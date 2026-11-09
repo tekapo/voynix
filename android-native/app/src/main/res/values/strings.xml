@@ -150,6 +150,9 @@
     <string name="sync_not_synced_yet">Not synced yet</string>
     <string name="sync_syncing">Syncing...</string>
     <string name="sync_now">Sync now</string>
+    <string name="sync_files">Sync song files</string>
+    <string name="sync_files_detail">Turn off to sync only playlists, play history, favorites and podcast positions</string>
+    <string name="sync_skipped_files">%1$d songs will be added the next time song files are synced</string>
     <string name="sync_auto_sync">Auto-sync</string>
     <string name="sync_auto_sync_detail">Sync automatically about every 6 hours when the Mac is on this Wi-Fi</string>
     <string name="sync_charging_only">Only while charging</string>

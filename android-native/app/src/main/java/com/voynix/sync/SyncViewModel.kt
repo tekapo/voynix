@@ -93,7 +93,15 @@ class SyncViewModel(private val context: Context, private val db: VoynixDatabase
     private val _autoSyncChargingOnly = MutableStateFlow(true)
     val autoSyncChargingOnly: StateFlow<Boolean> = _autoSyncChargingOnly.asStateFlow()
 
+    // Whether a sync also downloads song files. Off = metadata only (playlists,
+    // play history, favorites, podcast positions); on by default.
+    private val _syncFiles = MutableStateFlow(true)
+    val syncFiles: StateFlow<Boolean> = _syncFiles.asStateFlow()
+
     init {
+        viewModelScope.launch {
+            _syncFiles.value = db.settingsDao().get(SYNC_FILES_KEY) != "0"
+        }
         viewModelScope.launch {
             val existing = peerStore.get()
             _peer.value = existing
@@ -121,6 +129,13 @@ class SyncViewModel(private val context: Context, private val db: VoynixDatabase
             db.settingsDao().set(SettingEntity(AUTO_SYNC_CHARGING_ONLY_KEY, if (chargingOnly) "1" else "0"))
         }
         AutoSyncScheduler.reschedule(context, _autoSyncEnabled.value, chargingOnly)
+    }
+
+    fun setSyncFiles(syncFiles: Boolean) {
+        _syncFiles.value = syncFiles
+        viewModelScope.launch {
+            db.settingsDao().set(SettingEntity(SYNC_FILES_KEY, if (syncFiles) "1" else "0"))
+        }
     }
 
     /** Pings the saved peer (re-finding it over mDNS if it moved) and updates [connection]. */
@@ -318,7 +333,7 @@ class SyncViewModel(private val context: Context, private val db: VoynixDatabase
                 probe = { url, token, pin -> api.ping(url, token, pin) },
                 discover = { nsd.discover() },
                 scan = { port -> subnetCandidates(LocalSubnets.ipv4Addresses(), port) },
-                runSync = { peer, onProgress -> engine.runSync(peer, onProgress) },
+                runSync = { peer, onProgress -> engine.runSync(peer, onProgress, _syncFiles.value) },
                 onPeerMoved = { moved -> peerStore.save(moved.url, moved.token, moved.pin.orEmpty()) },
             )) {
                 is SyncRunResult.Success -> {
