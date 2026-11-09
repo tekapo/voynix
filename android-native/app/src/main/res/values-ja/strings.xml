@@ -153,11 +153,6 @@
     <string name="sync_files">曲ファイルも同期する</string>
     <string name="sync_files_detail">オフにすると、プレイリスト・再生履歴・お気に入り・Podcastの再生位置だけを同期します</string>
     <string name="sync_skipped_files">%1$d曲は、曲ファイルも同期するときに追加されます</string>
-    <string name="sync_bluetooth">Bluetoothで同期</string>
-    <string name="sync_bluetooth_detail">ネットワークでMacに届かないとき、Bluetoothで探して同期します。手動同期のみ。Mac側の「Bluetooth経由の同期を許可」もオンにしてください。</string>
-    <string name="sync_bluetooth_files">Bluetoothでも曲ファイルを同期する</string>
-    <string name="sync_bluetooth_files_detail">とても遅く、1時間に1GB以下です</string>
-    <string name="sync_via_bluetooth">Bluetooth経由で同期しました</string>
     <string name="sync_auto_sync">自動同期</string>
     <string name="sync_auto_sync_detail">このWi-FiにMacが接続されているとき、約6時間ごとに自動的に同期します</string>
     <string name="sync_charging_only">充電中のみ</string>

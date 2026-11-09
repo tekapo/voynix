@@ -59,9 +59,6 @@ export function useSyncServer({ playlists, refreshPlaylists, setError }: UseSync
   // a paired device's saved peer URL is useless until someone opens the Sync
   // modal and presses Start every time.
   const [serverAutostart, setServerAutostart] = useState(true);
-  // Mac side: let the paired phone sync over Bluetooth when it can't reach us
-  // on Wi-Fi. Off by default; macOS asks for Bluetooth permission on first use.
-  const [bluetoothSync, setBluetoothSync] = useState(false);
   // Mac side: progress while transcoding files a synced device can't play natively.
   const [prepareProgress, setPrepareProgress] = useState<{ done: number; total: number } | null>(null);
   // Mac side: sync transcode target. AAC/256k matches the old
@@ -97,11 +94,6 @@ export function useSyncServer({ playlists, refreshPlaylists, setError }: UseSync
     setServerStatus(status);
     setSyncServerPort(status.port).catch(e =>
       console.error("Failed to persist sync_server_port:", e));
-    // Bluetooth rides on the running server, so it is (re)attached on every start.
-    if ((await getSetting("sync_bluetooth_enabled").catch(() => null)) === "1") {
-      invoke("set_sync_bluetooth", { enabled: true }).catch(e =>
-        setError(i18n.t("syncServer.bluetoothError", { error: String(e) })));
-    }
     return status;
   }
 
@@ -124,17 +116,6 @@ export function useSyncServer({ playlists, refreshPlaylists, setError }: UseSync
     setServerAutostart(next);
     setSetting("sync_server_autostart", next ? "1" : "0").catch(e =>
       console.error("Failed to persist sync_server_autostart:", e));
-  };
-
-  const toggleBluetoothSync = (next: boolean) => {
-    setBluetoothSync(next);
-    setSetting("sync_bluetooth_enabled", next ? "1" : "0").catch(e =>
-      console.error("Failed to persist sync_bluetooth_enabled:", e));
-    // Applied right away when the server is up; otherwise the next start picks it up.
-    if (serverStatus?.running) {
-      invoke("set_sync_bluetooth", { enabled: next }).catch(e =>
-        setError(i18n.t("syncServer.bluetoothError", { error: String(e) })));
-    }
   };
 
   const changeTranscodeFormat = (next: TranscodeFormat) => {
@@ -166,7 +147,6 @@ export function useSyncServer({ playlists, refreshPlaylists, setError }: UseSync
     }
     const autostart = await getSetting("sync_server_autostart").catch(() => null);
     setServerAutostart(autostart !== "0");
-    setBluetoothSync((await getSetting("sync_bluetooth_enabled").catch(() => null)) === "1");
   }
 
   // Called from App's mount-time initialize() at the same point this logic
@@ -180,7 +160,6 @@ export function useSyncServer({ playlists, refreshPlaylists, setError }: UseSync
     const autostart = await getSetting("sync_server_autostart").catch(() => null);
     const autostartOn = autostart !== "0";
     setServerAutostart(autostartOn);
-    setBluetoothSync((await getSetting("sync_bluetooth_enabled").catch(() => null)) === "1");
     // The Rust sync server outlives a webview reload; restore our view of it
     // so the snapshot-push effect keeps working after HMR. If nothing is
     // running yet, start it ourselves so a paired device never has to wait
@@ -296,7 +275,6 @@ export function useSyncServer({ playlists, refreshPlaylists, setError }: UseSync
     serverStatus,
     serverActivity,
     serverAutostart,
-    bluetoothSync,
     prepareProgress,
     transcodeFormat,
     transcodeBitrate,
@@ -304,7 +282,6 @@ export function useSyncServer({ playlists, refreshPlaylists, setError }: UseSync
     closeSyncModal,
     toggleServer,
     toggleServerAutostart,
-    toggleBluetoothSync,
     changeTranscodeFormat,
     changeTranscodeBitrate,
     bumpSnapshot,

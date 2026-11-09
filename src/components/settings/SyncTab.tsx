@@ -6,9 +6,6 @@ export interface SyncTabProps {
     /** Desktop only: start the sync server automatically on launch. */
     serverAutostart: boolean;
     onToggleServerAutostart: (next: boolean) => void;
-    /** Desktop only: let the paired phone sync over Bluetooth. */
-    bluetoothSync: boolean;
-    onToggleBluetoothSync: (next: boolean) => void;
     /** Desktop only: target format/bitrate for on-sync transcoding. */
     transcodeFormat: TranscodeFormat;
     onChangeTranscodeFormat: (next: TranscodeFormat) => void;
@@ -19,8 +16,6 @@ export interface SyncTabProps {
 export const SyncTab: React.FC<SyncTabProps> = ({
     serverAutostart,
     onToggleServerAutostart,
-    bluetoothSync,
-    onToggleBluetoothSync,
     transcodeFormat,
     onChangeTranscodeFormat,
     transcodeBitrate,
@@ -43,18 +38,6 @@ export const SyncTab: React.FC<SyncTabProps> = ({
                 </label>
                 <p className="settings-hint">
                     {t('settings.syncAutostartHint')}
-                </p>
-
-                <label className="settings-toggle">
-                    <input
-                        type="checkbox"
-                        checked={bluetoothSync}
-                        onChange={e => onToggleBluetoothSync(e.target.checked)}
-                    />
-                    {t('settings.syncOverBluetooth')}
-                </label>
-                <p className="settings-hint">
-                    {t('settings.syncOverBluetoothHint')}
                 </p>
 
                 <label style={{ display: 'block', marginTop: '0.75rem' }}>

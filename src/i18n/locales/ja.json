@@ -309,7 +309,6 @@
   },
   "syncServer": {
     "serverError": "サーバーエラー: {{error}}",
-    "bluetoothError": "Bluetooth同期を開始できませんでした: {{error}}",
     "pairRequestMessage": "「{{deviceName}}」がこのMacとペアリングして同期することを許可しますか？\n\nセキュリティコード: {{fingerprint}}\n（許可する前にスマートフォンの表示と一致することを確認してください。）",
     "pairRequestTitle": "Voynix ペアリングリクエスト"
   },
@@ -458,8 +457,6 @@
     "sync": "同期",
     "startSyncServerAutomatically": "同期サーバーを自動的に開始する",
     "syncAutostartHint": "オフの場合は、毎回同期メニューから自分で開始してください。",
-    "syncOverBluetooth": "Bluetooth経由の同期を許可",
-    "syncOverBluetoothHint": "Wi-Fiでこのmacに届かないとき、ペアリング済みのスマートフォンがBluetoothで同期できるようにします。初回はmacOSがBluetoothの許可を求めます。",
     "convertUnsupportedFilesTo": "非対応形式（ALAC、AIFFなど）の変換先:",
     "formatAac": "AAC（小さいが非可逆）",
     "formatFlac": "FLAC（可逆だが大きい）",

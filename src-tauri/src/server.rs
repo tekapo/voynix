@@ -303,18 +303,6 @@ struct PairPrompt {
     fingerprint: String,
 }
 
-/// Everything a non-TCP transport (Bluetooth, see `bt.rs`) needs to serve a
-/// connection exactly as the LAN listener does: same TLS identity, same
-/// router (so the same token check), same stop signal.
-#[derive(Clone)]
-pub(crate) struct BtServeCtx {
-    pub acceptor: tokio_rustls::TlsAcceptor,
-    pub router: Router,
-    pub stop: watch::Receiver<bool>,
-    /// SHA-256 of the TLS public key, lowercase hex; the phone matches its saved pin against a prefix of it.
-    pub fingerprint: String,
-}
-
 pub struct SyncServer {
     /// Flips to `true` on stop: ends the accept loop and gracefully closes open connections.
     shutdown_tx: Option<watch::Sender<bool>>,
@@ -346,8 +334,6 @@ pub struct SyncServer {
     /// SHA-256 of the current TLS identity's SPKI, lowercase hex. Shown to the
     /// user so they can visually compare it against what the phone observes.
     fingerprint: String,
-    /// Set while the server runs; lets `bt.rs` serve connections that arrive over Bluetooth.
-    bt_ctx: Option<BtServeCtx>,
 }
 
 #[derive(Default, Clone, Serialize)]
@@ -384,7 +370,6 @@ impl SyncServer {
             pending_pairs: HashMap::new(),
             pair_declined_at: None,
             fingerprint: String::new(),
-            bt_ctx: None,
         }
     }
 
@@ -583,12 +568,6 @@ pub async fn start(
 
     let (tx, rx) = watch::channel(false);
     let router = build_router(state.clone());
-    let bt_ctx = BtServeCtx {
-        acceptor: acceptor.clone(),
-        router: router.clone(),
-        stop: rx.clone(),
-        fingerprint: identity.fingerprint.clone(),
-    };
     let ip_check_state = state.clone();
 
     tokio::spawn(async move {
@@ -666,16 +645,10 @@ pub async fn start(
         server.mdns = mdns;
         server.app = app;
         server.fingerprint = identity.fingerprint;
-        server.bt_ctx = Some(bt_ctx);
         status_from(&server, true)
     };
 
     Ok(status)
-}
-
-/// The serving context for the Bluetooth transport; `None` while the server is stopped.
-pub(crate) fn bt_ctx(state: &Shared) -> Option<BtServeCtx> {
-    state.lock().unwrap().bt_ctx.clone()
 }
 
 /// The live server state, so the frontend can re-sync its view after a reload
@@ -745,17 +718,12 @@ pub(crate) fn admit_ip(counts: &IpCounts, ip: IpAddr) -> Option<PerIpGuard> {
     Some(PerIpGuard { counts: counts.clone(), ip })
 }
 
-/// Serves one TLS+HTTP connection over any byte stream: a `TcpStream` on the
-/// LAN, or the L2CAP channel bridge for Bluetooth sync (see `bt.rs`). TLS is
-/// terminated here either way, so the token and SPKI pinning apply unchanged.
-pub(crate) async fn serve_connection<S>(
-    stream: S,
+async fn serve_connection(
+    stream: tokio::net::TcpStream,
     acceptor: tokio_rustls::TlsAcceptor,
     router: Router,
     mut stop: watch::Receiver<bool>,
-) where
-    S: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + 'static,
-{
+) {
     let Ok(Ok(tls)) = tokio::time::timeout(HANDSHAKE_TIMEOUT, acceptor.accept(stream)).await else { return };
     let service = hyper_util::service::TowerToHyperService::new(router);
     let mut builder = hyper_util::server::conn::auto::Builder::new(hyper_util::rt::TokioExecutor::new());
@@ -790,9 +758,6 @@ pub async fn stop(state: Shared) -> Result<(), String> {
     server.pending_pairs.clear();
     server.app = None;
     server.fingerprint = String::new();
-    server.bt_ctx = None;
-    #[cfg(target_os = "macos")]
-    crate::bt::stop();
     // Don't serve a stale manifest or replay stale inbox items after a restart.
     server.snapshot = None;
     server.track_paths.clear();
@@ -1369,86 +1334,6 @@ mod tests {
         assert!(srv.track_paths.contains_key("k1"));
         srv.set_snapshot(SyncSnapshot::default());
         assert!(srv.track_paths.is_empty());
-    }
-
-    /// Certificate checks are the client's job in production (SPKI pin on the
-    /// phone); this test only cares that TLS + HTTP run over a non-TCP stream.
-    #[derive(Debug)]
-    struct AcceptAnyCert;
-
-    impl rustls::client::danger::ServerCertVerifier for AcceptAnyCert {
-        fn verify_server_cert(
-            &self,
-            _: &rustls::pki_types::CertificateDer<'_>,
-            _: &[rustls::pki_types::CertificateDer<'_>],
-            _: &rustls::pki_types::ServerName<'_>,
-            _: &[u8],
-            _: rustls::pki_types::UnixTime,
-        ) -> Result<rustls::client::danger::ServerCertVerified, rustls::Error> {
-            Ok(rustls::client::danger::ServerCertVerified::assertion())
-        }
-        fn verify_tls12_signature(
-            &self,
-            _: &[u8],
-            _: &rustls::pki_types::CertificateDer<'_>,
-            _: &rustls::DigitallySignedStruct,
-        ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
-            Ok(rustls::client::danger::HandshakeSignatureValid::assertion())
-        }
-        fn verify_tls13_signature(
-            &self,
-            _: &[u8],
-            _: &rustls::pki_types::CertificateDer<'_>,
-            _: &rustls::DigitallySignedStruct,
-        ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
-            Ok(rustls::client::danger::HandshakeSignatureValid::assertion())
-        }
-        fn supported_verify_schemes(&self) -> Vec<rustls::SignatureScheme> {
-            rustls::crypto::ring::default_provider()
-                .signature_verification_algorithms
-                .supported_schemes()
-        }
-    }
-
-    /// `serve_connection` is generic so Bluetooth can feed it an L2CAP bridge.
-    /// An in-memory duplex stream stands in for that: TLS handshake, bearer
-    /// auth and an HTTP response must all work with no socket involved.
-    #[tokio::test]
-    async fn serve_connection_works_over_a_non_tcp_stream() {
-        use tokio::io::{AsyncReadExt, AsyncWriteExt};
-
-        let dir = tempfile::tempdir().unwrap();
-        let identity = crate::tls::load_or_create(dir.path(), "127.0.0.1").unwrap();
-        let acceptor = tokio_rustls::TlsAcceptor::from(identity.config);
-        let state = Arc::new(Mutex::new(SyncServer::new()));
-        state.lock().unwrap().token = "tok-bt".into();
-        let router = build_router(state);
-
-        let (client_io, server_io) = tokio::io::duplex(64 * 1024);
-        let (_stop_tx, stop_rx) = watch::channel(false);
-        let server = tokio::spawn(serve_connection(server_io, acceptor, router, stop_rx));
-
-        let client_cfg = rustls::ClientConfig::builder()
-            .dangerous()
-            .with_custom_certificate_verifier(Arc::new(AcceptAnyCert))
-            .with_no_client_auth();
-        let connector = tokio_rustls::TlsConnector::from(Arc::new(client_cfg));
-        let name = rustls::pki_types::ServerName::try_from("127.0.0.1").unwrap();
-        let mut tls = connector.connect(name, client_io).await.unwrap();
-
-        for (auth, expected) in [("tok-bt", "HTTP/1.1 204"), ("wrong", "HTTP/1.1 401")] {
-            let req = format!(
-                "GET /api/ping HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {auth}\r\nConnection: keep-alive\r\n\r\n"
-            );
-            tls.write_all(req.as_bytes()).await.unwrap();
-            let mut buf = vec![0u8; 512];
-            let n = tls.read(&mut buf).await.unwrap();
-            let head = String::from_utf8_lossy(&buf[..n]);
-            assert!(head.starts_with(expected), "expected {expected}, got: {head}");
-        }
-
-        drop(tls);
-        tokio::time::timeout(Duration::from_secs(5), server).await.unwrap().unwrap();
     }
 
     /// Full round-trip over a real TCP socket: start the server, then drive it
