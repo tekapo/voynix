@@ -162,6 +162,23 @@ describe("syncRoundTrip", () => {
         expect(phone.favorites).toEqual([fav("s1", 1, 200)]);
     });
 
+    it("converges a thumbs-down given on the phone", () => {
+        let mac = device("mac", { favorites: [fav("s1", 1, 100)] });
+        let phone = device("phone", { favorites: [{ ...fav("s1", 0, 200), disliked: 1 }] });
+
+        ({ mac, phone } = syncRoundTrip(mac, phone));
+
+        expect(mac.favorites).toEqual([{ ...fav("s1", 0, 200), disliked: 1 }]);
+        expect(phone.favorites).toEqual([{ ...fav("s1", 0, 200), disliked: 1 }]);
+        expect(sameStats(mac, phone)).toBe(true);
+    });
+
+    it("does not call two devices in step when only the thumbs-down differs", () => {
+        const a = device("a", { favorites: [{ ...fav("s1", 0, 200), disliked: 1 }] });
+        const b = device("b", { favorites: [fav("s1", 0, 200)] });
+        expect(sameStats(a, b)).toBe(false);
+    });
+
     it("converges a favorite toggled on the Mac", () => {
         let mac = device("mac", { favorites: [fav("s1", 1, 300)] });
         let phone = device("phone", { favorites: [fav("s1", 0, 100)] });

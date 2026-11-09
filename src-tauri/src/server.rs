@@ -932,9 +932,12 @@ async fn post_pair(State(state): State<Shared>, headers: HeaderMap, Json(body): 
         if s.token.is_empty() {
             return (StatusCode::SERVICE_UNAVAILABLE, "Server not ready").into_response();
         }
-        // The phone must say which TLS key it actually saw. If something is
-        // relaying the connection, the phone saw the relay's key, not ours —
-        // refuse before any prompt is raised or the token is released.
+        // The phone must say which TLS key it actually saw. A relay that passes the
+        // request through unchanged is caught here: the phone saw the relay's key,
+        // not ours, so we refuse before any prompt is raised or the token released.
+        // This is a plain header, not bound to the TLS session, so a relay that
+        // rewrites it is not caught; the owner comparing the fingerprint on the
+        // prompt with the phone's is the final check.
         if !crate::util::fingerprint_matches(observed, &s.fingerprint) {
             return (StatusCode::BAD_REQUEST, "Could not verify this connection's identity").into_response();
         }

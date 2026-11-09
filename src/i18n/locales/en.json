@@ -399,6 +399,7 @@
     "later": "Later",
     "downloading": "Downloading… {{percent}}%",
     "downloadingUnknown": "Downloading…",
+    "installFailed": "The update could not be installed: {{message}}",
     "noticeAvailable": "Voynix {{version}} available",
     "dismissNotice": "Dismiss"
   },

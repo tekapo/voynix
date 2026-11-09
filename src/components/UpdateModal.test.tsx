@@ -29,6 +29,12 @@ describe("UpdateModal", () => {
         expect(dismiss).toHaveBeenCalled();
     });
 
+    it("says why a failed install failed and keeps the retry button", () => {
+        render(<UpdateModal updater={make({ status: { kind: "available", version: "1.2.3", notes: "", error: "offline" } })} />);
+        expect(screen.getByRole("alert").textContent).toContain("offline");
+        expect((screen.getByText("Update and Restart") as HTMLButtonElement).disabled).toBe(false);
+    });
+
     it("shows download progress and blocks dismissal", () => {
         render(<UpdateModal updater={make({ status: { kind: "downloading", version: "1.2.3", done: 50, total: 200 } })} />);
         expect(screen.getByText("Downloading… 25%")).toBeTruthy();

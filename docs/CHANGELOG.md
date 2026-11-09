@@ -10,6 +10,11 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.39.3 — 2026-11-09
+
+- Fix keyboard and update-dialog issues: Enter on a row's thumbs button no longer plays the row, stacked dialogs no longer fight over Tab, a failed install keeps the update dialog open with the reason and a retry, "Check for updates" is ignored mid-download, and turning off auto-check is honoured even when startup is slow.
+- Fix the player bar showing a stale thumbs-down after a rating syncs in; incoming ratings are normalised so a track is never both thumbs-up and thumbs-down.
+
 ## 0.39.2 — 2026-11-09
 
 - User manual and READMEs now describe thumbs up/down ratings and the "hide thumbs-down songs" setting; leftover star wording is gone.

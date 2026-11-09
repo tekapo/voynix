@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TrackList } from "./TrackList";
 import { Track } from "../types";
@@ -599,6 +599,17 @@ describe("TrackList keyboard access", () => {
         fireEvent.keyDown(list, { key: "ArrowDown" });
         fireEvent.keyDown(list, { key: "Enter" });
         expect(onTrackActivate).toHaveBeenCalledWith(expect.objectContaining({ id: "b" }));
+    });
+
+    it("leaves Enter to a row's thumbs button instead of playing the row", () => {
+        const { list, onTrackActivate } = setup();
+        fireEvent.focus(list);
+        const thumb = within(screen.getAllByRole("option")[0]).getAllByRole("button")[0];
+        thumb.focus();
+        fireEvent.keyDown(thumb, { key: "Enter" });
+        fireEvent.keyDown(thumb, { key: "ArrowDown" });
+        expect(onTrackActivate).not.toHaveBeenCalled();
+        expect(list).toHaveAttribute("aria-activedescendant", "track-row-a");
     });
 
     it("opens the context menu for the cursor row on the Menu key and Shift+F10", () => {

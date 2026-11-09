@@ -65,7 +65,9 @@ export async function applyFavoritesBatch(rows: FavoriteRow[], onChunk?: (done: 
         rows: deduped,
         cols: 4,
         perChunk: 225, // 225 * 4 = 900 params
-        toParams: r => [r.track_key, r.favorite, r.disliked ?? 0, r.favorite_updated_at],
+        // A paired device is trusted to sync, not to send well-formed ratings: keep
+        // the flags 0/1 and never both set (up wins over down is arbitrary but stable).
+        toParams: r => [r.track_key, r.favorite ? 1 : 0, !r.favorite && r.disliked ? 1 : 0, r.favorite_updated_at],
         sql: tuples => `
             UPDATE tracks SET favorite = v.column2, disliked = v.column3, favorite_updated_at = v.column4
             FROM (VALUES ${tuples}) AS v

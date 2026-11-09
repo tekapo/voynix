@@ -69,7 +69,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
                     {t('settings.autoUpdateCheck')}
                 </label>
                 <p className="settings-hint">{t('settings.autoUpdateHint')}</p>
-                <button type="button" className="modal-btn secondary" onClick={updater.checkNow} disabled={updater.status.kind === 'checking'}>
+                <button type="button" className="modal-btn secondary" onClick={updater.checkNow} disabled={updater.status.kind === 'checking' || updater.status.kind === 'downloading'}>
                     {t('settings.checkForUpdates')}
                 </button>
                 {updater.status.kind === 'checking' && <p className="settings-hint">{t('settings.updateChecking')}</p>}

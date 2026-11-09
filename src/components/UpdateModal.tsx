@@ -28,6 +28,9 @@ export const UpdateModal: React.FC<{ updater: SelfUpdate }> = ({ updater }) => {
                 >
                     <h3 id="update-title">{t('update.title', { version: status.version })}</h3>
                     {status.kind === 'available' && status.notes && <pre className="update-notes">{status.notes}</pre>}
+                    {status.kind === 'available' && status.error && <p className="settings-hint update-error" role="alert">
+                        {t('update.installFailed', { message: status.error })}
+                    </p>}
                     {downloading && <p className="settings-hint">
                         {percent === null ? t('update.downloadingUnknown') : t('update.downloading', { percent })}
                     </p>}

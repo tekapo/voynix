@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { useDialogFocus } from "./useDialogFocus";
 
 function Harness({ withAutoFocus = false }: { withAutoFocus?: boolean }) {
@@ -62,5 +62,44 @@ describe("useDialogFocus", () => {
     open();
     fireEvent.click(screen.getByText("last"));
     expect(opener).toHaveFocus();
+  });
+});
+
+const outerFocused = vi.fn();
+
+function Stacked() {
+  const [inner, setInner] = useState(false);
+  const outerRef = useDialogFocus(true);
+  const innerRef = useDialogFocus(inner);
+  return (
+    <>
+      <div ref={outerRef} role="dialog" aria-label="Outer">
+        <button onFocus={outerFocused} onClick={() => setInner(true)}>open-inner</button>
+        <button onFocus={outerFocused}>outer-last</button>
+      </div>
+      {inner && (
+        <div ref={innerRef} role="dialog" aria-label="Inner">
+          <button>inner-first</button>
+          <button>inner-last</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+describe("useDialogFocus stacking", () => {
+  it("lets only the topmost dialog handle Tab", () => {
+    render(<Stacked />);
+    fireEvent.click(screen.getByText("open-inner"));
+    expect(screen.getByText("inner-first")).toHaveFocus();
+    outerFocused.mockClear();
+    screen.getByText("inner-first").focus();
+    fireEvent.keyDown(document, { key: "Tab" });
+    // The outer trap must not yank focus back out of the inner dialog.
+    expect(screen.getByText("inner-first")).toHaveFocus();
+    screen.getByText("inner-last").focus();
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(screen.getByText("inner-first")).toHaveFocus();
+    expect(outerFocused).not.toHaveBeenCalled();
   });
 });

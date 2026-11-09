@@ -45,6 +45,8 @@ class AutoSyncWorker(context: Context, params: WorkerParameters) : CoroutineWork
         val api = SyncApi()
         val nsd = NsdDiscovery(applicationContext)
         val engine = SyncEngine(applicationContext, db, api)
+        // No `scan`: the subnet scan probes up to ~250 hosts, which is fine when
+        // the user is waiting on the Sync screen but not for an hourly background job.
         val result = SyncRunner.sync(
             peer = peer,
             probe = { url, token, pin -> api.ping(url, token, pin) },

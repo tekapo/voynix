@@ -34,6 +34,7 @@ export interface PlayEvent {
 export interface FavoriteRow {
     track_key: string;
     favorite: number; // 0 | 1
+    disliked?: number; // 0 | 1; absent from an older peer, which means 0
     favorite_updated_at: number | null;
 }
 
@@ -90,7 +91,12 @@ export function playCount(events: PlayEvent[], trackKey: string): number {
 export function mergeFavorites(into: FavoriteRow[], incoming: FavoriteRow[]): FavoriteRow[] {
     return mergeLww(into, incoming, r => r.track_key, r => r.favorite_updated_at, (cur, r) => {
         const win = favoriteWins(cur, r);
-        return { track_key: r.track_key, favorite: win.favorite, favorite_updated_at: win.favorite_updated_at };
+        return {
+            track_key: r.track_key,
+            favorite: win.favorite,
+            ...(win.disliked ? { disliked: win.disliked } : {}),
+            favorite_updated_at: win.favorite_updated_at,
+        };
     });
 }
 
@@ -160,7 +166,7 @@ export function sameStats(a: DeviceStats, b: DeviceStats): boolean {
     const favs = (d: DeviceStats) =>
         d.favorites
             .filter(f => f.favorite_updated_at != null)
-            .map(f => `${f.track_key}${US}${f.favorite}${US}${f.favorite_updated_at}`)
+            .map(f => `${f.track_key}${US}${f.favorite}${US}${f.disliked ?? 0}${US}${f.favorite_updated_at}`)
             .sort()
             .join("|");
     const plays = (d: DeviceStats) =>
