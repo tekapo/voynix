@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.39.6 — 2026-11-09
+
+- The sync server no longer spins a CPU core when accepting connections fails (e.g. out of file descriptors); it backs off for 100 ms like the Echo server.
+
 ## 0.39.5 — 2026-11-09
 
 - After adding a folder, rescanning, or importing an iTunes XML, covers missing from the files are now fetched online (iTunes) in the background, so the Albums grid fills in without playing each album first.
