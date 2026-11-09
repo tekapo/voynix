@@ -47,7 +47,13 @@ class SyncEngine(
      * downloaded or deleted. Tracks that aren't on the phone stay absent (no
      * placeholder rows) until a sync with files turned on.
      */
-    suspend fun runSync(peer: SyncPeer, onProgress: (SyncProgress) -> Unit = {}, syncFiles: Boolean = true): SyncSummary {
+    suspend fun runSync(
+        peer: SyncPeer,
+        onProgress: (SyncProgress) -> Unit = {},
+        syncFiles: Boolean = true,
+        /** Off over Bluetooth: album art is many small files, and the cached copies from earlier syncs stay. */
+        fetchArt: Boolean = true,
+    ): SyncSummary {
         val errors = mutableListOf<String>()
 
         onProgress(SyncProgress("manifest", "Fetching manifest"))
@@ -123,8 +129,10 @@ class SyncEngine(
         val playlistErrors = reconcilePlaylists(manifestPlaylists)
         errors.addAll(playlistErrors)
 
-        onProgress(SyncProgress("artwork", "Fetching album art"))
-        fetchAlbumArtBestEffort(manifestTracks, peer)
+        if (fetchArt) {
+            onProgress(SyncProgress("artwork", "Fetching album art"))
+            fetchAlbumArtBestEffort(manifestTracks, peer)
+        }
 
         val now = System.currentTimeMillis()
         peerStore.setLastSync(now)

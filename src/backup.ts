@@ -26,6 +26,7 @@ export const BACKUP_SETTING_KEYS = [
     "library_layout_artists",
     "library_layout_albums",
     "sync_server_autostart",
+    "sync_bluetooth_enabled",
     "transcode_format",
     "transcode_bitrate",
     "library_sync_sources",

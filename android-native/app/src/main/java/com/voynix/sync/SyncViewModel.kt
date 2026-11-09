@@ -98,9 +98,23 @@ class SyncViewModel(private val context: Context, private val db: VoynixDatabase
     private val _syncFiles = MutableStateFlow(true)
     val syncFiles: StateFlow<Boolean> = _syncFiles.asStateFlow()
 
+    // Bluetooth fallback for a manual sync when the Mac isn't on the network.
+    // Both off by default; song files over Bluetooth are very slow.
+    private val _btSyncEnabled = MutableStateFlow(false)
+    val btSyncEnabled: StateFlow<Boolean> = _btSyncEnabled.asStateFlow()
+
+    private val _btSyncFiles = MutableStateFlow(false)
+    val btSyncFiles: StateFlow<Boolean> = _btSyncFiles.asStateFlow()
+
+    /** Whether the last successful sync went through Bluetooth rather than the network. */
+    private val _lastViaBluetooth = MutableStateFlow(false)
+    val lastViaBluetooth: StateFlow<Boolean> = _lastViaBluetooth.asStateFlow()
+
     init {
         viewModelScope.launch {
             _syncFiles.value = db.settingsDao().get(SYNC_FILES_KEY) != "0"
+            _btSyncEnabled.value = db.settingsDao().get(BT_SYNC_ENABLED_KEY) == "1"
+            _btSyncFiles.value = db.settingsDao().get(BT_SYNC_FILES_KEY) == "1"
         }
         viewModelScope.launch {
             val existing = peerStore.get()
@@ -129,6 +143,20 @@ class SyncViewModel(private val context: Context, private val db: VoynixDatabase
             db.settingsDao().set(SettingEntity(AUTO_SYNC_CHARGING_ONLY_KEY, if (chargingOnly) "1" else "0"))
         }
         AutoSyncScheduler.reschedule(context, _autoSyncEnabled.value, chargingOnly)
+    }
+
+    fun setBtSyncEnabled(enabled: Boolean) {
+        _btSyncEnabled.value = enabled
+        viewModelScope.launch {
+            db.settingsDao().set(SettingEntity(BT_SYNC_ENABLED_KEY, if (enabled) "1" else "0"))
+        }
+    }
+
+    fun setBtSyncFiles(withFiles: Boolean) {
+        _btSyncFiles.value = withFiles
+        viewModelScope.launch {
+            db.settingsDao().set(SettingEntity(BT_SYNC_FILES_KEY, if (withFiles) "1" else "0"))
+        }
     }
 
     fun setSyncFiles(syncFiles: Boolean) {
@@ -335,9 +363,11 @@ class SyncViewModel(private val context: Context, private val db: VoynixDatabase
                 scan = { port -> subnetCandidates(LocalSubnets.ipv4Addresses(), port) },
                 runSync = { peer, onProgress -> engine.runSync(peer, onProgress, _syncFiles.value) },
                 onPeerMoved = { moved -> peerStore.save(moved.url, moved.token, moved.pin.orEmpty()) },
+                bluetooth = bluetoothTransport(),
             )) {
                 is SyncRunResult.Success -> {
                     _lastSummary.value = result.summary
+                    _lastViaBluetooth.value = result.viaBluetooth
                     _connection.value = PeerConnection.CONNECTED
                 }
                 is SyncRunResult.Failed -> {
@@ -350,6 +380,16 @@ class SyncViewModel(private val context: Context, private val db: VoynixDatabase
             }
             _peer.value = peerStore.get()
         }
+    }
+
+    /** Only offered when the user turned it on, the phone supports it (Android 12+) and the permissions are granted. */
+    private fun bluetoothTransport(): BluetoothTransport? {
+        if (!_btSyncEnabled.value || !BluetoothTunnels.isSupported || !BluetoothTunnels.hasPermissions(context)) return null
+        return BluetoothTransport(
+            open = { p -> BluetoothTunnels.open(context, p.pin) },
+            // Album art is many small requests; the copies cached by earlier syncs stay.
+            runSync = { p, onProgress -> engine.runSync(p, onProgress, syncFiles = _btSyncFiles.value, fetchArt = false) },
+        )
     }
 
     private fun deviceName(): String = "${Build.MANUFACTURER} ${Build.MODEL}".trim().ifBlank { "Voynix" }

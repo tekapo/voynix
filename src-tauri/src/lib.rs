@@ -37,6 +37,29 @@ fn respond_pairing(
     server::respond_pairing(state.inner(), id, approve)
 }
 
+/// Turns Bluetooth sync on/off for the running sync server (macOS only).
+/// Needs the server to be running; the frontend calls it after starting it.
+#[tauri::command]
+fn set_sync_bluetooth(
+    state: tauri::State<'_, Arc<Mutex<server::SyncServer>>>,
+    enabled: bool,
+) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        if !enabled {
+            bt::stop();
+            return Ok(());
+        }
+        let ctx = server::bt_ctx(state.inner()).ok_or("The sync server isn't running")?;
+        bt::start(ctx)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = (state, enabled);
+        Err("Bluetooth sync is only available on macOS".to_string())
+    }
+}
+
 #[tauri::command]
 async fn stop_sync_server(
     state: tauri::State<'_, Arc<Mutex<server::SyncServer>>>,
@@ -266,6 +289,8 @@ fn show_in_finder(path: String) -> Result<(), String> {
 }
 
 #[cfg(target_os = "macos")]
+mod bt;
+#[cfg(target_os = "macos")]
 mod dock;
 #[cfg(target_os = "macos")]
 mod menu;
@@ -300,6 +325,7 @@ pub fn run() {
             scan::cancel_scan,
             start_sync_server,
             stop_sync_server,
+            set_sync_bluetooth,
             respond_pairing,
             player_load,
             player_set_next,

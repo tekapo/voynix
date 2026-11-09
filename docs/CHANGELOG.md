@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.38.0 — 2026-11-09
+- Bluetooth sync (experimental, off by default): with "Allow sync over Bluetooth" on in the Mac app and "Sync over Bluetooth" on in the Android app (Android 12+), a manual sync falls back to a direct Bluetooth (BLE L2CAP) link when the Mac can't be reached on the network. It carries metadata only unless "Include song files over Bluetooth" is on.
+- The sync server's connection handler now works over any byte stream, not just TCP.
+
 ## 0.37.1 — 2026-11-09
 - Android: the periodic auto-sync no longer runs as a foreground service, so the "Syncing with Mac" notification and the dataSync foreground-service permission are gone (Play only accepts that type for user-started work). An interrupted run resumes from its partial downloads on the next hourly check.
 
