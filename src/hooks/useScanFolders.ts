@@ -1,8 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import i18n from "../i18n";
-import { albumOf } from "../albumName";
+import { albumOf, isFolderAlbum } from "../albumName";
+import { invalidateAlbumArt } from "../albumArt";
+import { buildAlbumReps, ensureAlbumArts } from "../lib/ensureAlbumArts";
 import { useTauriEvent } from "./useTauriEvent";
 import {
   addScanFolder,
@@ -56,6 +58,8 @@ export function useScanFolders({
   // Per-album progress from prewarmForTracks below, shown in the sidebar once
   // a scan finishes (see Sidebar.tsx's "Loading artwork…" status).
   const [artworkProgress, setArtworkProgress] = useState<{ done: number; total: number } | null>(null);
+  // Set by cancelThumbPrewarm to stop the post-scan online cover fetch early.
+  const fetchCancelled = useRef(false);
 
   // Get ahead of the Albums grid's on-demand `get_album_thumb` calls right
   // after a scan, so opening it resolves from an already-warm cache instead
@@ -66,22 +70,48 @@ export function useScanFolders({
   // Deliberately not awaited by callers: it's a nice-to-have that shouldn't
   // hold up the scan's own success/error handling.
   async function prewarmForTracks(tracks: { artist?: string; album?: string; file_path: string }[]) {
-    const reps = new Map<string, { artist: string; album: string; path: string }>();
-    for (const t of tracks) {
+    const reps = buildAlbumReps(tracks, (t) => {
       const album = albumOf(t);
-      const key = `${t.artist ?? ""}␟${album}`;
-      if (!reps.has(key)) reps.set(key, { artist: t.artist ?? "", album, path: t.file_path });
-    }
-    if (reps.size === 0) return;
+      return {
+        key: `${t.artist ?? ""}␟${album}`,
+        artist: t.artist ?? "", album,
+        // A folder name stands in for a missing album tag; don't search iTunes for it.
+        lookupOnline: !isFolderAlbum(t),
+      };
+    });
+    if (reps.length === 0) return;
+    fetchCancelled.current = false;
     try {
-      await invoke("prewarm_album_thumbs", { items: Array.from(reps.values()) });
+      await invoke("prewarm_album_thumbs", {
+        items: reps.map(({ artist, album, path }) => ({ artist, album, path })),
+      });
     } catch (e) {
       console.error("Failed to prewarm album thumbs:", e);
     }
+    // Then fetch covers the files don't carry (iTunes), so the Albums grid
+    // fills in without having to play each album first. Cached covers and
+    // recent misses return early on the Rust side, so a rescan of a known
+    // library makes no requests. Re-render the grid as covers arrive (and
+    // once at the end) — the thumb cache remembers "no cover" until cleared.
+    let resolved = 0;
+    let lastRefresh = Date.now();
+    await ensureAlbumArts(reps, {
+      concurrency: 2,
+      isCancelled: () => fetchCancelled.current,
+      onResolved: () => {
+        resolved++;
+        // Throttled: clearing the cache makes every visible card re-resolve.
+        if (Date.now() - lastRefresh >= 5000) { lastRefresh = Date.now(); invalidateAlbumArt(); }
+      },
+    });
+    if (resolved > 0) invalidateAlbumArt();
   }
 
   // Cancel a running prewarm. Safe to call when nothing is prewarming.
-  const cancelThumbPrewarm = () => { invoke("cancel_thumb_prewarm").catch(() => { /* nothing prewarming */ }); };
+  const cancelThumbPrewarm = () => {
+    fetchCancelled.current = true;
+    invoke("cancel_thumb_prewarm").catch(() => { /* nothing prewarming */ });
+  };
 
   async function refreshScanFolders() {
     try {
