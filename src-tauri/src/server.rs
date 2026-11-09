@@ -596,7 +596,14 @@ pub async fn start(
             tokio::select! {
                 _ = rx.changed() => break,
                 accepted = listener.accept() => {
-                    let Ok((stream, addr)) = accepted else { continue };
+                    let (stream, addr) = match accepted {
+                        Ok(conn) => conn,
+                        // E.g. out of file descriptors: retrying at once would spin a core.
+                        Err(_) => {
+                            tokio::time::sleep(Duration::from_millis(100)).await;
+                            continue;
+                        }
+                    };
                     // Over a cap: drop the socket instead of queueing, so idle
                     // connections can't pile up; a real client just reconnects.
                     let Some(ip_slot) = admit_ip(&per_ip, addr.ip()) else { continue };
