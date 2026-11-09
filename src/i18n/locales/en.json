@@ -400,6 +400,8 @@
     "downloading": "Downloading… {{percent}}%",
     "downloadingUnknown": "Downloading…",
     "installFailed": "The update could not be installed: {{message}}",
+    "releaseNotes": "View release notes",
+    "releaseNotesUrl": "https://github.com/tekapo/voynix/releases/tag/v{{version}}",
     "noticeAvailable": "Voynix {{version}} available",
     "dismissNotice": "Dismiss"
   },

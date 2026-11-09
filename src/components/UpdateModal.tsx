@@ -1,4 +1,5 @@
 import React from 'react';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { useTranslation } from 'react-i18next';
 import { Portal } from './Modals';
 import { useDialogFocus } from '../hooks/useDialogFocus';
@@ -27,6 +28,11 @@ export const UpdateModal: React.FC<{ updater: SelfUpdate }> = ({ updater }) => {
                     onClick={e => e.stopPropagation()}
                 >
                     <h3 id="update-title">{t('update.title', { version: status.version })}</h3>
+                    {status.kind === 'available' && (
+                        <button type="button" className="link-button" onClick={() => { openUrl(t('update.releaseNotesUrl', { version: status.version })).catch(() => {}); }}>
+                            {t('update.releaseNotes')}
+                        </button>
+                    )}
                     {status.kind === 'available' && status.notes && <pre className="update-notes">{status.notes}</pre>}
                     {status.kind === 'available' && status.error && <p className="settings-hint update-error" role="alert">
                         {t('update.installFailed', { message: status.error })}
