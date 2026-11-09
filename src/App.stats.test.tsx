@@ -36,7 +36,7 @@ describe("favorite toggle", () => {
         await playRow("Aurora"); // Aurora is seeded as already-favorited
 
         const playerBar = document.querySelector(".player-bar") as HTMLElement;
-        const star = within(playerBar).getByRole("button", { name: /Favorites/ });
+        const star = within(playerBar).getByRole("button", { name: /thumbs up/i });
         expect(star).toHaveAttribute("aria-pressed", "true");
 
         fireEvent.click(star);
@@ -46,6 +46,27 @@ describe("favorite toggle", () => {
         await waitFor(() => expect(star).toHaveAttribute("aria-pressed", "true"));
     });
 
+    it("thumbs down and thumbs up are mutually exclusive in the PlayerBar", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+        await playRow("Aurora"); // seeded as thumbs-up
+
+        const playerBar = document.querySelector(".player-bar") as HTMLElement;
+        const up = within(playerBar).getByRole("button", { name: /thumbs up/i });
+        const down = within(playerBar).getByRole("button", { name: /thumbs down/i });
+        expect(up).toHaveAttribute("aria-pressed", "true");
+        expect(down).toHaveAttribute("aria-pressed", "false");
+
+        fireEvent.click(down);
+        await waitFor(() => expect(down).toHaveAttribute("aria-pressed", "true"));
+        expect(up).toHaveAttribute("aria-pressed", "false");
+
+        fireEvent.click(down);
+        await waitFor(() => expect(down).toHaveAttribute("aria-pressed", "false"));
+        expect(up).toHaveAttribute("aria-pressed", "false");
+    });
+
     it("a track without the favorite flag starts unpressed", async () => {
         await seedLibrary();
         render(<App />);
@@ -53,7 +74,7 @@ describe("favorite toggle", () => {
         await playRow("Borealis");
 
         const playerBar = document.querySelector(".player-bar") as HTMLElement;
-        expect(within(playerBar).getByRole("button", { name: /Favorites/ })).toHaveAttribute("aria-pressed", "false");
+        expect(within(playerBar).getByRole("button", { name: /thumbs up/i })).toHaveAttribute("aria-pressed", "false");
     });
 });
 

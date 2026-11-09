@@ -105,13 +105,14 @@ fun browseTreeChildren(
     allTracks: List<TrackWithStats>,
     page: Int,
     pageSize: Int,
+    excludeDisliked: Boolean = false,
 ): List<TrackWithStats>? {
     val matched = when {
         parentId == ALL_SONGS_ID -> allTracks
         parentId == FAVORITES_ID -> allTracks.filter { it.track.favorite }
-        parentId == MOST_PLAYED_ID -> mostPlayed(allTracks)
-        parentId == RECENTLY_ADDED_ID -> recentlyAdded(allTracks)
-        parentId == RECENTLY_PLAYED_ID -> recentlyPlayed(allTracks)
+        parentId == MOST_PLAYED_ID -> mostPlayed(allTracks, excludeDisliked)
+        parentId == RECENTLY_ADDED_ID -> recentlyAdded(allTracks, excludeDisliked)
+        parentId == RECENTLY_PLAYED_ID -> recentlyPlayed(allTracks, excludeDisliked)
         artistNameOfFolder(parentId) != null -> allTracks.filter { artistOf(it) == artistNameOfFolder(parentId) }
         albumNameOfFolder(parentId) != null -> allTracks.filter { albumOf(it) == albumNameOfFolder(parentId) }
         else -> return null

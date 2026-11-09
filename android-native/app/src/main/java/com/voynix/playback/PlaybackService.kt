@@ -35,6 +35,8 @@ import com.voynix.artwork.AlbumArtResolver
 import com.voynix.data.db.SettingEntity
 import com.voynix.data.db.TrackWithStats
 import com.voynix.data.db.VoynixDatabase
+import com.voynix.logic.EXCLUDE_DISLIKED_KEY
+import com.voynix.logic.parseExcludeDisliked
 import com.voynix.logic.PlayState
 import com.voynix.logic.QueueSnapshot
 import com.voynix.logic.alignSnapshotCursor
@@ -260,12 +262,16 @@ class PlaybackService : MediaLibraryService() {
         serviceScope.launch { db.settingsDao().set(SettingEntity(CAR_PAUSED_AT_KEY, System.currentTimeMillis().toString())) }
     }
 
+    /** The "hide thumbs-down songs from auto lists" setting, read fresh so a change applies on the next browse. */
+    private suspend fun excludeDisliked(): Boolean =
+        parseExcludeDisliked(db.settingsDao().get(EXCLUDE_DISLIKED_KEY))
+
     /** The full (unpaged) track list for a browse folder id, or null if [parentId] isn't one we recognize. */
     private suspend fun resolveFolderTracks(parentId: String): List<TrackWithStats>? {
         playlistIdOfFolder(parentId)?.let { playlistId ->
             return db.playlistDao().observePlaylistTracks(playlistId).first()
         }
-        return browseTreeChildren(parentId, allTracksSorted(), page = 0, pageSize = Int.MAX_VALUE)
+        return browseTreeChildren(parentId, allTracksSorted(), page = 0, pageSize = Int.MAX_VALUE, excludeDisliked = excludeDisliked())
     }
 
     /** A persisted queue resolved against the current library: tracks in queue order + the remapped order/cursor. */
@@ -671,7 +677,7 @@ class PlaybackService : MediaLibraryService() {
                         // with thousands of tracks must never cross the Binder in
                         // one transaction (see BrowseTree.kt). Also handles
                         // artist/album leaf folders (their tracks, not names).
-                        val children = browseTreeChildren(parentId, allTracksSorted(), page, pageSize)
+                        val children = browseTreeChildren(parentId, allTracksSorted(), page, pageSize, excludeDisliked())
                         children?.map { playableItem(parentId, it) } ?: emptyList()
                     }
                 }

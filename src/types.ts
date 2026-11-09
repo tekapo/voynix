@@ -26,8 +26,11 @@ export interface Track {
   track_key?: string;
   /** Cheap fingerprint of the file bytes; changes when the file is replaced/retagged. */
   content_hash?: string;
-  /** 0 | 1 */
+  /** Thumbs up, 0 | 1 (formerly "favorite"; the column name is kept for sync/backup compatibility). */
   favorite?: number;
+  /** Thumbs down, 0 | 1. Mutually exclusive with `favorite`. */
+  disliked?: number;
+  /** LWW timestamp for the whole rating (favorite + disliked). */
   favorite_updated_at?: number;
   /** Derived from play_events (not stored on the row). */
   play_count?: number;
@@ -147,6 +150,8 @@ export interface SyncSnapshot {
     /** Byte length of the file to download; 0 when unknown. */
     size: number;
     favorite: number;
+    /** Thumbs down; absent from peers older than the rating feature (treated as 0). */
+    disliked?: number;
     favorite_updated_at: number | null;
     /** 'music' | 'podcast' | 'other'. */
     kind: TrackKind;
@@ -171,7 +176,7 @@ export interface SyncSnapshot {
 export interface IncomingStats {
   device_id: string;
   events?: { track_key: string; played_at: number }[];
-  favorites?: { track_key: string; favorite: number; updated_at: number }[];
+  favorites?: { track_key: string; favorite: number; disliked?: number; updated_at: number }[];
   play_states?: { track_key: string; play_state: PlayState; resume_position: number; updated_at: number }[];
 }
 

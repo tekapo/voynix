@@ -9,9 +9,19 @@ import com.voynix.data.db.TrackWithStats
 
 private const val SMART_LIST_LIMIT = 100
 
+/** Setting "exclude_disliked_from_lists" (default on): hide thumbs-down songs from the three lists below. */
+const val EXCLUDE_DISLIKED_KEY = "exclude_disliked_from_lists"
+
+/** Unset means on; only an explicit "0" turns it off. */
+fun parseExcludeDisliked(raw: String?): Boolean = raw != "0"
+
+/** Drops thumbs-down tracks when the "exclude disliked" setting is on (these three lists only). */
+private fun List<TrackWithStats>.visible(excludeDisliked: Boolean): List<TrackWithStats> =
+    if (excludeDisliked) filter { !it.track.disliked } else this
+
 /** Tracks with at least one play, most-played first, capped at 100. */
-fun mostPlayed(tracks: List<TrackWithStats>): List<TrackWithStats> =
-    tracks.filter { it.playCount > 0 }
+fun mostPlayed(tracks: List<TrackWithStats>, excludeDisliked: Boolean = false): List<TrackWithStats> =
+    tracks.visible(excludeDisliked).filter { it.playCount > 0 }
         .sortedByDescending { it.playCount }
         .take(SMART_LIST_LIMIT)
 
@@ -22,8 +32,8 @@ fun mostPlayed(tracks: List<TrackWithStats>): List<TrackWithStats> =
  * with no addedAt (not yet backfilled by a sync, see VoynixDatabase's
  * MIGRATION_3_4) are left out rather than sorted arbitrarily.
  */
-fun recentlyAdded(tracks: List<TrackWithStats>): List<TrackWithStats> =
-    tracks.filter { it.track.kind != "podcast" && it.track.addedAt != null }
+fun recentlyAdded(tracks: List<TrackWithStats>, excludeDisliked: Boolean = false): List<TrackWithStats> =
+    tracks.visible(excludeDisliked).filter { it.track.kind != "podcast" && it.track.addedAt != null }
         .sortedByDescending { it.track.addedAt }
         .take(SMART_LIST_LIMIT)
 
@@ -32,7 +42,7 @@ fun recentlyAdded(tracks: List<TrackWithStats>): List<TrackWithStats> =
  * from play_events (MAX(played_at) per track_key), so this includes plays
  * synced in from a paired device.
  */
-fun recentlyPlayed(tracks: List<TrackWithStats>): List<TrackWithStats> =
-    tracks.filter { it.lastPlayed != null }
+fun recentlyPlayed(tracks: List<TrackWithStats>, excludeDisliked: Boolean = false): List<TrackWithStats> =
+    tracks.visible(excludeDisliked).filter { it.lastPlayed != null }
         .sortedByDescending { it.lastPlayed }
         .take(SMART_LIST_LIMIT)

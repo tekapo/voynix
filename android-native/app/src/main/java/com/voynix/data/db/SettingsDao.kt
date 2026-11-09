@@ -3,11 +3,16 @@ package com.voynix.data.db
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SettingsDao {
     @Query("SELECT value FROM settings WHERE `key` = :key")
     suspend fun get(key: String): String?
+
+    /** Emits the value now and on every change (null while unset). */
+    @Query("SELECT value FROM settings WHERE `key` = :key")
+    fun observe(key: String): Flow<String?>
 
     @Upsert
     suspend fun set(setting: SettingEntity)

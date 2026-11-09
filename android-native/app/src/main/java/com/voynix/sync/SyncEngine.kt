@@ -188,7 +188,7 @@ class SyncEngine(
                     deviceId = deviceId,
                     events = batch.map { IncomingEventDto(it.trackKey, it.playedAt) },
                     favorites = if (i > 0) emptyList() else favorites.map {
-                        FavoriteUpdateDto(it.trackKey, if (it.favorite) 1 else 0, it.favoriteUpdatedAt ?: 0)
+                        FavoriteUpdateDto(it.trackKey, if (it.favorite) 1 else 0, if (it.disliked) 1 else 0, it.favoriteUpdatedAt ?: 0)
                     },
                     playStates = if (i > 0) emptyList() else playStates.map {
                         PlayStateUpdateDto(it.trackKey, it.playState, it.resumePosition, requireNotNull(it.playStateUpdatedAt))
@@ -205,7 +205,7 @@ class SyncEngine(
     private suspend fun applyManifestStats(manifestTracks: List<ManifestTrack>, macEvents: List<PlayEventDto>) = db.withTransaction {
         for (t in manifestTracks) {
             if (t.favoriteUpdatedAt != null) {
-                db.trackDao().applyFavoriteIfNewer(t.trackKey, t.favorite, t.favoriteUpdatedAt)
+                db.trackDao().applyFavoriteIfNewer(t.trackKey, t.favorite, t.disliked, t.favoriteUpdatedAt)
             }
             if (t.playStateUpdatedAt != null) {
                 db.trackDao().applyPlayStateIfNewer(t.trackKey, t.playState.toWire(), t.resumePosition, t.playStateUpdatedAt)
@@ -244,6 +244,7 @@ class SyncEngine(
             trackKey = track.trackKey,
             contentHash = track.contentHash,
             favorite = track.favorite,
+            disliked = track.disliked,
             favoriteUpdatedAt = track.favoriteUpdatedAt,
             kind = track.kind.toWire(),
             discNo = track.discNo,

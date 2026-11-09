@@ -20,6 +20,7 @@ interface ContextMenuProps {
     onSetAlbumCover?: (track: Track) => void;
     onResetAlbumCover?: (track: Track) => void;
     onToggleFavorite: (track: Track) => void;
+    onToggleDislike: (track: Track) => void;
     onSetKind?: (track: Track, kind: TrackKind) => void;
     onSetPlayState?: (track: Track, state: 'unplayed' | 'played') => void;
     onGetInfo?: (track: Track) => void;
@@ -47,6 +48,7 @@ export const TrackContextMenu: React.FC<ContextMenuProps> = ({
     onSetAlbumCover,
     onResetAlbumCover,
     onToggleFavorite,
+    onToggleDislike,
     onSetKind,
     onSetPlayState,
     onGetInfo,
@@ -78,7 +80,13 @@ export const TrackContextMenu: React.FC<ContextMenuProps> = ({
                 if (track) onToggleFavorite(track);
                 onClose();
             }}>
-                {track?.favorite ? t('contextMenu.removeFromFavorites') : t('contextMenu.addToFavorites')}
+                {track?.favorite ? t('contextMenu.removeThumbUp') : t('contextMenu.thumbUp')}
+            </div>
+            <div role="menuitem" tabIndex={-1} className="context-menu-item" onClick={() => {
+                if (track) onToggleDislike(track);
+                onClose();
+            }}>
+                {track?.disliked ? t('contextMenu.removeThumbDown') : t('contextMenu.thumbDown')}
             </div>
             {onAddToQueue && (
                 <div role="menuitem" tabIndex={-1} className="context-menu-item" onClick={() => {

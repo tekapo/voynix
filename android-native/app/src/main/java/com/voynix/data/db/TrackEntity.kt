@@ -32,7 +32,11 @@ data class TrackEntity(
     val trackKey: String? = null,
     @ColumnInfo(name = "content_hash")
     val contentHash: String? = null,
+    /** Thumbs up (formerly "favorite"; column name kept for sync compatibility). */
     val favorite: Boolean = false,
+    /** Thumbs down, mutually exclusive with [favorite] (migration 4->5). Shares favorite_updated_at. */
+    val disliked: Boolean = false,
+    /** LWW timestamp for the whole rating (favorite + disliked). */
     @ColumnInfo(name = "favorite_updated_at")
     val favoriteUpdatedAt: Long? = null,
     /** 'local' (added on this device) | 'mirror' (received from a sync peer). */

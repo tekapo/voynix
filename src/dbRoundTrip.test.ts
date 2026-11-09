@@ -56,7 +56,7 @@ import {
     getLocalPlayStates,
     initDb,
     recordPlayEvent,
-    setTrackFavorite,
+    setTrackRating,
     setTrackPlayState,
 } from "./db";
 import type { IncomingStats } from "./types";
@@ -195,9 +195,9 @@ describe("stats round-trip over real SQLite (両端末同時再生の収束)", (
     it("resolves a favorite conflict to the later write (phone wins)", async () => {
         vi.useFakeTimers();
         vi.setSystemTime(1000);
-        await withDevice(mac, () => setTrackFavorite("t-k1-mac", true));
+        await withDevice(mac, () => setTrackRating("t-k1-mac", 'up'));
         vi.setSystemTime(2000);
-        await withDevice(phone, () => setTrackFavorite("t-k1-phone", false));
+        await withDevice(phone, () => setTrackRating("t-k1-phone", 'none'));
         vi.useRealTimers();
 
         await syncRound();
@@ -211,9 +211,9 @@ describe("stats round-trip over real SQLite (両端末同時再生の収束)", (
     it("resolves a favorite conflict to the later write (Mac wins)", async () => {
         vi.useFakeTimers();
         vi.setSystemTime(1000);
-        await withDevice(phone, () => setTrackFavorite("t-k1-phone", false));
+        await withDevice(phone, () => setTrackRating("t-k1-phone", 'none'));
         vi.setSystemTime(2000);
-        await withDevice(mac, () => setTrackFavorite("t-k1-mac", true));
+        await withDevice(mac, () => setTrackRating("t-k1-mac", 'up'));
         vi.useRealTimers();
 
         await syncRound();
@@ -222,6 +222,35 @@ describe("stats round-trip over real SQLite (両端末同時再生の収束)", (
         const phoneFav = (await withDevice(phone, () => getLocalFavorites())).find(f => f.track_key === "k1");
         expect(macFav?.favorite).toBe(1);
         expect(phoneFav?.favorite).toBe(1);
+    });
+
+    it("syncs a thumbs down (and clears thumbs up) as one rating, later write wins", async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(1000);
+        await withDevice(mac, () => setTrackRating("t-k1-mac", 'up'));
+        vi.setSystemTime(2000);
+        await withDevice(phone, () => setTrackRating("t-k1-phone", 'down'));
+        vi.useRealTimers();
+
+        await syncRound();
+
+        for (const dev of [mac, phone]) {
+            const row = (await withDevice(dev, () => getAllTracks())).find(t => t.track_key === "k1");
+            expect(row?.disliked).toBe(1);
+            expect(row?.favorite).toBe(0);
+        }
+    });
+
+    it("setTrackRating keeps up and down mutually exclusive", async () => {
+        await withDevice(mac, () => setTrackRating("t-k1-mac", 'up'));
+        let row = (await withDevice(mac, () => getAllTracks())).find(t => t.track_key === "k1");
+        expect([row?.favorite, row?.disliked]).toEqual([1, 0]);
+        await withDevice(mac, () => setTrackRating("t-k1-mac", 'down'));
+        row = (await withDevice(mac, () => getAllTracks())).find(t => t.track_key === "k1");
+        expect([row?.favorite, row?.disliked]).toEqual([0, 1]);
+        await withDevice(mac, () => setTrackRating("t-k1-mac", 'none'));
+        row = (await withDevice(mac, () => getAllTracks())).find(t => t.track_key === "k1");
+        expect([row?.favorite, row?.disliked]).toEqual([0, 0]);
     });
 
     it("resolves a play_state/resume_position conflict atomically to the later write", async () => {
@@ -249,7 +278,7 @@ describe("stats round-trip over real SQLite (両端末同時再生の収束)", (
         await withDevice(phone, () => recordPlayEvent("k1"));
         vi.useFakeTimers();
         vi.setSystemTime(1000);
-        await withDevice(phone, () => setTrackFavorite("t-k1-phone", true));
+        await withDevice(phone, () => setTrackRating("t-k1-phone", 'up'));
         vi.useRealTimers();
         await syncRound();
 
@@ -358,7 +387,7 @@ describe("stats round-trip over real SQLite (両端末同時再生の収束)", (
             vi.useFakeTimers();
             vi.setSystemTime(1000);
             await withDevice(mac, async () => {
-                for (const k of keys) await setTrackFavorite(`t-${k}-mac`, true);
+                for (const k of keys) await setTrackRating(`t-${k}-mac`, 'up');
             });
             vi.useRealTimers();
 
@@ -379,7 +408,7 @@ describe("stats round-trip over real SQLite (両端末同時再生の収束)", (
             vi.useFakeTimers();
             vi.setSystemTime(1000);
             await withDevice(mac, async () => {
-                for (const k of keys) await setTrackFavorite(`t-${k}-mac`, true);
+                for (const k of keys) await setTrackRating(`t-${k}-mac`, 'up');
             });
             vi.useRealTimers();
 

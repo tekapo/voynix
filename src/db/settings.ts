@@ -15,6 +15,16 @@ export async function setSetting(key: string, value: string) {
     );
 }
 
+/**
+ * "Hide thumbs-down songs from the auto lists" (Most Played / Recently Added /
+ * Recently Played). Default on; stored as "exclude_disliked_from_lists" = "0"/"1".
+ */
+export const EXCLUDE_DISLIKED_KEY = "exclude_disliked_from_lists";
+
+export async function getExcludeDisliked(): Promise<boolean> {
+    return (await getSetting(EXCLUDE_DISLIKED_KEY)) !== "0";
+}
+
 // ---- Last-playback restore -------------------------------------------------
 // The playing track / position / view live only in React state, so a cold
 // start (Android killed the process) would otherwise reset to the first track

@@ -258,7 +258,12 @@ export const TrackInfoModal: React.FC<TrackInfoModalProps> = ({ track, onClose, 
                                 </span>
                                 {!!track.favorite && (
                                     <span className="info-modal-chip">
-                                        <Icon name="star-filled" size={12} /> {t('trackInfo.favorite')}
+                                        <Icon name="thumb-up-filled" size={12} /> {t('trackInfo.thumbUp')}
+                                    </span>
+                                )}
+                                {!!track.disliked && (
+                                    <span className="info-modal-chip">
+                                        <Icon name="thumb-down-filled" size={12} /> {t('trackInfo.thumbDown')}
                                     </span>
                                 )}
                                 <span className="info-modal-chip">{track.kind ?? 'music'}</span>

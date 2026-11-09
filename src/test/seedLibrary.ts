@@ -1,6 +1,6 @@
 // A small, deterministic fixture library for App.tsx characterization tests.
 // Built by calling db.ts's own write functions (createPlaylist,
-// addTracksToPlaylist, setTrackFavorite, setTrackKind, setTrackPlayState)
+// addTracksToPlaylist, setTrackRating, setTrackKind, setTrackPlayState)
 // against a real in-memory SQLite device (test/sqliteDevice.ts) — not by
 // hand-crafting fakeDb SQL-string matches. This means App renders against
 // the exact same SQL getPlaylists()/buildSyncSnapshot() run in production,
@@ -9,7 +9,7 @@
 import {
     addTracksToPlaylist,
     createPlaylist,
-    setTrackFavorite,
+    setTrackRating,
     setTrackKind,
     setTrackPlayState,
 } from "../db";
@@ -64,7 +64,7 @@ export async function seedLibrary(): Promise<SeededLibrary> {
         file_path: "/music/artist-b/album-b/01-cascade.mp3", file_name: "01-cascade.mp3", track_no: 1,
     });
     await addTracksToPlaylist(rockPlaylist.id, [aFavorite, aTrack2, bTrack1]);
-    await setTrackFavorite(aFavorite.id, true);
+    await setTrackRating(aFavorite.id, 'up');
 
     const podcastUnplayed = track({
         id: "t-pod-1", title: "Episode 1", artist: "Cast Host", album: "My Podcast",

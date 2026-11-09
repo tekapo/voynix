@@ -7,6 +7,8 @@ export interface LibraryTabProps {
     showPathColumn: boolean;
     onTogglePathColumn: (next: boolean) => void;
     /** Play Podcast playlists in order even while shuffle is on. */
+    excludeDisliked: boolean;
+    onToggleExcludeDisliked: (next: boolean) => void;
     podcastNoShuffle: boolean;
     onTogglePodcastNoShuffle: (next: boolean) => void;
     /** Bulk "Fetch Missing Artist Images" (Deezer) — see useArtworkActions.ts. */
@@ -24,6 +26,8 @@ export const LibraryTab: React.FC<LibraryTabProps> = ({
     isScanning,
     showPathColumn,
     onTogglePathColumn,
+    excludeDisliked,
+    onToggleExcludeDisliked,
     podcastNoShuffle,
     onTogglePodcastNoShuffle,
     artistImageFetchProgress = null,
@@ -47,6 +51,17 @@ export const LibraryTab: React.FC<LibraryTabProps> = ({
                     />
                     {t('settings.showPathColumn')}
                 </label>
+                <label className="settings-toggle">
+                    <input
+                        type="checkbox"
+                        checked={excludeDisliked}
+                        onChange={e => onToggleExcludeDisliked(e.target.checked)}
+                    />
+                    {t('settings.excludeDisliked')}
+                </label>
+                <p className="settings-hint">
+                    {t('settings.excludeDislikedHint')}
+                </p>
             </div>
             <div className="settings-section">
                 <div className="settings-section-header">

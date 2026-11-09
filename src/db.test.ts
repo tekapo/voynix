@@ -163,11 +163,21 @@ describe("saveHashCache", () => {
 // index, only file_path does.
 describe("applyFavoritesBatch / applyPlayStatesBatch", () => {
     it("applyFavoritesBatch keeps the per-row LWW guard under the join", async () => {
-        await applyFavoritesBatch([{ track_key: "k1", favorite: 1, favorite_updated_at: 500 }]);
+        await applyFavoritesBatch([{ track_key: "k1", favorite: 1, disliked: 0, favorite_updated_at: 500 }]);
         const [sql, params] = fakeDb.execute.mock.calls[0];
         expect(sql).toContain("FROM (VALUES");
-        expect(sql).toContain("tracks.favorite_updated_at IS NULL OR tracks.favorite_updated_at < v.column3");
-        expect(params).toEqual(["k1", 1, 500]);
+        expect(sql).toContain("tracks.favorite_updated_at IS NULL OR tracks.favorite_updated_at < v.column4");
+        expect(params).toEqual(["k1", 1, 0, 500]);
+    });
+
+    it("applyFavoritesBatch carries the thumbs-down flag, and treats a missing one (older peer) as 0", async () => {
+        await applyFavoritesBatch([
+            { track_key: "k1", favorite: 0, disliked: 1, favorite_updated_at: 500 },
+            { track_key: "k2", favorite: 1, favorite_updated_at: 600 },
+        ]);
+        const [sql, params] = fakeDb.execute.mock.calls[0];
+        expect(sql).toContain("SET favorite = v.column2, disliked = v.column3");
+        expect(params).toEqual(["k1", 0, 1, 500, "k2", 1, 0, 600]);
     });
 
     it("applyPlayStatesBatch keeps the per-row LWW guard under the join", async () => {
@@ -184,7 +194,7 @@ describe("applyFavoritesBatch / applyPlayStatesBatch", () => {
             { track_key: "k1", favorite: 1, favorite_updated_at: 500 },
         ]);
         const [, params] = fakeDb.execute.mock.calls[0];
-        expect(params).toEqual(["k1", 1, 500]);
+        expect(params).toEqual(["k1", 1, 0, 500]);
     });
 });
 
@@ -743,7 +753,7 @@ describe("sync stats SQL", () => {
         expect(ins[0][1]).toEqual([expect.any(String), "k1", 10, "phone-1", expect.any(String), "k2", 20, "phone-1"]);
         const fav = calls.filter(([sql]) => sql.includes("SET favorite ="));
         expect(fav).toHaveLength(1);
-        expect(fav[0][1]).toEqual(["k1", 1, 30]);
+        expect(fav[0][1]).toEqual(["k1", 1, 0, 30]);
     });
 
     it("applySyncInbox counts applied rows from rowsAffected and reports none failed", async () => {

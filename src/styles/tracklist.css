@@ -18,7 +18,7 @@
 /* Header Row */
 .track-list-header {
   display: grid;
-  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) var(--col-path, 2fr) 44px 32px var(--col-time, 112px);
+  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) var(--col-path, 2fr) 44px 60px var(--col-time, 112px);
   /* # Title Artist Album Path Plays Fav Duration. The --col-* vars are set by
      TrackList.tsx once a column has been dragged to a custom width. */
   padding: 0.8rem 2rem;
@@ -137,7 +137,7 @@
 
 .track-item {
   display: grid;
-  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) var(--col-path, 2fr) 44px 32px var(--col-time, 112px);
+  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) var(--col-path, 2fr) 44px 60px var(--col-time, 112px);
   /* Match header */
   align-items: center;
   padding: 0.6rem 1rem;
@@ -163,7 +163,7 @@
    so the mobile 4-column grid in the media query still wins. */
 :where(.hide-path) .track-list-header,
 :where(.hide-path) .track-item {
-  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) 44px 32px var(--col-time, 112px);
+  grid-template-columns: 40px var(--col-title, 2fr) var(--col-artist, 1.5fr) var(--col-album, 1.5fr) 44px 60px var(--col-time, 112px);
 }
 
 .track-item:hover {
@@ -405,6 +405,22 @@
 
 .star-btn:hover {
   color: var(--accent-text);
+}
+
+.rating-cell {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.star-btn.is-disliked {
+  opacity: 1;
+  color: var(--text-2);
+}
+
+.player-fav-btn.is-disliked {
+  color: var(--text-1);
+  opacity: 1;
 }
 
 .player-fav-btn.is-favorite {

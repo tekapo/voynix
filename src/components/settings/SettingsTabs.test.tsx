@@ -21,6 +21,8 @@ function makeProps(over: Partial<Props> = {}): Props {
         onSetFolderKind: () => {},
         showPathColumn: false,
         onTogglePathColumn: () => {},
+        excludeDisliked: true,
+        onToggleExcludeDisliked: () => {},
         podcastNoShuffle: false,
         onTogglePodcastNoShuffle: () => {},
         serverAutostart: false,

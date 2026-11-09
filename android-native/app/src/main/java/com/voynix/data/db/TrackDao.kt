@@ -36,6 +36,7 @@ data class TrackKeyId(
 data class FavoriteRowEntity(
     @androidx.room.ColumnInfo(name = "track_key") val trackKey: String,
     val favorite: Boolean,
+    val disliked: Boolean,
     @androidx.room.ColumnInfo(name = "favorite_updated_at") val favoriteUpdatedAt: Long?,
 )
 
@@ -74,11 +75,11 @@ interface TrackDao {
         """
         INSERT INTO tracks
           (id, title, artist, album, file_path, file_name, duration, track_key, content_hash,
-           favorite, favorite_updated_at, kind, disc_no, track_no, play_state, resume_position,
+           favorite, disliked, favorite_updated_at, kind, disc_no, track_no, play_state, resume_position,
            play_state_updated_at, added_at, origin)
         VALUES
           (:id, :title, :artist, :album, :filePath, :fileName, :duration, :trackKey, :contentHash,
-           :favorite, :favoriteUpdatedAt, :kind, :discNo, :trackNo, :playState, :resumePosition,
+           :favorite, :disliked, :favoriteUpdatedAt, :kind, :discNo, :trackNo, :playState, :resumePosition,
            :playStateUpdatedAt, :addedAt, 'mirror')
         ON CONFLICT(file_path) DO UPDATE SET
           title = excluded.title, artist = excluded.artist, album = excluded.album,
@@ -98,6 +99,7 @@ interface TrackDao {
         trackKey: String,
         contentHash: String,
         favorite: Boolean,
+        disliked: Boolean,
         favoriteUpdatedAt: Long?,
         kind: String,
         discNo: Int?,
@@ -146,7 +148,7 @@ interface TrackDao {
     // ---- Stats (favorites / play_state / play_events pull+push) -----------
 
     @Query(
-        "SELECT track_key, favorite, favorite_updated_at FROM tracks WHERE favorite_updated_at IS NOT NULL AND track_key IS NOT NULL"
+        "SELECT track_key, favorite, disliked, favorite_updated_at FROM tracks WHERE favorite_updated_at IS NOT NULL AND track_key IS NOT NULL"
     )
     suspend fun getLocalFavorites(): List<FavoriteRowEntity>
 
@@ -156,9 +158,9 @@ interface TrackDao {
     suspend fun getLocalPlayStates(): List<PlayStateRowEntity>
 
     @Query(
-        "UPDATE tracks SET favorite = :favorite, favorite_updated_at = :updatedAt WHERE track_key = :trackKey AND (favorite_updated_at IS NULL OR favorite_updated_at < :updatedAt)"
+        "UPDATE tracks SET favorite = :favorite, disliked = :disliked, favorite_updated_at = :updatedAt WHERE track_key = :trackKey AND (favorite_updated_at IS NULL OR favorite_updated_at < :updatedAt)"
     )
-    suspend fun applyFavoriteIfNewer(trackKey: String, favorite: Boolean, updatedAt: Long)
+    suspend fun applyFavoriteIfNewer(trackKey: String, favorite: Boolean, disliked: Boolean, updatedAt: Long)
 
     @Query(
         """
@@ -185,8 +187,9 @@ interface TrackDao {
     @Query("SELECT * FROM tracks WHERE id = :id")
     suspend fun getById(id: String): TrackEntity?
 
-    @Query("UPDATE tracks SET favorite = :favorite, favorite_updated_at = :updatedAt WHERE id = :id")
-    suspend fun setFavorite(id: String, favorite: Boolean, updatedAt: Long)
+    // The whole rating (thumbs up / none / thumbs down) in one write, stamped once for LWW.
+    @Query("UPDATE tracks SET favorite = :favorite, disliked = :disliked, favorite_updated_at = :updatedAt WHERE id = :id")
+    suspend fun setRating(id: String, favorite: Boolean, disliked: Boolean, updatedAt: Long)
 
     @Query(
         "UPDATE tracks SET play_state = :state, resume_position = :resume, play_state_updated_at = :updatedAt WHERE id = :id"

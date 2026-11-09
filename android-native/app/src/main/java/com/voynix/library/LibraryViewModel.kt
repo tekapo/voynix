@@ -6,11 +6,13 @@ import com.voynix.data.db.PlaylistEntity
 import com.voynix.data.db.TrackEntity
 import com.voynix.data.db.TrackWithStats
 import com.voynix.data.db.VoynixDatabase
+import com.voynix.logic.EXCLUDE_DISLIKED_KEY
 import com.voynix.logic.albumOf
 import com.voynix.logic.artistOf
 import com.voynix.logic.filterStrings
 import com.voynix.logic.filterTracks
 import com.voynix.logic.mostPlayed
+import com.voynix.logic.parseExcludeDisliked
 import com.voynix.logic.recentlyAdded
 import com.voynix.logic.recentlyPlayed
 import com.voynix.logic.sortNatural
@@ -22,6 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -72,17 +75,21 @@ class LibraryViewModel(private val db: VoynixDatabase) : ViewModel() {
         .stateIn(viewModelScope, whileUsed, emptyList())
 
     // The tracks for the current view, before the search filter — App.tsx's viewTracks.
+    // Setting "exclude_disliked_from_lists" (default on) — see logic/SmartLists.kt.
+    val excludeDisliked: StateFlow<Boolean> =
+        db.settingsDao().observe(EXCLUDE_DISLIKED_KEY).map(::parseExcludeDisliked).stateIn(viewModelScope, whileUsed, true)
+
     val viewTracks: StateFlow<List<TrackWithStats>> =
-        combine(_viewMode, _viewFilter, allTracks, playlistTracks) { mode, filter, all, plTracks ->
+        combine(_viewMode, _viewFilter, allTracks, playlistTracks, excludeDisliked) { mode, filter, all, plTracks, hideDisliked ->
             when (mode) {
                 ViewMode.PLAYLIST -> plTracks
                 ViewMode.ALL_SONGS -> sortNatural(all)
                 ViewMode.ARTISTS -> if (filter != null) sortNatural(all.filter { artistOf(it) == filter }) else emptyList()
                 ViewMode.ALBUMS -> if (filter != null) sortNatural(all.filter { albumOf(it) == filter }) else emptyList()
                 ViewMode.FAVORITES -> sortNatural(all.filter { it.track.favorite })
-                ViewMode.MOST_PLAYED -> mostPlayed(all)
-                ViewMode.RECENTLY_ADDED -> recentlyAdded(all)
-                ViewMode.RECENTLY_PLAYED -> recentlyPlayed(all)
+                ViewMode.MOST_PLAYED -> mostPlayed(all, hideDisliked)
+                ViewMode.RECENTLY_ADDED -> recentlyAdded(all, hideDisliked)
+                ViewMode.RECENTLY_PLAYED -> recentlyPlayed(all, hideDisliked)
             }
         }.stateIn(viewModelScope, whileUsed, emptyList())
 
@@ -121,8 +128,14 @@ class LibraryViewModel(private val db: VoynixDatabase) : ViewModel() {
         _search.value = query
     }
 
+    /** Thumbs up: toggles on/off; from thumbs down it switches straight to up. */
     fun toggleFavorite(track: TrackEntity) = viewModelScope.launch {
-        db.trackDao().setFavorite(track.id, !track.favorite, System.currentTimeMillis())
+        db.trackDao().setRating(track.id, favorite = !track.favorite, disliked = false, updatedAt = System.currentTimeMillis())
+    }
+
+    /** Thumbs down: toggles on/off; from thumbs up it switches straight to down. */
+    fun toggleDislike(track: TrackEntity) = viewModelScope.launch {
+        db.trackDao().setRating(track.id, favorite = false, disliked = !track.disliked, updatedAt = System.currentTimeMillis())
     }
 
     /** Podcast read/unread toggle — mirrors setTrackPlayState's played <-> unplayed swing. */

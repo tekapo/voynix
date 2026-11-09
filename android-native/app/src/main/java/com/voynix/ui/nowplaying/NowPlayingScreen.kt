@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ThumbDown
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.outlined.ThumbDown
+import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.BedtimeOff
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -91,6 +93,7 @@ fun NowPlayingScreen(
     onBack: () -> Unit,
     onOpenLyrics: () -> Unit,
     onToggleFavorite: () -> Unit,
+    onToggleDislike: () -> Unit,
 ) {
     val track = state.currentTrack
     // Podcasts get a 10s-back/forward pair instead of shuffle/repeat — same
@@ -243,10 +246,17 @@ fun NowPlayingScreen(
                         )
                     }
                 }
+                IconButton(onClick = onToggleDislike) {
+                    Icon(
+                        if (track.disliked) Icons.Filled.ThumbDown else Icons.Outlined.ThumbDown,
+                        contentDescription = stringResource(R.string.now_playing_thumb_down),
+                        tint = if (track.disliked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 IconButton(onClick = onToggleFavorite) {
                     Icon(
-                        if (track.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                        contentDescription = stringResource(R.string.now_playing_favorites),
+                        if (track.favorite) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
+                        contentDescription = stringResource(R.string.now_playing_thumb_up),
                         tint = if (track.favorite) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

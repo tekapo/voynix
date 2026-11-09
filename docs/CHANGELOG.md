@@ -10,6 +10,11 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.39.0 — 2026-11-09
+
+- Thumbs up / thumbs down on every track (Mac and Android) replaces the favorite star: thumbs up is the old favorite, thumbs down is new, and the two are mutually exclusive. The rating syncs both ways (last write wins).
+- New setting "Hide thumbs-down songs from auto lists" (on by default, separate on Mac and Android): Most Played, Recently Added and Recently Played skip thumbs-down songs, including on Android Auto and in what the Mac syncs to the phone.
+
 ## 0.38.2 — 2026-11-09
 
 - Remove the experimental Bluetooth sync (0.38.0/0.38.1): over BLE it ran at about 1 KB/s, too slow even for metadata only. Sync works over Wi-Fi and tethering as before.

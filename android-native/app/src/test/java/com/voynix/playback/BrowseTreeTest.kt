@@ -16,6 +16,7 @@ class BrowseTreeTest {
     private fun track(
         id: String,
         favorite: Boolean = false,
+        disliked: Boolean = false,
         playCount: Int = 0,
         artist: String? = "Artist",
         album: String? = "Album",
@@ -30,6 +31,7 @@ class BrowseTreeTest {
                 fileName = "$id.mp3",
                 duration = 200.0,
                 favorite = favorite,
+                disliked = disliked,
             ),
             playCount = playCount,
         )
@@ -50,6 +52,18 @@ class BrowseTreeTest {
         for (id in listOf(HOME_ID, LIBRARY_ID)) {
             assertNull(browseTreeChildren(id, tracks, page = 0, pageSize = 50))
         }
+    }
+
+    @Test
+    fun `most played hides thumbs-down tracks only when asked to`() {
+        val tracks = listOf(track("1", playCount = 3), track("2", disliked = true, playCount = 9))
+        val kept = browseTreeChildren(MOST_PLAYED_ID, tracks, page = 0, pageSize = 50)
+        assertEquals(listOf("2", "1"), kept?.map { it.track.id })
+        val hidden = browseTreeChildren(MOST_PLAYED_ID, tracks, page = 0, pageSize = 50, excludeDisliked = true)
+        assertEquals(listOf("1"), hidden?.map { it.track.id })
+        // All Songs always shows them.
+        val all = browseTreeChildren(ALL_SONGS_ID, tracks, page = 0, pageSize = 50, excludeDisliked = true)
+        assertEquals(listOf("1", "2"), all?.map { it.track.id })
     }
 
     @Test

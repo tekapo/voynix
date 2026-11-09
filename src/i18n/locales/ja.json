@@ -125,7 +125,11 @@
     "markAsUnplayed": "未再生に戻す",
     "removeFromPlaylist": "プレイリストから削除",
     "addToPlaylist": "プレイリストに追加",
-    "noCustomPlaylists": "カスタムプレイリストがありません"
+    "noCustomPlaylists": "カスタムプレイリストがありません",
+    "thumbUp": "高評価にする",
+    "removeThumbUp": "高評価を外す",
+    "thumbDown": "低評価にする",
+    "removeThumbDown": "低評価を外す"
   },
   "albumCoverPicker": {
     "title": "アルバムカバーを検索",
@@ -285,7 +289,9 @@
     "saving": "保存中…",
     "save": "保存",
     "readFileInfoFailed": "ファイル情報の読み込みに失敗しました: {{error}}",
-    "saveFailed": "保存に失敗しました: {{error}}"
+    "saveFailed": "保存に失敗しました: {{error}}",
+    "thumbUp": "高評価",
+    "thumbDown": "低評価"
   },
   "scanFolders": {
     "selectMusicFolder": "ミュージックフォルダを選択",
@@ -491,7 +497,9 @@
     "updateUpToDate": "最新バージョンです。",
     "updateFailed": "アップデートを確認できませんでした: {{message}}",
     "close": "閉じる",
-    "tabRemote": "Echo"
+    "tabRemote": "Echo",
+    "excludeDisliked": "低評価の曲を自動リストから除外",
+    "excludeDislikedHint": "「よく再生する曲」「最近追加した曲」「最近再生した曲」から、低評価（👎）の曲を除きます。"
   },
   "libraryColumns": {
     "meta_other": "{{count}}曲 · {{minutes}}分",
@@ -562,5 +570,11 @@
     "copyPlaylistNames": "プレイリスト名をコピー",
     "availability": "Voynix が起動していて、この Mac がスリープしていない間だけ使えます。",
     "serverError": "Echo サーバーのエラー: {{error}}"
+  },
+  "rating": {
+    "thumbUp": "高評価（👍）",
+    "removeThumbUp": "高評価を外す",
+    "thumbDown": "低評価（👎）",
+    "removeThumbDown": "低評価を外す"
   }
 }

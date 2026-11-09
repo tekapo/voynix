@@ -70,3 +70,28 @@ describe("libraryListTracks", () => {
         expect(isLibrarySyncSource("artists")).toBe(false);
     });
 });
+
+describe("excluding thumbs-down tracks", () => {
+    const tracks = [
+        track({ id: "good", play_count: 2, added_at: 10, last_played: 5 }),
+        track({ id: "bad", disliked: 1, play_count: 9, added_at: 20, last_played: 8 }),
+    ];
+
+    it("keeps them by default (the option is off unless asked)", () => {
+        expect(mostPlayed(tracks).map(t => t.id)).toEqual(["bad", "good"]);
+        expect(recentlyAdded(tracks).map(t => t.id)).toEqual(["bad", "good"]);
+        expect(recentlyPlayed(tracks).map(t => t.id)).toEqual(["bad", "good"]);
+    });
+
+    it("drops them from the three auto lists when excludeDisliked is on", () => {
+        expect(mostPlayed(tracks, true).map(t => t.id)).toEqual(["good"]);
+        expect(recentlyAdded(tracks, true).map(t => t.id)).toEqual(["good"]);
+        expect(recentlyPlayed(tracks, true).map(t => t.id)).toEqual(["good"]);
+    });
+
+    it("still lists them in All Songs, and only the auto lists feel the option via libraryListTracks", () => {
+        expect(libraryListTracks("all_songs", tracks, true).map(t => t.id)).toEqual(["good", "bad"]);
+        expect(libraryListTracks("most_played", tracks, true).map(t => t.id)).toEqual(["good"]);
+        expect(libraryListTracks("most_played", tracks, false).map(t => t.id)).toEqual(["bad", "good"]);
+    });
+});

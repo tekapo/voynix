@@ -73,7 +73,7 @@
      the right edge; the two paddings below line the header up with the rows. */
   .track-list-header,
   .track-item {
-    grid-template-columns: 28px minmax(0, 1fr) 44px 96px;
+    grid-template-columns: 28px minmax(0, 1fr) 68px 96px;
   }
 
   /* Hide by class, not nth-child — the Path column is conditionally rendered

@@ -11,6 +11,7 @@ private fun track(
     lastPlayed: Long? = null,
     addedAt: Long? = null,
     kind: String = "music",
+    disliked: Boolean = false,
 ): TrackWithStats =
     TrackWithStats(
         track = TrackEntity(
@@ -23,6 +24,7 @@ private fun track(
             duration = null,
             kind = kind,
             addedAt = addedAt,
+            disliked = disliked,
         ),
         playCount = playCount,
         lastPlayed = lastPlayed,
@@ -56,5 +58,27 @@ class SmartListsTest {
     fun `recentlyPlayed excludes never-played tracks and sorts newest first`() {
         val tracks = listOf(track("a", lastPlayed = 100), track("b", lastPlayed = 300), track("c"))
         assertEquals(listOf("b", "a"), recentlyPlayed(tracks).map { it.track.id })
+    }
+
+    @Test
+    fun `thumbs-down tracks are kept by default and dropped from all three lists when excluded`() {
+        val tracks = listOf(
+            track("good", playCount = 2, lastPlayed = 5, addedAt = 10),
+            track("bad", playCount = 9, lastPlayed = 8, addedAt = 20, disliked = true),
+        )
+        assertEquals(listOf("bad", "good"), mostPlayed(tracks).map { it.track.id })
+        assertEquals(listOf("bad", "good"), recentlyAdded(tracks).map { it.track.id })
+        assertEquals(listOf("bad", "good"), recentlyPlayed(tracks).map { it.track.id })
+
+        assertEquals(listOf("good"), mostPlayed(tracks, excludeDisliked = true).map { it.track.id })
+        assertEquals(listOf("good"), recentlyAdded(tracks, excludeDisliked = true).map { it.track.id })
+        assertEquals(listOf("good"), recentlyPlayed(tracks, excludeDisliked = true).map { it.track.id })
+    }
+
+    @Test
+    fun `the exclude setting is on unless explicitly 0`() {
+        assertEquals(true, parseExcludeDisliked(null))
+        assertEquals(true, parseExcludeDisliked("1"))
+        assertEquals(false, parseExcludeDisliked("0"))
     }
 }

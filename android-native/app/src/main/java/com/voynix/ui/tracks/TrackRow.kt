@@ -14,7 +14,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Equalizer
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.ThumbDown
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -113,7 +114,8 @@ fun TrackRow(
         trailingContent = {
             when {
                 isCurrent -> Icon(Icons.Filled.Equalizer, contentDescription = stringResource(R.string.track_row_now_playing), tint = MaterialTheme.colorScheme.primary)
-                track.favorite -> Icon(Icons.Filled.Favorite, contentDescription = stringResource(R.string.track_row_favorites), tint = MaterialTheme.colorScheme.tertiary)
+                track.favorite -> Icon(Icons.Filled.ThumbUp, contentDescription = stringResource(R.string.track_row_thumb_up), tint = MaterialTheme.colorScheme.tertiary)
+                track.disliked -> Icon(Icons.Filled.ThumbDown, contentDescription = stringResource(R.string.track_row_thumb_down), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
         colors = ListItemDefaults.colors(

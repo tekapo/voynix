@@ -7,13 +7,12 @@ import { albumOf } from '../albumName';
 import { artistOf, artistLabel, UNKNOWN_ARTIST } from '../names';
 import { Track } from '../types';
 import { Icon } from './Icon';
+import { RatingButtons } from './RatingButtons';
 import { AlbumThumb, ArtistThumb } from './LibraryView';
 import { podcastBadge, podcastDurationText } from './trackFormat';
 
 // Hoisted like TrackList's — one shared element per state avoids a fresh
 // element per row across a library-sized list.
-const STAR_ON = <Icon name="star-filled" size={15} />;
-const STAR_OFF = <Icon name="star" size={15} />;
 
 /** Same threshold/approach as TrackList.tsx: below it, plain DOM; above it,
  *  windowed via @tanstack/react-virtual. The left-pane names list can run to
@@ -64,6 +63,7 @@ interface LibraryColumnsProps {
     onTrackActivate: (track: Track) => void;
     onTrackContextMenu: (e: React.MouseEvent, track: Track) => void;
     onToggleFavorite: (track: Track) => void;
+    onToggleDislike: (track: Track) => void;
     onPlay: (tracks: Track[]) => void;
     onShuffle: (tracks: Track[]) => void;
     /** Artist-view header's "..." — opens the artist context menu. */
@@ -86,8 +86,9 @@ const AlbumSection: React.FC<{
     onTrackActivate: (track: Track) => void;
     onTrackContextMenu: (e: React.MouseEvent, track: Track) => void;
     onToggleFavorite: (track: Track) => void;
+    onToggleDislike: (track: Track) => void;
     onAlbumMore: (e: React.MouseEvent, album: string, track: Track | null) => void;
-}> = ({ artist, album, tracks, showArtist, large, currentTrack, loadedTrackId, onTrackClick, onTrackActivate, onTrackContextMenu, onToggleFavorite, onAlbumMore }) => {
+}> = ({ artist, album, tracks, showArtist, large, currentTrack, loadedTrackId, onTrackClick, onTrackActivate, onTrackContextMenu, onToggleFavorite, onToggleDislike, onAlbumMore }) => {
     const { t } = useTranslation();
     // Only worth a per-row artist cell when this album's own tracks disagree
     // (e.g. a compilation) — otherwise it's redundant with the section header.
@@ -133,15 +134,7 @@ const AlbumSection: React.FC<{
                                 {podcastBadge(track, t)}{track.title}
                                 {mixedArtists && <span className="album-track-artist"> — {artistLabel(track, t)}</span>}
                             </div>
-                            <button
-                                className={`cell-center star-btn ${track.favorite ? 'is-favorite' : ''}`}
-                                title={track.favorite ? t('libraryColumns.removeFromFavorites') : t('libraryColumns.addToFavorites')}
-                                aria-label={track.favorite ? t('libraryColumns.removeFromFavorites') : t('libraryColumns.addToFavorites')}
-                                aria-pressed={!!track.favorite}
-                                onClick={(e) => { e.stopPropagation(); onToggleFavorite(track); }}
-                            >
-                                {track.favorite ? STAR_ON : STAR_OFF}
-                            </button>
+                            <RatingButtons track={track} onToggleFavorite={onToggleFavorite} onToggleDislike={onToggleDislike} className="cell-center" />
                             <div className="album-track-duration">{podcastDurationText(track)}</div>
                             <button
                                 className="album-track-more"
@@ -160,7 +153,7 @@ const AlbumSection: React.FC<{
 
 export const LibraryColumns: React.FC<LibraryColumnsProps> = ({
     viewMode, items, selected, onSelect, onItemContextMenu, artFor,
-    tracks, currentTrack, loadedTrackId, onTrackClick, onTrackActivate, onTrackContextMenu, onToggleFavorite,
+    tracks, currentTrack, loadedTrackId, onTrackClick, onTrackActivate, onTrackContextMenu, onToggleFavorite, onToggleDislike,
     onPlay, onShuffle, onArtistMore, onAlbumMore, onBack,
 }) => {
     const { t } = useTranslation();
@@ -272,6 +265,7 @@ export const LibraryColumns: React.FC<LibraryColumnsProps> = ({
                                     onTrackActivate={onTrackActivate}
                                     onTrackContextMenu={onTrackContextMenu}
                                     onToggleFavorite={onToggleFavorite}
+                                    onToggleDislike={onToggleDislike}
                                     onAlbumMore={onAlbumMore}
                                 />
                             ))}

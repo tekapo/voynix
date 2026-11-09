@@ -39,15 +39,18 @@
     <string name="track_row_played_times">%1$d回再生済み</string>
     <string name="track_row_unplayed">未再生</string>
     <string name="track_row_now_playing">再生中</string>
-    <string name="track_row_favorites">お気に入り</string>
+    <string name="track_row_thumb_up">高評価</string>
+    <string name="track_row_thumb_down">低評価</string>
     <string name="podcast_status_unplayed">未再生</string>
     <string name="podcast_status_in_progress">再生中</string>
     <string name="podcast_status_played">再生済み</string>
     <string name="podcast_dot_description">ポッドキャスト、%1$s</string>
 
     <!-- Track actions sheet -->
-    <string name="track_actions_remove_favorite">お気に入りから削除</string>
-    <string name="track_actions_add_favorite">お気に入りに追加</string>
+    <string name="track_actions_thumb_up">高評価にする</string>
+    <string name="track_actions_remove_thumb_up">高評価を外す</string>
+    <string name="track_actions_thumb_down">低評価にする</string>
+    <string name="track_actions_remove_thumb_down">低評価を外す</string>
     <string name="track_actions_add_to_queue">キューに追加</string>
     <string name="track_actions_mark_unplayed">未再生に戻す</string>
     <string name="track_actions_mark_played">再生済みにする</string>
@@ -69,7 +72,8 @@
     <string name="now_playing_end_of_episode">エピソードの終わりまで</string>
     <string name="now_playing_end_of_track">曲の終わりまで</string>
     <string name="now_playing_nothing_playing">再生していません</string>
-    <string name="now_playing_favorites">お気に入り</string>
+    <string name="now_playing_thumb_up">高評価</string>
+    <string name="now_playing_thumb_down">低評価</string>
     <string name="now_playing_back_10">10秒戻る</string>
     <string name="now_playing_forward_10">10秒進む</string>
     <string name="now_playing_shuffle_on_ordered">シャッフルON（順番に再生中）</string>
@@ -177,6 +181,8 @@
     <string name="auto_songs">曲</string>
     <string name="auto_artists">アーティスト</string>
     <string name="auto_albums">アルバム</string>
+    <string name="settings_exclude_disliked">低評価の曲を自動リストから除外</string>
+    <string name="settings_exclude_disliked_detail">「よく再生する曲」「最近追加した曲」「最近再生した曲」から、低評価の曲を除きます</string>
     <string name="auto_favorites">お気に入り</string>
     <string name="auto_most_played">よく再生する曲</string>
     <string name="auto_recently_added">最近追加した項目</string>

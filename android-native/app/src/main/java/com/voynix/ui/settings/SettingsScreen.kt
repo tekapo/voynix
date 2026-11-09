@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.ThumbDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,10 +53,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import com.voynix.BuildConfig
 import com.voynix.R
+import com.voynix.data.db.SettingEntity
 import com.voynix.data.db.VoynixDatabase
+import com.voynix.logic.EXCLUDE_DISLIKED_KEY
+import com.voynix.logic.parseExcludeDisliked
 import com.voynix.playback.PlayerController
 import java.io.File
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -74,6 +79,8 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val podcastNoShuffle by player.podcastNoShuffle.collectAsState()
+    val excludeDisliked by remember { db.settingsDao().observe(EXCLUDE_DISLIKED_KEY).map(::parseExcludeDisliked) }
+        .collectAsState(initial = true)
 
     LaunchedEffect(Unit) {
         deviceId = db.settingsDao().get("device_id")
@@ -125,6 +132,19 @@ fun SettingsScreen(
                     value = podcastNoShuffle,
                     role = Role.Switch,
                     onValueChange = { player.setPodcastNoShuffle(it) },
+                ),
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_exclude_disliked)) },
+                supportingContent = { Text(stringResource(R.string.settings_exclude_disliked_detail)) },
+                leadingContent = { Icon(Icons.Filled.ThumbDown, contentDescription = null) },
+                trailingContent = { Switch(checked = excludeDisliked, onCheckedChange = null) },
+                modifier = Modifier.toggleable(
+                    value = excludeDisliked,
+                    role = Role.Switch,
+                    onValueChange = { next ->
+                        scope.launch { db.settingsDao().set(SettingEntity(EXCLUDE_DISLIKED_KEY, if (next) "1" else "0")) }
+                    },
                 ),
             )
             ListItem(

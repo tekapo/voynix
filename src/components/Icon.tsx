@@ -12,6 +12,10 @@ export type IconName =
     | 'music'
     | 'star'
     | 'star-filled'
+    | 'thumb-up'
+    | 'thumb-up-filled'
+    | 'thumb-down'
+    | 'thumb-down-filled'
     | 'flame'
     | 'mic'
     | 'disc'
@@ -76,6 +80,20 @@ const ICONS: Record<IconName, IconDef> = {
     'star-filled': {
         solid: true,
         body: <path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 21l1.1-6.5L2.6 9.8l6.5-.9L12 3z" />,
+    },
+    'thumb-up': {
+        body: <path d="M7 10v12M15 5.88L14 10h5.83a2 2 0 011.92 2.56l-2.33 8A2 2 0 0117.5 22H4a2 2 0 01-2-2v-8a2 2 0 012-2h2.76a2 2 0 001.79-1.11L12 2a3.13 3.13 0 013 3.88z" />,
+    },
+    'thumb-up-filled': {
+        solid: true,
+        body: <path d="M7 10v12H4a2 2 0 01-2-2v-8a2 2 0 012-2h2.76a2 2 0 001.79-1.11L12 2a3.13 3.13 0 013 3.88L14 10h5.83a2 2 0 011.92 2.56l-2.33 8A2 2 0 0117.5 22H7z" />,
+    },
+    'thumb-down': {
+        body: <path d="M17 14V2M9 18.12L10 14H4.17a2 2 0 01-1.92-2.56l2.33-8A2 2 0 016.5 2H20a2 2 0 012 2v8a2 2 0 01-2 2h-2.76a2 2 0 00-1.79 1.11L12 22a3.13 3.13 0 01-3-3.88z" />,
+    },
+    'thumb-down-filled': {
+        solid: true,
+        body: <path d="M17 14V2h3a2 2 0 012 2v8a2 2 0 01-2 2h-2.76a2 2 0 00-1.79 1.11L12 22a3.13 3.13 0 01-3-3.88L10 14H4.17a2 2 0 01-1.92-2.56l2.33-8A2 2 0 016.5 2H17z" />,
     },
     flame: {
         body: (

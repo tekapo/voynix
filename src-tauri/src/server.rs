@@ -53,6 +53,10 @@ pub struct SnapshotTrack {
     #[serde(default)]
     pub size: i64,
     pub favorite: i64,
+    /// Thumbs down (the rating's other half; `favorite` is thumbs up). Absent from
+    /// peers older than the rating feature. Shares `favorite_updated_at` for LWW.
+    #[serde(default)]
+    pub disliked: i64,
     pub favorite_updated_at: Option<i64>,
     /// "music" | "podcast" | "other". Defaults to "music" for older peers.
     #[serde(default = "default_kind")]
@@ -151,6 +155,8 @@ pub struct IncomingEvent {
 pub struct FavoriteUpdate {
     pub track_key: String,
     pub favorite: i64,
+    #[serde(default)]
+    pub disliked: i64,
     pub updated_at: i64,
 }
 
@@ -1015,6 +1021,7 @@ mod tests {
                 content_hash: "h".into(),
                 size: 0,
                 favorite: 0,
+                disliked: 0,
                 favorite_updated_at: None,
                 kind: "music".into(),
                 disc_no: None,
@@ -1075,8 +1082,17 @@ mod tests {
         assert!(status(&shared).is_none());
     }
 
-    /// An older peer's JSON predates the podcast fields entirely. `#[serde(default)]`
+    /// An older peer's JSON predates the podcast fields (and `disliked`) entirely. `#[serde(default)]`
     /// must fill them in rather than fail deserialization.
+    #[test]
+    fn favorite_update_defaults_disliked_to_zero_and_reads_it_when_present() {
+        let old: FavoriteUpdate = serde_json::from_str(r#"{"track_key":"k","favorite":1,"updated_at":5}"#).unwrap();
+        assert_eq!((old.favorite, old.disliked), (1, 0));
+        let new: FavoriteUpdate =
+            serde_json::from_str(r#"{"track_key":"k","favorite":0,"disliked":1,"updated_at":5}"#).unwrap();
+        assert_eq!((new.favorite, new.disliked), (0, 1));
+    }
+
     #[test]
     fn old_peer_json_defaults_missing_play_state_fields() {
         let track: SnapshotTrack = serde_json::from_str(
@@ -1088,6 +1104,8 @@ mod tests {
         assert_eq!(track.play_state, "unplayed");
         assert_eq!(track.resume_position, 0.0);
         assert_eq!(track.play_state_updated_at, None);
+        // ...and predates the thumbs-down flag too.
+        assert_eq!(track.disliked, 0);
 
         let stats: IncomingStats = serde_json::from_str(
             r#"{"device_id":"phone-1","events":[],"favorites":[]}"#,
@@ -1364,6 +1382,7 @@ mod tests {
                 content_hash: hash_a.clone(),
                 size: 22,
                 favorite: 0,
+                disliked: 0,
                 favorite_updated_at: None,
                 kind: "music".into(),
                 disc_no: None,
@@ -1384,6 +1403,7 @@ mod tests {
                 content_hash: hash_b.clone(),
                 size: 5000,
                 favorite: 0,
+                disliked: 0,
                 favorite_updated_at: None,
                 kind: "music".into(),
                 disc_no: None,
@@ -1510,6 +1530,7 @@ mod tests {
                 favorites: vec![FavoriteUpdate {
                     track_key: "key-b".into(),
                     favorite: 1,
+                    disliked: 0,
                     updated_at: 99,
                 }],
                 play_states: vec![PlayStateUpdate {

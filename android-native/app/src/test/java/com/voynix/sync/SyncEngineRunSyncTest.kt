@@ -239,6 +239,20 @@ class SyncEngineRunSyncTest {
     }
 
     @Test
+    fun `a thumbs down from the Mac lands on the phone and replaces an older thumbs up`() = runTest {
+        manifest = manifest.copy(tracks = listOf(track("a").copy(favorite = 1, favoriteUpdatedAt = 5L)))
+        engine.runSync(peer)
+        assertTrue(db.trackDao().getLocalFavorites().single { it.trackKey == "a" }.favorite)
+
+        manifest = manifest.copy(tracks = listOf(track("a").copy(favorite = 0, disliked = 1, favoriteUpdatedAt = 9L)))
+        engine.runSync(peer)
+
+        val rating = db.trackDao().getLocalFavorites().single { it.trackKey == "a" }
+        assertTrue(rating.disliked)
+        assertEquals(false, rating.favorite)
+    }
+
+    @Test
     fun `without song files favorites and playlists still reach the tracks already on the phone`() = runTest {
         manifest = manifest.copy(tracks = listOf(track("a")))
         engine.runSync(peer)

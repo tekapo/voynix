@@ -6,7 +6,8 @@ import {
   setLibrarySyncSources,
   setPlaylistKind,
   setPlaylistSyncToDevice,
-  setTrackFavorite,
+  setTrackRating,
+  type TrackRating,
   setTrackKind,
   setTrackPlayState,
 } from "../db";
@@ -42,17 +43,25 @@ export function usePlaylistActions({
       console.error("Failed to load library sync sources:", e));
   }, []);
 
-  const handleToggleFavorite = async (track: Track) => {
-    const next = !track.favorite;
+  const applyRating = async (track: Track, rating: TrackRating) => {
     try {
-      await setTrackFavorite(track.id, next);
-      patchCurrentTrackIfId(track.id, { favorite: next ? 1 : 0, favorite_updated_at: Date.now() });
+      await setTrackRating(track.id, rating);
+      patchCurrentTrackIfId(track.id, {
+        favorite: rating === 'up' ? 1 : 0,
+        disliked: rating === 'down' ? 1 : 0,
+        favorite_updated_at: Date.now(),
+      });
       await refreshPlaylists();
     } catch (e) {
-      console.error("Failed to toggle favorite:", e);
+      console.error("Failed to set rating:", e);
       setError(t('errors.updateFavoriteFailed', { error: String(e) }));
     }
   };
+
+  /** Thumbs up: toggles on/off; from thumbs down it switches to up. */
+  const handleToggleFavorite = (track: Track) => applyRating(track, track.favorite ? 'none' : 'up');
+  /** Thumbs down: toggles on/off; from thumbs up it switches to down. */
+  const handleToggleDislike = (track: Track) => applyRating(track, track.disliked ? 'none' : 'down');
 
   const handleSetKind = async (track: Track, kind: TrackKind) => {
     try {
@@ -138,6 +147,7 @@ export function usePlaylistActions({
   return {
     librarySyncSources,
     handleToggleFavorite,
+    handleToggleDislike,
     handleSetKind,
     handleSetPlayState,
     handleToggleLibrarySync,
