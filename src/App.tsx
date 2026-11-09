@@ -150,7 +150,9 @@ function App() {
   // Default on; persisted as "auto_update_check".
   const [autoUpdateCheck, setAutoUpdateCheck, loadAutoUpdateCheck] = usePersistedSetting(
     "auto_update_check", true, raw => raw !== "0", v => v ? "1" : "0");
-  const updater = useUpdater(autoUpdateCheck);
+  // The saved auto-check choice has been read from the DB (set by initialize()).
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const updater = useUpdater(autoUpdateCheck, settingsLoaded);
   // Podcast playback speed (0.8–2.0x), shared across every podcast — not
   // per-episode. Music always plays at 1.0x regardless of this value (see
   // effectiveSpeed in playback.ts). Persisted as "podcast_speed".
@@ -361,10 +363,10 @@ function App() {
   // vanish from the whole library UI even though the row still existed.
   const allTracks = dbTracks;
 
-  // Keep the now-playing track's favorite flag in step with the library after any
-  // refresh — a star toggled from the track-list context menu, or a favorite
-  // arriving from a paired device — so PlayerBar doesn't show a stale star until
-  // the next track change. Only `favorite`/`favorite_updated_at` are synced here:
+  // Keep the now-playing track's rating (thumbs up/down) in step with the library
+  // after any refresh — a thumb toggled from the track-list context menu, or a
+  // rating arriving from a paired device — so PlayerBar doesn't show a stale thumb
+  // until the next track change. Only the rating fields are synced here:
   // `play_count` isn't shown for the current track, and folding it in would churn
   // the currentTrack identity on every play event (which retriggers playback).
   useEffect(() => {
@@ -374,6 +376,7 @@ function App() {
       if (!fresh) return prev;
       if (
         fresh.favorite === prev.favorite &&
+        fresh.disliked === prev.disliked &&
         fresh.favorite_updated_at === prev.favorite_updated_at &&
         fresh.kind === prev.kind &&
         fresh.play_state === prev.play_state &&
@@ -383,6 +386,7 @@ function App() {
       return {
         ...prev,
         favorite: fresh.favorite,
+        disliked: fresh.disliked,
         favorite_updated_at: fresh.favorite_updated_at,
         kind: fresh.kind,
         play_state: fresh.play_state,
@@ -427,7 +431,7 @@ function App() {
         await migrateFromJson();
         await refreshPlaylists();
         await refreshScanFolders(); // from useScanFolders(), declared below — safe: initialize() only runs post-commit
-        reloadSettings();
+        reloadSettings().finally(() => setSettingsLoaded(true));
         await initSyncFromDb();
         await initRemoteFromDb();
 

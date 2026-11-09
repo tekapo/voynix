@@ -12,7 +12,7 @@ export type UpdaterStatus =
   | { kind: "idle" }
   | { kind: "checking" }
   | { kind: "upToDate" }
-  | { kind: "available"; version: string; notes: string }
+  | { kind: "available"; version: string; notes: string; /** Set when an install attempt just failed, so the dialog can say so and offer a retry. */ error?: string }
   | { kind: "downloading"; version: string; done: number; total: number | null }
   | { kind: "error"; message: string };
 
@@ -34,12 +34,13 @@ export interface SelfUpdate {
  * Self-update for the desktop app (tauri-plugin-updater): checks the signed
  * `latest.json` on GitHub Releases, and downloads + installs + relaunches only
  * when the user asks. The automatic check runs shortly after launch and then
- * every 6 hours, only when `autoCheck` is on (read through a ref so the
- * persisted setting has loaded by the time the timer fires). It only raises a
+ * every 6 hours, only when `autoCheck` is on. The timers start once
+ * `settingsLoaded` says the persisted setting has been read, so an opt-out is
+ * honoured even when startup is slow. It only raises a
  * sidebar notice; the dialog opens on a click or a manual check. Dev builds
  * never auto-check — there is no signed bundle to compare against.
  */
-export function useUpdater(autoCheck: boolean): SelfUpdate {
+export function useUpdater(autoCheck: boolean, settingsLoaded = true): SelfUpdate {
   const [status, setStatus] = useState<UpdaterStatus>({ kind: "idle" });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [noticeDismissed, setNoticeDismissed] = useState(false);
@@ -73,7 +74,7 @@ export function useUpdater(autoCheck: boolean): SelfUpdate {
   }, []);
 
   useEffect(() => {
-    if (import.meta.env.DEV) return;
+    if (import.meta.env.DEV || !settingsLoaded) return;
     const tick = () => {
       // Never swap `pending` out from under an update the user is looking at or installing.
       const kind = statusRef.current.kind;
@@ -82,7 +83,7 @@ export function useUpdater(autoCheck: boolean): SelfUpdate {
     const timer = setTimeout(tick, STARTUP_CHECK_DELAY_MS);
     const interval = setInterval(tick, PERIODIC_CHECK_INTERVAL_MS);
     return () => { clearTimeout(timer); clearInterval(interval); };
-  }, [runCheck]);
+  }, [runCheck, settingsLoaded]);
 
   const install = useCallback(async () => {
     const update = pending.current;
@@ -101,14 +102,21 @@ export function useUpdater(autoCheck: boolean): SelfUpdate {
       // when that isn't possible (e.g. not running from an .app bundle).
       if (!(await invoke<boolean>("relaunch_app"))) await relaunch();
     } catch (e) {
-      setStatus({ kind: "error", message: String(e) });
+      // Back to the offer, not to a bare error: the dialog stays open with the
+      // reason, and "Update and Restart" is the retry.
+      setStatus({ kind: "available", version: update.version, notes: update.body ?? "", error: String(e) });
     }
   }, []);
 
   return {
     status,
     dialogOpen,
-    checkNow: () => { setDialogOpen(false); void runCheck(true); },
+    checkNow: () => {
+      // A download in progress owns `pending` and the status; leave it be.
+      if (statusRef.current.kind === "downloading") return;
+      setDialogOpen(false);
+      void runCheck(true);
+    },
     install: () => { void install(); },
     dismiss: () => setDialogOpen(false),
     noticeDismissed,

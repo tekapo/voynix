@@ -420,6 +420,9 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
     // Menu key / Shift+F10 opens the row's context menu. Space and ←/→ are left
     // to useKeyboardShortcuts (play/pause, prev/next).
     const handleListKeyDown = (e: React.KeyboardEvent<HTMLUListElement>) => {
+        // A control inside a row (the thumbs buttons) keeps its own keys: Enter
+        // presses it, the arrows are not a list move.
+        if (e.target !== e.currentTarget) return;
         if (tracks.length === 0) return;
         const cur = clampedActive ?? 0;
         const move = (to: number) => {

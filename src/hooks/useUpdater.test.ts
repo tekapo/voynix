@@ -48,9 +48,33 @@ describe("useUpdater install", () => {
   it("does not relaunch when the download fails", async () => {
     const hook = await readyToInstall(fakeUpdate(vi.fn().mockRejectedValue(new Error("offline"))));
     await act(async () => { hook.result.current.install(); });
-    await waitFor(() => expect(hook.result.current.status.kind).toBe("error"));
+    await waitFor(() => expect(hook.result.current.status).toMatchObject({ kind: "available", version: "9.9.9", error: expect.stringContaining("offline") }));
     expect(invoke).not.toHaveBeenCalled();
     expect(relaunch).not.toHaveBeenCalled();
+  });
+
+  it("keeps the dialog's update on offer after a failed install so it can be retried", async () => {
+    const downloadAndInstall = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValue(undefined);
+    invoke.mockResolvedValue(true);
+    const hook = await readyToInstall(fakeUpdate(downloadAndInstall));
+    await act(async () => { hook.result.current.install(); });
+    await waitFor(() => expect(hook.result.current.status).toMatchObject({ kind: "available", notes: "notes" }));
+    await act(async () => { hook.result.current.install(); });
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("relaunch_app"));
+  });
+
+  it("ignores Check for updates while a download is running", async () => {
+    let finish: () => void = () => {};
+    const downloadAndInstall = vi.fn(() => new Promise<void>(r => { finish = r; }));
+    invoke.mockResolvedValue(true);
+    const hook = await readyToInstall(fakeUpdate(downloadAndInstall));
+    await act(async () => { hook.result.current.install(); });
+    await waitFor(() => expect(hook.result.current.status.kind).toBe("downloading"));
+    check.mockClear();
+    await act(async () => { hook.result.current.checkNow(); });
+    expect(check).not.toHaveBeenCalled();
+    expect(hook.result.current.status.kind).toBe("downloading");
+    finish();
   });
 });
 
@@ -93,6 +117,26 @@ describe("useUpdater periodic check", () => {
     renderHook(() => useUpdater(false));
     await advance(12 * HOUR);
     expect(check).not.toHaveBeenCalled();
+  });
+
+  it("waits for the saved setting to load before the launch check", async () => {
+    check.mockResolvedValue(null);
+    const { rerender } = renderHook(({ loaded }) => useUpdater(false, loaded), { initialProps: { loaded: false } });
+    await advance(30000);
+    // The setting turns out to be off once it loads: no check ever fires.
+    rerender({ loaded: true });
+    await advance(12 * HOUR);
+    expect(check).not.toHaveBeenCalled();
+  });
+
+  it("starts the launch timer only once the saved setting has loaded", async () => {
+    check.mockResolvedValue(null);
+    const { rerender } = renderHook(({ loaded }) => useUpdater(true, loaded), { initialProps: { loaded: false } });
+    await advance(30000);
+    expect(check).not.toHaveBeenCalled();
+    rerender({ loaded: true });
+    await advance(5000);
+    expect(check).toHaveBeenCalledTimes(1);
   });
 
   it("does not re-check while an update is already waiting", async () => {

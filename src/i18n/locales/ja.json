@@ -395,6 +395,7 @@
     "later": "あとで",
     "downloading": "ダウンロード中… {{percent}}%",
     "downloadingUnknown": "ダウンロード中…",
+    "installFailed": "更新をインストールできませんでした: {{message}}",
     "noticeAvailable": "Voynix {{version}} が利用できます",
     "dismissNotice": "通知を閉じる"
   },

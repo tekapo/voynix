@@ -7,6 +7,9 @@ function focusables(root: HTMLElement): HTMLElement[] {
   return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(el => !el.closest("[hidden]"));
 }
 
+/** Open dialogs, oldest first. Only the last one may trap Tab, so a dialog opened on top of another doesn't fight it. */
+const openDialogs: HTMLElement[] = [];
+
 /**
  * Focus handling for a modal dialog: puts focus inside when it opens (unless
  * something in it — an `autoFocus` field — already has it), keeps Tab and
@@ -28,8 +31,9 @@ export function useDialogFocus<T extends HTMLElement = HTMLDivElement>(active = 
       (focusables(root)[0] ?? root).focus({ preventScroll: true });
     }
 
+    openDialogs.push(root);
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
+      if (e.key !== "Tab" || openDialogs[openDialogs.length - 1] !== root) return;
       const items = focusables(root);
       if (items.length === 0) {
         e.preventDefault();
@@ -53,6 +57,8 @@ export function useDialogFocus<T extends HTMLElement = HTMLDivElement>(active = 
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
+      const at = openDialogs.lastIndexOf(root);
+      if (at >= 0) openDialogs.splice(at, 1);
       const now = document.activeElement;
       // Hand focus back unless the user already put it somewhere else.
       if (opener?.isConnected && (!now || now === document.body || root.contains(now))) {

@@ -180,6 +180,16 @@ describe("applyFavoritesBatch / applyPlayStatesBatch", () => {
         expect(params).toEqual(["k1", 0, 1, 500, "k2", 1, 0, 600]);
     });
 
+    it("applyFavoritesBatch never stores thumbs-up and thumbs-down together, or values beyond 0/1", async () => {
+        await applyFavoritesBatch([
+            { track_key: "k1", favorite: 1, disliked: 1, favorite_updated_at: 500 },
+            { track_key: "k2", favorite: 0, disliked: 7, favorite_updated_at: 600 },
+            { track_key: "k3", favorite: 5, disliked: 0, favorite_updated_at: 700 },
+        ]);
+        const [, params] = fakeDb.execute.mock.calls[0];
+        expect(params).toEqual(["k1", 1, 0, 500, "k2", 0, 1, 600, "k3", 1, 0, 700]);
+    });
+
     it("applyPlayStatesBatch keeps the per-row LWW guard under the join", async () => {
         await applyPlayStatesBatch([{ track_key: "k1", play_state: "played", resume_position: 0, play_state_updated_at: 500 }]);
         const [sql, params] = fakeDb.execute.mock.calls[0];
