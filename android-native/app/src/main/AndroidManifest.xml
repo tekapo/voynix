@@ -14,8 +14,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <!-- AutoSyncWorker's setForeground while a background sync is running. -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:allowBackup="false"
@@ -76,15 +74,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/now_playing_widget_info" />
         </receiver>
-
-        <!-- WorkManager's own SystemForegroundService declares no
-             foregroundServiceType by default, which Android 14+ requires to
-             match whatever type AutoSyncWorker.getForegroundInfo() passes to
-             setForeground() (dataSync) — override it here rather than in code. -->
-        <service
-            android:name="androidx.work.impl.foreground.SystemForegroundService"
-            android:foregroundServiceType="dataSync"
-            tools:node="merge" />
 
     </application>
 

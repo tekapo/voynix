@@ -1,19 +1,11 @@
 package com.voynix.sync
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
-import android.content.pm.ServiceInfo
-import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
-import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
-import com.voynix.R
 import com.voynix.data.db.VoynixDatabase
 import com.voynix.logic.shouldAutoSync
 
-private const val CHANNEL_ID = "auto_sync"
-private const val NOTIFICATION_ID = 4201
 const val AUTO_SYNC_ENABLED_KEY = "auto_sync_enabled"
 const val AUTO_SYNC_CHARGING_ONLY_KEY = "auto_sync_charging_only"
 /** "0" = metadata-only sync (no song files); anything else, including unset, syncs files too. */
@@ -27,6 +19,13 @@ const val SYNC_FILES_KEY = "sync_files"
  * this Wi-Fi right now) is an ordinary, expected outcome for a periodic job,
  * not a failure: this returns success either way so WorkManager doesn't retry
  * aggressively or treat a normal "Mac wasn't around this hour" as an error.
+ *
+ * Deliberately not a foreground service: Play only accepts a dataSync
+ * foreground service for work the user starts, and this runs on its own. So
+ * Android may stop a long run (WorkManager's ~10 minute limit); that is fine,
+ * because a half-finished download resumes from its `.part` file, finished
+ * tracks are already saved, and the interrupted run doesn't count as a
+ * sync (see SyncEngine.runSync), so the next hourly check retries it.
  */
 class AutoSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
@@ -42,8 +41,6 @@ class AutoSyncWorker(context: Context, params: WorkerParameters) : CoroutineWork
         checkNotNull(peer)
 
         val syncFiles = settings.get(SYNC_FILES_KEY) != "0"
-
-        setForegroundAsync(getForegroundInfo())
 
         val api = SyncApi()
         val nsd = NsdDiscovery(applicationContext)
@@ -62,21 +59,5 @@ class AutoSyncWorker(context: Context, params: WorkerParameters) : CoroutineWork
             // failures. WorkManager tries again on its next hourly tick anyway.
             is SyncRunResult.Failed, SyncRunResult.AlreadyRunning -> Result.success()
         }
-    }
-
-    override suspend fun getForegroundInfo(): ForegroundInfo {
-        val manager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (manager.getNotificationChannel(CHANNEL_ID) == null) {
-            manager.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "Background sync", NotificationManager.IMPORTANCE_MIN)
-            )
-        }
-        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setContentTitle("Syncing with Mac")
-            .setSmallIcon(R.mipmap.ic_launcher_monochrome)
-            .setOngoing(true)
-            .setSilent(true)
-            .build()
-        return ForegroundInfo(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
     }
 }
