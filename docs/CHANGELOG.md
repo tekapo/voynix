@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.37.1 — 2026-11-09
+- Android: the periodic auto-sync no longer runs as a foreground service, so the "Syncing with Mac" notification and the dataSync foreground-service permission are gone (Play only accepts that type for user-started work). An interrupted run resumes from its partial downloads on the next hourly check.
+
 ## 0.37.0 — 2026-11-09
 - Android: new "Sync song files" switch on the sync screen (on by default). When off, a sync only brings playlists, play history, favorites and podcast positions; no song file is downloaded or deleted, and the result notes how many songs were left for the next sync with files.
 
