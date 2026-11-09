@@ -79,7 +79,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                             {t('welcome.openSync')}
                         </button>
                         {' '}
-                        <button type="button" className="modal-btn cancel" onClick={() => { openUrl(t('settings.websiteUrl')).catch(() => {}); }}>
+                        <button type="button" className="modal-btn secondary" onClick={() => { openUrl(t('settings.websiteUrl')).catch(() => {}); }}>
                             {t('welcome.openManual')}
                         </button>
                     </div>}

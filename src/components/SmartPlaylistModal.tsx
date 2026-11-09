@@ -244,7 +244,7 @@ export const SmartPlaylistModal: React.FC<SmartPlaylistModalProps> = ({
                         )}
                     </div>
 
-                    <button type="button" className="modal-btn cancel smart-rules-add" onClick={addCondition}>
+                    <button type="button" className="modal-btn secondary smart-rules-add" onClick={addCondition}>
                         <Icon name="plus" size={14} /> {t('smartPlaylist.addRule')}
                     </button>
 

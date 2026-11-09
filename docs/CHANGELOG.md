@@ -13,7 +13,7 @@ android-native/app/build.gradle.kts in one go.
 ## 0.39.1 — 2026-11-09
 
 - The track list header, sidebar Favorites entry and album info now use thumbs-up/down icons instead of the old star.
-- Settings: the Echo tab buttons and the sync server's Stop/Close buttons now look like buttons (bordered) instead of plain text.
+- Settings: the Echo tab buttons and the sync server's Stop/Close buttons now look like buttons (bordered) instead of plain text. Same for the Welcome "manual" link, the album-cover / artist-image Search buttons and the smart playlist "Add condition" button.
 
 ## 0.39.0 — 2026-11-09
 

@@ -93,7 +93,7 @@ export const AlbumCoverPicker: React.FC<AlbumCoverPickerProps> = ({ isOpen, quer
                         placeholder={t('albumCoverPicker.queryPlaceholder')}
                         autoFocus
                     />
-                    <button type="submit" className="modal-btn cancel" disabled={loading || !query.trim()}>
+                    <button type="submit" className="modal-btn secondary" disabled={loading || !query.trim()}>
                         {t('albumCoverPicker.search')}
                     </button>
                 </form>

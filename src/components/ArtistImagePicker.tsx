@@ -91,7 +91,7 @@ export const ArtistImagePicker: React.FC<ArtistImagePickerProps> = ({ isOpen, ar
                         placeholder={t('artistImagePicker.artistNamePlaceholder')}
                         autoFocus
                     />
-                    <button type="submit" className="modal-btn cancel" disabled={loading || !query.trim()}>
+                    <button type="submit" className="modal-btn secondary" disabled={loading || !query.trim()}>
                         {t('artistImagePicker.search')}
                     </button>
                 </form>
