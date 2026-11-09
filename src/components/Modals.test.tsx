@@ -23,6 +23,8 @@ function makeProps(over: Partial<React.ComponentProps<typeof SettingsModal>> = {
         podcastNoShuffle: true,
         onTogglePodcastNoShuffle: () => {},
         serverAutostart: true,
+        bluetoothSync: false,
+        onToggleBluetoothSync: () => {},
         onToggleServerAutostart: () => {},
         transcodeFormat: "aac" as const,
         onChangeTranscodeFormat: () => {},

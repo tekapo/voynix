@@ -1,5 +1,7 @@
 package com.voynix.ui.sync
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,10 +48,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import com.voynix.sync.BluetoothTunnels
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -312,6 +315,14 @@ private fun PairedSection(vm: SyncViewModel, peerUrl: String, lastSyncAt: Long?)
     val autoSyncEnabled by vm.autoSyncEnabled.collectAsState()
     val autoSyncChargingOnly by vm.autoSyncChargingOnly.collectAsState()
     val syncFiles by vm.syncFiles.collectAsState()
+    val btSyncEnabled by vm.btSyncEnabled.collectAsState()
+    val btSyncFiles by vm.btSyncFiles.collectAsState()
+    val viaBluetooth by vm.lastViaBluetooth.collectAsState()
+    val context = LocalContext.current
+    // Turning Bluetooth sync on asks for the two Android 12+ permissions first.
+    val btPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
+        vm.setBtSyncEnabled(granted.values.all { it })
+    }
 
     Spacer(Modifier.height(16.dp))
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -325,6 +336,45 @@ private fun PairedSection(vm: SyncViewModel, peerUrl: String, lastSyncAt: Long?)
                 onValueChange = { vm.setSyncFiles(it) },
             ),
         )
+    }
+
+    if (BluetoothTunnels.isSupported) {
+        Spacer(Modifier.height(16.dp))
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.sync_bluetooth)) },
+                    supportingContent = { Text(stringResource(R.string.sync_bluetooth_detail)) },
+                    trailingContent = { Switch(checked = btSyncEnabled, onCheckedChange = null) },
+                    modifier = Modifier.toggleable(
+                        value = btSyncEnabled,
+                        role = Role.Switch,
+                        onValueChange = { on ->
+                            if (!on) {
+                                vm.setBtSyncEnabled(false)
+                            } else if (BluetoothTunnels.hasPermissions(context)) {
+                                vm.setBtSyncEnabled(true)
+                            } else {
+                                btPermissionLauncher.launch(
+                                    arrayOf(android.Manifest.permission.BLUETOOTH_SCAN, android.Manifest.permission.BLUETOOTH_CONNECT),
+                                )
+                            }
+                        },
+                    ),
+                )
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.sync_bluetooth_files)) },
+                    supportingContent = { Text(stringResource(R.string.sync_bluetooth_files_detail)) },
+                    trailingContent = { Switch(checked = btSyncFiles, onCheckedChange = null, enabled = btSyncEnabled) },
+                    modifier = Modifier.toggleable(
+                        value = btSyncFiles,
+                        enabled = btSyncEnabled,
+                        role = Role.Switch,
+                        onValueChange = { vm.setBtSyncFiles(it) },
+                    ),
+                )
+            }
+        }
     }
 
     Spacer(Modifier.height(16.dp))
@@ -368,6 +418,14 @@ private fun PairedSection(vm: SyncViewModel, peerUrl: String, lastSyncAt: Long?)
             stringResource(R.string.sync_summary, it.added, it.refetched, it.deleted, it.playlists),
             style = MaterialTheme.typography.bodyMedium,
         )
+        if (viaBluetooth) {
+            Text(
+                stringResource(R.string.sync_via_bluetooth),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
         if (it.skippedFiles > 0) {
             Text(
                 stringResource(R.string.sync_skipped_files, it.skippedFiles),
