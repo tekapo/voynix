@@ -8,18 +8,19 @@ English | [日本語](./README.ja.md)
 
 Voynix is a local-first music player for Mac and Android.
 
-- Syncs your Mac library to Android over Wi-Fi; play history and favorites sync back too
+- Syncs your Mac library to Android over Wi-Fi; play history and ratings sync back too
 - Supports Android Auto
 
 ## Features
 
 - **Playback**: Scans local music files (mp3, m4a, flac) and organizes them into a library (artists, albums, playlists), with gapless playback on both Mac and Android
 - **Playlists**: Regular and smart playlists (smart playlists are created on Mac and sync to Android as regular playlists)
+- **Ratings**: Give any track a thumbs up (it joins the Favorites list) or a thumbs down. Thumbs-down songs are hidden from Most Played, Recently Added and Recently Played (turn this off in Settings → Library on Mac, or in Settings on Android)
 - **Editing track info**: Edit titles and tags per track, album, or artist
 - **Podcasts**: Playback speed, ±10-second skip, and optional exclusion from shuffle
 - **Lyrics**: View lyrics for the playing track on Mac and Android (looked up online from LRCLIB when you open the lyrics view)
 - **Themes (Mac)**: System, Light or Dark, chosen in Settings → General
-- **Sync to Android**: Mirrors the playlists and Library lists you mark for sync to Android devices on the same Wi-Fi network; play history and favorites sync both ways
+- **Sync to Android**: Mirrors the playlists and Library lists you mark for sync to Android devices on the same Wi-Fi network; play history and ratings (thumbs up/down) sync both ways
 - **Android Auto**: Browse and play your library and playlists from the car head unit, including the full play queue with jump-to-track
 - **Now playing source (Android)**: Shows which playlist, artist, album or library list the queue is playing from, in the Now Playing screen, the mini player and Android Auto
 
@@ -80,7 +81,7 @@ Install the app first (see [Installation](#installation)). Details for each step
 
 1. Install the app (the APK, or Google Play if you are a closed-test tester) and open it. Allow notifications if asked.
 2. Connect to the same Wi-Fi network as the Mac, open **Settings → Wi-Fi Sync**, and scan the QR code shown on the Mac.
-3. The marked songs, playlists, play history and favorites are imported. After that, tap **Sync now**, or let it sync automatically about every 6 hours on the Mac's Wi-Fi.
+3. The marked songs, playlists, play history and ratings are imported. After that, tap **Sync now**, or let it sync automatically about every 6 hours on the Mac's Wi-Fi.
 
 ### Android Auto
 

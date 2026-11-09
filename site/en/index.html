@@ -38,12 +38,13 @@
 
 <h2 id="overview">Overview</h2>
 <ul>
-  <li>Syncs your Mac library to Android over Wi-Fi; play history and favorites sync back too</li>
+  <li>Syncs your Mac library to Android over Wi-Fi; play history and ratings sync back too</li>
   <li>Supports Android Auto</li>
 </ul>
 <ul>
   <li><strong>Playback</strong>: scans local music files (mp3, m4a, flac) into a library of artists, albums and playlists. Gapless playback on both Mac and Android</li>
-  <li><strong>Playlists</strong>: regular playlists, plus smart playlists that collect tracks by genre, artist, play count, date added, favorites and more. Most Played, Recently Added and Recently Played are built in</li>
+  <li><strong>Playlists</strong>: regular playlists, plus smart playlists that collect tracks by genre, artist, play count, date added, thumbs up and more. Most Played, Recently Added and Recently Played are built in</li>
+  <li><strong>Ratings</strong>: give any track a thumbs up (it joins the Favorites list) or a thumbs down. Thumbs-down songs are hidden from Most Played, Recently Added and Recently Played; turn this off in Settings → Library on the Mac, or in Settings on Android</li>
   <li><strong>Editing track info</strong>: "Get Info…" edits titles and tags per track, album or artist. Artist images can be fetched automatically</li>
   <li><strong>Lyrics</strong>: view lyrics for the playing track on Mac and Android (looked up online from LRCLIB when you open the lyrics view)</li>
   <li><strong>Themes (Mac)</strong>: System, Light or Dark, chosen in Settings → General</li>
@@ -84,12 +85,12 @@
 <h2 id="sync">Wi-Fi sync between Mac and Android</h2>
 <div class="note">Both devices must be on the same Wi-Fi network.</div>
 <h3>What gets synced</h3>
-<p>Only what you mark for sync is sent. In the Mac sidebar, <strong>right-click a playlist (or a Library item: All Songs, Favorites, Most Played, Recently Added or Recently Played) and choose "Sync to Device"</strong>; a sync mark appears next to it. Playlists are created on Android as they are on the Mac, and the tracks they contain are copied. If nothing is marked, Android receives no songs. Play history and favorites sync both ways.</p>
+<p>Only what you mark for sync is sent. In the Mac sidebar, <strong>right-click a playlist (or a Library item: All Songs, Favorites, Most Played, Recently Added or Recently Played) and choose "Sync to Device"</strong>; a sync mark appears next to it. Playlists are created on Android as they are on the Mac, and the tracks they contain are copied. If nothing is marked, Android receives no songs. Play history and ratings (thumbs up/down) sync both ways.</p>
 <h3>Pairing</h3>
 <ol>
   <li>On the Mac, click the sync button at the bottom left of the sidebar. The sync server starts automatically when Voynix launches (you can turn this off in <strong>Settings → Sync → "Start sync server automatically"</strong>; then start it from this window). A QR code, the server URL, the pairing code and a security code are shown.</li>
   <li>On Android, open Settings → <strong>Wi-Fi Sync</strong> and pair using one of the three methods below (QR code is the easiest).</li>
-  <li>The marked tracks, playlists, play history and favorites are imported to Android. After that you can re-sync manually, and within Wi-Fi range it syncs automatically about every 6 hours. Auto sync can be turned off or limited to charging in the Android settings.</li>
+  <li>The marked tracks, playlists, play history and ratings are imported to Android. After that you can re-sync manually, and within Wi-Fi range it syncs automatically about every 6 hours. Auto sync can be turned off or limited to charging in the Android settings.</li>
 </ol>
 <p>Tracks in formats Android can't play, such as ALAC, are converted on the Mac before being sent. Under <strong>Settings → Sync</strong> you can choose the target format (AAC, smaller but lossy, or FLAC, lossless but larger) and the AAC bitrate; changing it re-converts those files on the next sync.</p>
 <table>
@@ -104,7 +105,7 @@
 <p>The Android app is a client that mirrors the Mac library. The home screen lists <strong>Library</strong> (Songs, Artists, Albums, Favorites, Most Played, Recently Added, Recently Played) and your synced <strong>Playlists</strong>; the top bar has search, a sync button and Settings.</p>
 <ul>
   <li><strong>Settings → Wi-Fi Sync</strong>: pair or unpair, see the connection status, run <strong>Sync now</strong>, and set <strong>Auto-sync</strong> (about every 6 hours on the Mac's Wi-Fi) and <strong>Only while charging</strong>.</li>
-  <li><strong>Settings → Language</strong>: System, English or 日本語. Also here: "Don't shuffle podcasts", "Clear album art cache" (re-fetched on the next sync), the device ID and the version.</li>
+  <li><strong>Settings → Language</strong>: System, English or 日本語. Also here: "Hide thumbs-down songs from auto lists", "Don't shuffle podcasts", "Clear album art cache" (re-fetched on the next sync), the device ID and the version.</li>
   <li><strong>User manual</strong> and <strong>Open source licenses</strong> are at the bottom of Settings.</li>
 </ul>
 
