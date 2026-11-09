@@ -111,6 +111,8 @@ class LocalBridge(private val channels: TunnelChannelFactory) : SyncTunnel {
             }
             live.add(local)
             live.add(channel)
+            Log.i(TAG, "channel opened")
+            var up = 0L
             val shutdown = {
                 runCatching { local.close() }
                 runCatching { channel.close() }
@@ -118,26 +120,31 @@ class LocalBridge(private val channels: TunnelChannelFactory) : SyncTunnel {
                 live.remove(channel)
             }
             thread(name = "bt-bridge-up", isDaemon = true) {
-                pipe(local.getInputStream(), channel.output)
+                up = pipe(local.getInputStream(), channel.output)
                 shutdown()
             }
-            pipe(channel.input, local.getOutputStream())
+            val down = pipe(channel.input, local.getOutputStream())
             shutdown()
+            Log.i(TAG, "channel closed: $up bytes to the Mac, $down bytes from it")
         }
     }
 
-    private fun pipe(from: InputStream, to: OutputStream) {
+    /** Copies until either side closes; returns how many bytes went through. */
+    private fun pipe(from: InputStream, to: OutputStream): Long {
         val buf = ByteArray(16 * 1024)
+        var total = 0L
         try {
             while (true) {
                 val n = from.read(buf)
                 if (n < 0) break
                 to.write(buf, 0, n)
                 to.flush()
+                total += n
             }
         } catch (_: IOException) {
             // Either side going away ends the connection.
         }
+        return total
     }
 
     override fun close() {
@@ -166,7 +173,16 @@ object BluetoothTunnels {
         val found = withTimeoutOrNull(SCAN_TIMEOUT_MS) { findMac(context, adapter.bluetoothLeScanner ?: return@withTimeoutOrNull null, pinHex) }
             ?: return@withContext null
         Log.i(TAG, "found the Mac (psm ${found.info.psm}); opening the bridge")
-        LocalBridge { openChannel(found.device, found.info.psm) }
+        val bridge = LocalBridge { openChannel(found.device, found.info.psm) }
+        // The GATT link stays up until the tunnel closes: the Mac only attaches an
+        // incoming L2CAP channel to a phone it still sees as connected.
+        object : SyncTunnel {
+            override val url: String get() = bridge.url
+            override fun close() {
+                bridge.close()
+                runCatching { found.gatt.disconnect(); found.gatt.close() }
+            }
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -186,7 +202,10 @@ object BluetoothTunnels {
         }
     }
 
-    private class Found(val device: BluetoothDevice, val info: MacChannelInfo)
+    private class Found(val device: BluetoothDevice, val info: MacChannelInfo, val gatt: BluetoothGatt)
+
+    /** An open GATT connection that has just delivered the Mac's channel info. */
+    private class GattInfo(val info: MacChannelInfo, val gatt: BluetoothGatt)
 
     @SuppressLint("MissingPermission")
     private suspend fun findMac(
@@ -211,9 +230,10 @@ object BluetoothTunnels {
             val tried = HashSet<String>()
             for (device in devices) {
                 if (!tried.add(device.address)) continue
-                val info = withTimeoutOrNull(GATT_TIMEOUT_MS) { readInfo(context, device) } ?: continue
-                if (fingerprintMatchesPin(info.fingerprintPrefix, pinHex)) return Found(device, info)
+                val link = withTimeoutOrNull(GATT_TIMEOUT_MS) { readInfo(context, device) } ?: continue
+                if (fingerprintMatchesPin(link.info.fingerprintPrefix, pinHex)) return Found(device, link.info, link.gatt)
                 Log.i(TAG, "skipping a Voynix Mac that isn't the paired one")
+                runCatching { link.gatt.disconnect(); link.gatt.close() }
             }
             return null
         } finally {
@@ -222,16 +242,25 @@ object BluetoothTunnels {
         }
     }
 
-    /** Connects over GATT, reads the info characteristic, and disconnects. Null on any failure. */
+    /**
+     * Connects over GATT and reads the info characteristic. On success the
+     * connection is handed back still open (the caller closes it); on any
+     * failure it is closed here and the result is null.
+     */
     @SuppressLint("MissingPermission")
-    private suspend fun readInfo(context: Context, device: BluetoothDevice): MacChannelInfo? =
-        suspendCancellableCoroutine { cont: CancellableContinuation<MacChannelInfo?> ->
+    private suspend fun readInfo(context: Context, device: BluetoothDevice): GattInfo? =
+        suspendCancellableCoroutine { cont: CancellableContinuation<GattInfo?> ->
             var gatt: BluetoothGatt? = null
             val done = AtomicBoolean(false)
             fun finish(result: MacChannelInfo?) {
                 if (!done.compareAndSet(false, true)) return
-                runCatching { gatt?.disconnect(); gatt?.close() }
-                if (cont.isActive) cont.resume(result)
+                val g = gatt
+                if (result != null && g != null && cont.isActive) {
+                    cont.resume(GattInfo(result, g))
+                    return
+                }
+                runCatching { g?.disconnect(); g?.close() }
+                if (cont.isActive) cont.resume(null)
             }
             val callback = object : BluetoothGattCallback() {
                 override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) {
