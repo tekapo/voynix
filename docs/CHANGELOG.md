@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.39.4 — 2026-11-09
+
+- The update dialog now has a "View release notes" link that opens the release page for that version.
+
 ## 0.39.3 — 2026-11-09
 
 - Fix keyboard and update-dialog issues: Enter on a row's thumbs button no longer plays the row, stacked dialogs no longer fight over Tab, a failed install keeps the update dialog open with the reason and a retry, "Check for updates" is ignored mid-download, and turning off auto-check is honoured even when startup is slow.

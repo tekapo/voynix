@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { UpdateModal } from "./UpdateModal";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import type { SelfUpdate } from "../hooks/useUpdater";
 
 function make(over: Partial<SelfUpdate> = {}): SelfUpdate {
@@ -17,7 +18,18 @@ function make(over: Partial<SelfUpdate> = {}): SelfUpdate {
     };
 }
 
+vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn(() => Promise.resolve()) }));
+
 describe("UpdateModal", () => {
+    it("links to this version's release page, but not while downloading", () => {
+        const { unmount } = render(<UpdateModal updater={make()} />);
+        fireEvent.click(screen.getByText("View release notes"));
+        expect(openUrl).toHaveBeenCalledWith("https://github.com/tekapo/voynix/releases/tag/v1.2.3");
+        unmount();
+        render(<UpdateModal updater={make({ status: { kind: "downloading", version: "1.2.3", done: 1, total: 2 } })} />);
+        expect(screen.queryByText("View release notes")).toBeNull();
+    });
+
     it("offers the update and lets the user install or defer", () => {
         const install = vi.fn();
         const dismiss = vi.fn();
