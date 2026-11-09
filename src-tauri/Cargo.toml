@@ -1,6 +1,6 @@
 [package]
 name = "voynix"
-version = "0.38.1"
+version = "0.38.2"
 description = "Music player for Mac and Android with Wi-Fi library sync"
 authors = ["JOTAKI, Taisuke"]
 license = "MIT"
@@ -93,6 +93,5 @@ block2 = "0.6"
 objc2 = "0.6"
 objc2-app-kit = { version = "0.3", features = ["NSMenu", "NSMenuItem", "NSResponder", "NSImage"] }
 objc2-core-foundation = "0.3"
-objc2-core-bluetooth = "0.3"
-objc2-foundation = { version = "0.3", features = ["NSString", "NSDictionary", "NSValue", "NSObject", "NSData", "NSGeometry", "NSStream", "NSRunLoop", "NSThread", "NSError", "NSArray", "NSUUID", "NSDate"] }
+objc2-foundation = { version = "0.3", features = ["NSString", "NSDictionary", "NSValue", "NSObject", "NSData", "NSGeometry"] }
 objc2-media-player = { version = "0.3", features = ["MPRemoteCommandCenter", "MPRemoteCommand", "MPRemoteCommandEvent", "MPNowPlayingInfoCenter", "MPMediaItem", "block2", "objc2-app-kit", "objc2-core-foundation"] }

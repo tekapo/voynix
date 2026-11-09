@@ -153,11 +153,6 @@
     <string name="sync_files">Sync song files</string>
     <string name="sync_files_detail">Turn off to sync only playlists, play history, favorites and podcast positions</string>
     <string name="sync_skipped_files">%1$d songs will be added the next time song files are synced</string>
-    <string name="sync_bluetooth">Sync over Bluetooth</string>
-    <string name="sync_bluetooth_detail">When the Mac can\'t be reached on the network, find it over Bluetooth. Manual sync only. Turn on \"Allow sync over Bluetooth\" in the Mac app.</string>
-    <string name="sync_bluetooth_files">Include song files over Bluetooth</string>
-    <string name="sync_bluetooth_files_detail">Very slow: about 1 GB per hour or less</string>
-    <string name="sync_via_bluetooth">Synced over Bluetooth</string>
     <string name="sync_auto_sync">Auto-sync</string>
     <string name="sync_auto_sync_detail">Sync automatically about every 6 hours when the Mac is on this Wi-Fi</string>
     <string name="sync_charging_only">Only while charging</string>

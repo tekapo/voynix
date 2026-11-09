@@ -299,7 +299,6 @@ function App() {
     serverStatus,
     serverActivity,
     serverAutostart,
-    bluetoothSync,
     prepareProgress,
     transcodeFormat,
     transcodeBitrate,
@@ -307,7 +306,6 @@ function App() {
     closeSyncModal,
     toggleServer,
     toggleServerAutostart,
-    toggleBluetoothSync,
     changeTranscodeFormat,
     changeTranscodeBitrate,
     bumpSnapshot,
@@ -1575,8 +1573,6 @@ function App() {
           onTogglePodcastNoShuffle={handleTogglePodcastNoShuffle}
           serverAutostart={serverAutostart}
           onToggleServerAutostart={toggleServerAutostart}
-          bluetoothSync={bluetoothSync}
-          onToggleBluetoothSync={toggleBluetoothSync}
           transcodeFormat={transcodeFormat}
           onChangeTranscodeFormat={changeTranscodeFormat}
           transcodeBitrate={transcodeBitrate}

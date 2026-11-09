@@ -24,8 +24,6 @@ function makeProps(over: Partial<Props> = {}): Props {
         podcastNoShuffle: false,
         onTogglePodcastNoShuffle: () => {},
         serverAutostart: false,
-        bluetoothSync: false,
-        onToggleBluetoothSync: () => {},
         onToggleServerAutostart: () => {},
         transcodeFormat: "aac",
         onChangeTranscodeFormat: () => {},

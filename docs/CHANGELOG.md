@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.38.2 — 2026-11-09
+
+- Remove the experimental Bluetooth sync (0.38.0/0.38.1): over BLE it ran at about 1 KB/s, too slow even for metadata only. Sync works over Wi-Fi and tethering as before.
+
 ## 0.38.1 — 2026-11-09
 - Bluetooth sync fix: the Mac now answers the phone's channel-info read itself (instead of a cached value) and the phone keeps its GATT link open until the tunnel closes, so CoreBluetooth can attach the incoming L2CAP channel to the phone.
 - The Mac writes a small log of Bluetooth sync to `~/Library/Logs/Voynix-bluetooth.log`.

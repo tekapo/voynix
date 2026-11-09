@@ -313,7 +313,6 @@
   },
   "syncServer": {
     "serverError": "Server Error: {{error}}",
-    "bluetoothError": "Bluetooth sync couldn't start: {{error}}",
     "pairRequestMessage": "Allow \"{{deviceName}}\" to pair and sync with this Mac?\n\nSecurity code: {{fingerprint}}\n(Check it matches what's shown on the phone before allowing.)",
     "pairRequestTitle": "Voynix pairing request"
   },
@@ -462,8 +461,6 @@
     "sync": "Sync",
     "startSyncServerAutomatically": "Start sync server automatically",
     "syncAutostartHint": "Off: start it yourself from the Sync menu each time.",
-    "syncOverBluetooth": "Allow sync over Bluetooth",
-    "syncOverBluetoothHint": "Lets a paired phone sync when it can't reach this Mac over Wi-Fi. macOS asks for Bluetooth permission the first time.",
     "convertUnsupportedFilesTo": "Convert unsupported files (ALAC, AIFF, …) to:",
     "formatAac": "AAC (smaller, lossy)",
     "formatFlac": "FLAC (lossless, larger)",

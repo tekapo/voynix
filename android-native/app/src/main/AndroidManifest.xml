@@ -9,11 +9,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
-    <!-- Bluetooth sync with the Mac (Android 12+): find it over BLE and open an
-         L2CAP channel. neverForLocation: we never derive a location from scans. -->
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
     <!-- Background Bluetooth/Auto playback: a mediaPlayback foreground service
          keeps the process alive with the screen off. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />

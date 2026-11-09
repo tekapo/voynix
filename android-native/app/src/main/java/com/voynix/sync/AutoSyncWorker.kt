@@ -10,10 +10,6 @@ const val AUTO_SYNC_ENABLED_KEY = "auto_sync_enabled"
 const val AUTO_SYNC_CHARGING_ONLY_KEY = "auto_sync_charging_only"
 /** "0" = metadata-only sync (no song files); anything else, including unset, syncs files too. */
 const val SYNC_FILES_KEY = "sync_files"
-/** "1" = fall back to Bluetooth when the Mac can't be reached on the network (manual sync only). Off by default. */
-const val BT_SYNC_ENABLED_KEY = "bt_sync_enabled"
-/** "1" = a Bluetooth sync also downloads song files (slow: Bluetooth moves roughly 100-250 KB/s). Off by default. */
-const val BT_SYNC_FILES_KEY = "bt_sync_files"
 
 /**
  * Periodic background sync with the paired Mac, scheduled by AutoSyncScheduler
