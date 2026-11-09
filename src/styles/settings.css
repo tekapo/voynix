@@ -81,3 +81,16 @@
     border-bottom-color: var(--accent-text);
   }
 }
+
+/* Action buttons in a settings panel: a wrapping row with an even gap, and a
+   lone button that sits clear of the text above it. (Use .modal-btn.secondary
+   for the look — .cancel is the borderless style for dismissing a dialog.) */
+.settings-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.settings-btn-row-single {
+  margin-top: 0.75rem;
+}

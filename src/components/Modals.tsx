@@ -133,7 +133,7 @@ const ServerSide: React.FC<Pick<SyncModalProps, 'serverStatus' | 'serverActivity
                                 {t('modals.convertingForAndroid', { done: prepareProgress.done, total: prepareProgress.total })}
                             </p>
                         )}
-                        <button className="modal-btn cancel" onClick={toggleServer} style={{ marginTop: '15px' }}>{t('modals.stopServer')}</button>
+                        <button className="modal-btn secondary settings-btn-row-single" onClick={toggleServer}>{t('modals.stopServer')}</button>
                     </div>
                 ) : (
                     <div className="status-stopped">
@@ -155,7 +155,7 @@ export const SyncModal: React.FC<SyncModalProps> = (props) => {
             <div className="modal-content" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="sync-server-title" onClick={e => e.stopPropagation()}>
                 <ServerSide {...props} />
                 <div className="modal-actions">
-                    <button type="button" className="modal-btn cancel" onClick={props.onClose}>{t('modals.close')}</button>
+                    <button type="button" className="modal-btn confirm" onClick={props.onClose}>{t('modals.close')}</button>
                 </div>
             </div>
         </div></Portal>

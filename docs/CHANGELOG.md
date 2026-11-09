@@ -10,6 +10,11 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.39.1 — 2026-11-09
+
+- The track list header, sidebar Favorites entry and album info now use thumbs-up/down icons instead of the old star.
+- Settings: the Echo tab buttons and the sync server's Stop/Close buttons now look like buttons (bordered) instead of plain text. Same for the Welcome "manual" link, the album-cover / artist-image Search buttons and the smart playlist "Add condition" button.
+
 ## 0.39.0 — 2026-11-09
 
 - Thumbs up / thumbs down on every track (Mac and Android) replaces the favorite star: thumbs up is the old favorite, thumbs down is new, and the two are mutually exclusive. The rating syncs both ways (last write wins).

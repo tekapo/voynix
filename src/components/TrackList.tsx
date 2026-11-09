@@ -533,7 +533,7 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                 <SortHeader col="album" className={showPath ? 'th-album' : 'th-album th-flex'} resizeKey={showPath ? 'album' : undefined}>{t('trackList.album')}</SortHeader>
                 {showPath && <div className="th-path th-flex">{t('trackList.path')}</div>}
                 <SortHeader col="plays" className="cell-center th-plays" label={t('trackList.playCount')}><Icon name="play" size={11} /></SortHeader>
-                <div className="cell-center th-fav"><Icon name="star" size={13} /></div>
+                <div className="cell-center th-fav"><Icon name="thumb-up" size={13} /><Icon name="thumb-down" size={13} /></div>
                 <SortHeader col="duration" className="th-time" resizeKey="time">{t('trackList.time')}</SortHeader>
             </div>
             {playingIndex >= 0 && nowPlaying.direction === 'above' && (

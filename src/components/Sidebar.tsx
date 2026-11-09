@@ -121,7 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         {...activatable(() => { onLibraryClick('favorites'); onClose(); })}
                         onContextMenu={(e) => onLibraryContextMenu?.(e, 'favorites')}
                     >
-                        <span className="playlist-icon"><Icon name="star" /></span>
+                        <span className="playlist-icon"><Icon name="thumb-up" /></span>
                         <span className="item-label">{t('sidebar.favorites')}</span>
                         {librarySyncSources.includes('favorites') ? (
                             <span className="playlist-sync-badge" title={t('sidebar.syncedToDevices')}>
