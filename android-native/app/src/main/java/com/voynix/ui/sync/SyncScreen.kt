@@ -311,6 +311,21 @@ private fun PairedSection(vm: SyncViewModel, peerUrl: String, lastSyncAt: Long?)
 
     val autoSyncEnabled by vm.autoSyncEnabled.collectAsState()
     val autoSyncChargingOnly by vm.autoSyncChargingOnly.collectAsState()
+    val syncFiles by vm.syncFiles.collectAsState()
+
+    Spacer(Modifier.height(16.dp))
+    Card(modifier = Modifier.fillMaxWidth()) {
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.sync_files)) },
+            supportingContent = { Text(stringResource(R.string.sync_files_detail)) },
+            trailingContent = { Switch(checked = syncFiles, onCheckedChange = null) },
+            modifier = Modifier.toggleable(
+                value = syncFiles,
+                role = Role.Switch,
+                onValueChange = { vm.setSyncFiles(it) },
+            ),
+        )
+    }
 
     Spacer(Modifier.height(16.dp))
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -353,6 +368,14 @@ private fun PairedSection(vm: SyncViewModel, peerUrl: String, lastSyncAt: Long?)
             stringResource(R.string.sync_summary, it.added, it.refetched, it.deleted, it.playlists),
             style = MaterialTheme.typography.bodyMedium,
         )
+        if (it.skippedFiles > 0) {
+            Text(
+                stringResource(R.string.sync_skipped_files, it.skippedFiles),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
         if (it.errors.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
             Text(stringResource(R.string.sync_errors), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)

@@ -198,6 +198,68 @@ class SyncEngineRunSyncTest {
     }
 
     @Test
+    fun `without song files nothing is downloaded and no track rows are added`() = runTest {
+        manifest = manifest.copy(tracks = listOf(track("a"), track("b")))
+
+        val summary = engine.runSync(peer, syncFiles = false)
+
+        assertTrue(downloaded.isEmpty())
+        assertTrue(db.trackDao().getMirrorTracks().isEmpty())
+        assertEquals(0, summary.added)
+        assertEquals(2, summary.skippedFiles)
+        assertTrue(summary.errors.isEmpty())
+    }
+
+    @Test
+    fun `without song files a track removed from the manifest keeps its file and row`() = runTest {
+        manifest = manifest.copy(tracks = listOf(track("a"), track("b")))
+        engine.runSync(peer)
+        val bPath = db.trackDao().getMirrorTracks().first { it.trackKey == "b" }.filePath
+
+        manifest = manifest.copy(tracks = listOf(track("a")))
+        val summary = engine.runSync(peer, syncFiles = false)
+
+        assertEquals(0, summary.deleted)
+        assertEquals(setOf("a", "b"), db.trackDao().getMirrorTracks().map { it.trackKey }.toSet())
+        assertTrue(File(bPath).isFile)
+    }
+
+    @Test
+    fun `without song files a changed file is not re-fetched but is counted as skipped`() = runTest {
+        manifest = manifest.copy(tracks = listOf(track("a")))
+        engine.runSync(peer)
+        downloaded.clear()
+
+        manifest = manifest.copy(tracks = listOf(track("a", hash = "h-a-v2")))
+        val summary = engine.runSync(peer, syncFiles = false)
+
+        assertTrue(downloaded.isEmpty())
+        assertEquals(1, summary.skippedFiles)
+        assertEquals("h-a", db.trackDao().getMirrorTracks().single().contentHash)
+    }
+
+    @Test
+    fun `without song files favorites and playlists still reach the tracks already on the phone`() = runTest {
+        manifest = manifest.copy(tracks = listOf(track("a")))
+        engine.runSync(peer)
+
+        manifest = manifest.copy(
+            tracks = listOf(
+                track("a").copy(favorite = 1, favoriteUpdatedAt = 5L),
+                track("b"), // not on the phone: never downloaded, so it can't join the playlist
+            ),
+            playlists = listOf(SnapshotPlaylistDto(id = "p1", name = "Mix", trackKeys = listOf("b", "a"))),
+        )
+        val summary = engine.runSync(peer, syncFiles = false)
+
+        assertEquals(1, summary.playlists)
+        assertTrue(db.trackDao().getLocalFavorites().single { it.trackKey == "a" }.favorite)
+        val idA = db.trackDao().getMirrorTracks().single { it.trackKey == "a" }.id
+        assertEquals(listOf(idA), db.playlistDao().getMirrorPlaylistTrackIds().map { it.trackId })
+        assertEquals(listOf("a"), db.trackDao().getMirrorTracks().map { it.trackKey })
+    }
+
+    @Test
     fun `playlists are mirrored with the manifest's track order and removed when gone`() = runTest {
         manifest = manifest.copy(
             tracks = listOf(track("a"), track("b")),

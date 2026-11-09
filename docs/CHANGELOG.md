@@ -10,6 +10,9 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.37.0 — 2026-11-09
+- Android: new "Sync song files" switch on the sync screen (on by default). When off, a sync only brings playlists, play history, favorites and podcast positions; no song file is downloaded or deleted, and the result notes how many songs were left for the next sync with files.
+
 ## 0.36.0 — 2026-11-06
 - Self-update: the app now re-checks for updates every 6 hours while it is open (besides at launch). A background check no longer pops up the dialog; it shows a "Voynix X.Y.Z available" notice at the bottom left of the sidebar, which opens the update dialog when clicked and can be dismissed with ×.
 

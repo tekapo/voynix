@@ -21,6 +21,8 @@ data class SyncSummary(
     val deleted: Int,
     val playlists: Int,
     val errors: List<String>,
+    /** Tracks whose download (add or re-fetch) was left for a later sync because song files are turned off. */
+    val skippedFiles: Int = 0,
 )
 
 /** Mirrors one entry of SyncSnapshot.tracks (the Mac's /api/manifest response). */

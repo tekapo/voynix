@@ -16,6 +16,8 @@ private const val CHANNEL_ID = "auto_sync"
 private const val NOTIFICATION_ID = 4201
 const val AUTO_SYNC_ENABLED_KEY = "auto_sync_enabled"
 const val AUTO_SYNC_CHARGING_ONLY_KEY = "auto_sync_charging_only"
+/** "0" = metadata-only sync (no song files); anything else, including unset, syncs files too. */
+const val SYNC_FILES_KEY = "sync_files"
 
 /**
  * Periodic background sync with the paired Mac, scheduled by AutoSyncScheduler
@@ -39,6 +41,8 @@ class AutoSyncWorker(context: Context, params: WorkerParameters) : CoroutineWork
         }
         checkNotNull(peer)
 
+        val syncFiles = settings.get(SYNC_FILES_KEY) != "0"
+
         setForegroundAsync(getForegroundInfo())
 
         val api = SyncApi()
@@ -48,7 +52,7 @@ class AutoSyncWorker(context: Context, params: WorkerParameters) : CoroutineWork
             peer = peer,
             probe = { url, token, pin -> api.ping(url, token, pin) },
             discover = { nsd.discover() },
-            runSync = { p, onProgress -> engine.runSync(p, onProgress) },
+            runSync = { p, onProgress -> engine.runSync(p, onProgress, syncFiles) },
             onPeerMoved = { moved -> peerStore.save(moved.url, moved.token, moved.pin.orEmpty()) },
         )
         return when (result) {
