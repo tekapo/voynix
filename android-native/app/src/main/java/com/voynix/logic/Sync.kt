@@ -46,6 +46,8 @@ data class ManifestTrack(
     val resumePosition: Double,
     val playStateUpdatedAt: Long?,
     val addedAt: Long?,
+    /** Thumbs down. Defaulted: an LWW field (not compared by metaMatches), absent from older Macs. */
+    val disliked: Boolean = false,
 )
 
 /** Mirrors one entry of SyncSnapshot.playlists. */

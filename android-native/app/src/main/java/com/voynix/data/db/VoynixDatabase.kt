@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         AlbumCoverEntity::class,
         ArtistCoverEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class VoynixDatabase : RoomDatabase() {
@@ -57,6 +57,14 @@ abstract class VoynixDatabase : RoomDatabase() {
             }
         }
 
+        // Adds `tracks.disliked` (thumbs down), mirroring migration 13 in
+        // db/migrations.ts. NOT NULL DEFAULT 0 so existing rows read as "no rating change".
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE tracks ADD COLUMN disliked INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         @Volatile
         private var instance: VoynixDatabase? = null
 
@@ -72,7 +80,7 @@ abstract class VoynixDatabase : RoomDatabase() {
                     // than silently wipe installed users' track metadata, local
                     // play history, and settings. Add a Migration(n, n+1) here —
                     // and a matching MigrationTest — whenever `version` above changes.
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build().also { instance = it }
             }
     }

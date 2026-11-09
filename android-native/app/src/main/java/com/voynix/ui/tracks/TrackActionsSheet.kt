@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ThumbDown
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.outlined.ThumbDown
+import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +40,7 @@ fun TrackActionsSheet(
     albumArt: AlbumArtResolver,
     onDismiss: () -> Unit,
     onToggleFavorite: () -> Unit,
+    onToggleDislike: () -> Unit,
     onEnqueue: () -> Unit,
     onTogglePlayed: () -> Unit,
 ) {
@@ -69,10 +72,16 @@ fun TrackActionsSheet(
         }
 
         SheetActionRow(
-            icon = if (track.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-            label = if (track.favorite) stringResource(R.string.track_actions_remove_favorite) else stringResource(R.string.track_actions_add_favorite),
+            icon = if (track.favorite) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
+            label = if (track.favorite) stringResource(R.string.track_actions_remove_thumb_up) else stringResource(R.string.track_actions_thumb_up),
             tint = if (track.favorite) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
             onClick = { onDismiss(); onToggleFavorite() },
+        )
+        SheetActionRow(
+            icon = if (track.disliked) Icons.Filled.ThumbDown else Icons.Outlined.ThumbDown,
+            label = if (track.disliked) stringResource(R.string.track_actions_remove_thumb_down) else stringResource(R.string.track_actions_thumb_down),
+            tint = if (track.disliked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            onClick = { onDismiss(); onToggleDislike() },
         )
         SheetActionRow(
             icon = Icons.AutoMirrored.Filled.QueueMusic,

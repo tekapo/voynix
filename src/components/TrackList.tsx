@@ -5,6 +5,7 @@ import { albumOf } from '../albumName';
 import { artistLabel } from '../names';
 import { SortKey, SortState } from '../trackSort';
 import { Track } from '../types';
+import { RatingButtons } from "./RatingButtons";
 import { Icon } from './Icon';
 import { podcastBadge, podcastDurationText } from './trackFormat';
 
@@ -12,8 +13,6 @@ const rowId = (trackId: string) => `track-row-${trackId}`;
 
 // Hoisted so React can bail out on the identical element reference — the star
 // renders once per row across a library that can run to thousands of tracks.
-const STAR_ON = <Icon name="star-filled" size={15} />;
-const STAR_OFF = <Icon name="star" size={15} />;
 
 // Below this, render every row directly (today's behaviour, unchanged) — a
 // typical playlist (tens to a few hundred tracks) gets no windowing at all,
@@ -65,6 +64,7 @@ interface TrackListProps {
      *  order. Without it, multi-select is disabled. */
     onSelectionContextMenu?: (e: React.MouseEvent, tracks: Track[]) => void;
     onToggleFavorite: (track: Track) => void;
+    onToggleDislike: (track: Track) => void;
     /** Enables drag-and-drop row reordering (a manually-ordered playlist view
      *  only — disabled while a column sort or search filter is active, since
      *  then row index no longer matches the underlying DB position). */
@@ -77,7 +77,7 @@ interface TrackListProps {
     onColumnWidthsChange?: (widths: ColumnWidths) => void;
 }
 
-const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loadedTrackId = null, showPath = false, sortState = null, onSort, onTrackClick, onTrackActivate, onContextMenu, onSelectionContextMenu, onToggleFavorite, reorderable = false, onReorder, columnWidths, onColumnWidthsChange }) => {
+const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loadedTrackId = null, showPath = false, sortState = null, onSort, onTrackClick, onTrackActivate, onContextMenu, onSelectionContextMenu, onToggleFavorite, onToggleDislike, reorderable = false, onReorder, columnWidths, onColumnWidthsChange }) => {
     const { t } = useTranslation();
     // Index of the row currently being dragged, and the row currently under
     // the pointer (for a drop-position indicator). Local UI state only — the
@@ -283,15 +283,7 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                     <div className="cell-text cell-path" style={{ fontSize: '0.8rem', opacity: 0.7 }}>{track.file_path}</div>
                 )}
                 <div className="cell-center cell-playcount">{track.play_count || ""}</div>
-                <button
-                    className={`cell-center star-btn ${track.favorite ? 'is-favorite' : ''}`}
-                    title={track.favorite ? t('trackList.removeFromFavorites') : t('trackList.addToFavorites')}
-                    aria-label={track.favorite ? t('trackList.removeFromFavorites') : t('trackList.addToFavorites')}
-                    aria-pressed={!!track.favorite}
-                    onClick={(e) => { e.stopPropagation(); onToggleFavorite(track); }}
-                >
-                    {track.favorite ? STAR_ON : STAR_OFF}
-                </button>
+                <RatingButtons track={track} onToggleFavorite={onToggleFavorite} onToggleDislike={onToggleDislike} className="cell-center" />
                 <div className="cell-duration" title={podcastDurationText(track)}>{podcastDurationText(track)}</div>
             </li>
         );

@@ -15,8 +15,8 @@ export async function getLocalPlayEvents(deviceId: string) {
 
 export async function getLocalFavorites() {
     const db = await getDb();
-    return db.select<{ track_key: string; favorite: number; updated_at: number }[]>(
-        "SELECT track_key, favorite, favorite_updated_at AS updated_at FROM tracks WHERE favorite_updated_at IS NOT NULL AND track_key IS NOT NULL"
+    return db.select<{ track_key: string; favorite: number; disliked: number; updated_at: number }[]>(
+        "SELECT track_key, favorite, disliked, favorite_updated_at AS updated_at FROM tracks WHERE favorite_updated_at IS NOT NULL AND track_key IS NOT NULL"
     );
 }
 
@@ -34,7 +34,7 @@ export async function getLocalPlayStates() {
 }
 
 interface PlayEventRow { track_key: string; played_at: number; device_id: string }
-interface FavoriteRow { track_key: string; favorite: number; favorite_updated_at: number }
+interface FavoriteRow { track_key: string; favorite: number; disliked?: number; favorite_updated_at: number }
 interface PlayStateRow { track_key: string; play_state: PlayState; resume_position: number; play_state_updated_at: number }
 
 /** Batched grow-only insert of play events (dedup is INSERT OR IGNORE against idx_play_events_dedup). */
@@ -63,14 +63,14 @@ export async function applyFavoritesBatch(rows: FavoriteRow[], onChunk?: (done: 
     const deduped = dedupeByKeyKeepMax(rows, r => r.track_key, r => r.favorite_updated_at);
     await batchExecute(db, {
         rows: deduped,
-        cols: 3,
-        perChunk: 300, // 300 * 3 = 900 params
-        toParams: r => [r.track_key, r.favorite, r.favorite_updated_at],
+        cols: 4,
+        perChunk: 225, // 225 * 4 = 900 params
+        toParams: r => [r.track_key, r.favorite, r.disliked ?? 0, r.favorite_updated_at],
         sql: tuples => `
-            UPDATE tracks SET favorite = v.column2, favorite_updated_at = v.column3
+            UPDATE tracks SET favorite = v.column2, disliked = v.column3, favorite_updated_at = v.column4
             FROM (VALUES ${tuples}) AS v
             WHERE tracks.track_key = v.column1
-              AND (tracks.favorite_updated_at IS NULL OR tracks.favorite_updated_at < v.column3)`,
+              AND (tracks.favorite_updated_at IS NULL OR tracks.favorite_updated_at < v.column4)`,
         onChunk: onChunk && ((done) => onChunk(done, rows.length)),
     });
 }
@@ -118,7 +118,7 @@ export async function applyManifestStats(
     const events = manifest.play_events.filter(e => e.device_id !== myDeviceId);
     const favorites = manifest.tracks
         .filter((t): t is ManifestTrack & { favorite_updated_at: number } => t.favorite_updated_at != null)
-        .map(t => ({ track_key: t.track_key, favorite: t.favorite, favorite_updated_at: t.favorite_updated_at }));
+        .map(t => ({ track_key: t.track_key, favorite: t.favorite, disliked: t.disliked ?? 0, favorite_updated_at: t.favorite_updated_at }));
     const playStates = manifest.tracks
         .filter((t): t is ManifestTrack & { play_state_updated_at: number } => t.play_state_updated_at != null)
         .map(t => ({
@@ -162,7 +162,7 @@ export async function applySyncInbox(items: IncomingStats[]): Promise<InboxApply
             await insertPlayEventsBatch((item.events ?? []).map(ev => ({ ...ev, device_id: item.device_id })));
             await applyFavoritesBatch(
                 (item.favorites ?? []).map(f => ({
-                    track_key: f.track_key, favorite: f.favorite, favorite_updated_at: f.updated_at,
+                    track_key: f.track_key, favorite: f.favorite, disliked: f.disliked ?? 0, favorite_updated_at: f.updated_at,
                 }))
             );
             const playStates = item.play_states ?? [];

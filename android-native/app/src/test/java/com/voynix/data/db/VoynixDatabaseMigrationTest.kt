@@ -79,6 +79,25 @@ class VoynixDatabaseMigrationTest {
     }
 
     @Test
+    fun `migrating v4 to v5 adds disliked defaulting to 0 without touching existing rows`() {
+        val v4 = helper.createDatabase(DB_NAME, 4)
+        v4.execSQL(
+            "INSERT INTO tracks (id, title, artist, album, file_path, file_name, duration, track_key, content_hash, favorite, origin, kind, resume_position, play_state) " +
+                "VALUES ('t1', 'Title', 'Artist', 'Album', '/mac/t1.mp3', 't1.mp3', 180.0, 'k1', 'hash-t1', 1, 'mirror', 'music', 0.0, 'unplayed')"
+        )
+        v4.close()
+
+        val v5 = helper.runMigrationsAndValidate(DB_NAME, 5, true, VoynixDatabase.MIGRATION_4_5)
+        val cursor = v5.query("SELECT title, favorite, disliked FROM tracks WHERE id = 't1'")
+        assertEquals(true, cursor.moveToFirst())
+        assertEquals("Title", cursor.getString(0))
+        assertEquals(1, cursor.getInt(1)) // an existing favorite (now thumbs up) survives
+        assertEquals(0, cursor.getInt(2))
+        cursor.close()
+        v5.close()
+    }
+
+    @Test
     fun `reopening the database at the same version preserves existing rows`() = runTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         context.deleteDatabase(DB_NAME)
@@ -87,7 +106,7 @@ class VoynixDatabaseMigrationTest {
         first.trackDao().upsertMirrorTrack(
             id = "t1", title = "Title", artist = "Artist", album = "Album", filePath = "/mac/t1.mp3",
             fileName = "t1.mp3", duration = 180.0, trackKey = "k1", contentHash = "hash-t1",
-            favorite = false, favoriteUpdatedAt = null, kind = "music", discNo = null, trackNo = null,
+            favorite = false, disliked = false, favoriteUpdatedAt = null, kind = "music", discNo = null, trackNo = null,
             playState = "unplayed", resumePosition = 0.0, playStateUpdatedAt = null, addedAt = null,
         )
         first.close()

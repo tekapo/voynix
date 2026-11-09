@@ -32,7 +32,9 @@ interface PlayerBarProps {
     isLyricsOpen?: boolean;
     artworkUrl?: string | null;
     isFavorite?: boolean;
+    isDisliked?: boolean;
     onToggleFavorite?: () => void;
+    onToggleDislike?: () => void;
     onQueueClick?: () => void;
     // Podcast-only playback speed (0.8–2.0x). Shown next to the ±10s buttons
     // only while a podcast is loaded.
@@ -61,7 +63,9 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
     isLyricsOpen = false,
     artworkUrl,
     isFavorite = false,
+    isDisliked = false,
     onToggleFavorite,
+    onToggleDislike,
     onQueueClick,
     podcastSpeed = 1.0,
     onCyclePodcastSpeed,
@@ -203,12 +207,21 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
                     </span>
                     <button
                         className={`control-btn icon-btn player-fav-btn ${isFavorite ? 'is-favorite' : ''}`}
-                        title={isFavorite ? t('player.removeFromFavorites') : t('player.addToFavorites')}
-                        aria-label={isFavorite ? t('player.removeFromFavorites') : t('player.addToFavorites')}
+                        title={isFavorite ? t('rating.removeThumbUp') : t('rating.thumbUp')}
+                        aria-label={isFavorite ? t('rating.removeThumbUp') : t('rating.thumbUp')}
                         aria-pressed={isFavorite}
                         onClick={onToggleFavorite}
                     >
-                        <Icon name={isFavorite ? "star-filled" : "star"} />
+                        <Icon name={isFavorite ? "thumb-up-filled" : "thumb-up"} />
+                    </button>
+                    <button
+                        className={`control-btn icon-btn player-fav-btn ${isDisliked ? 'is-disliked' : ''}`}
+                        title={isDisliked ? t('rating.removeThumbDown') : t('rating.thumbDown')}
+                        aria-label={isDisliked ? t('rating.removeThumbDown') : t('rating.thumbDown')}
+                        aria-pressed={isDisliked}
+                        onClick={onToggleDislike}
+                    >
+                        <Icon name={isDisliked ? "thumb-down-filled" : "thumb-down"} />
                     </button>
                     {onQueueClick && (
                         <button

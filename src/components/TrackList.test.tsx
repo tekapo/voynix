@@ -29,6 +29,7 @@ const base = {
     onTrackActivate: noop,
     onContextMenu: noop,
     onToggleFavorite: noop,
+    onToggleDislike: noop,
 };
 
 describe("TrackList Path column", () => {

@@ -194,6 +194,7 @@ fun SearchScreen(
             albumArt = albumArt,
             onDismiss = { actionsFor = null },
             onToggleFavorite = { vm.toggleFavorite(item.track) },
+            onToggleDislike = { vm.toggleDislike(item.track) },
             onEnqueue = { player.enqueue(item.track) },
             onTogglePlayed = { vm.togglePlayed(item.track) },
         )

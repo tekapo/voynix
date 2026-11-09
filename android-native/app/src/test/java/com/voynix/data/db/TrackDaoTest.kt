@@ -50,7 +50,7 @@ class TrackDaoTest {
         dao.upsertMirrorTrack(
             id = t.id, title = t.title, artist = t.artist, album = t.album, filePath = t.filePath,
             fileName = t.fileName, duration = t.duration, trackKey = t.trackKey!!, contentHash = t.contentHash!!,
-            favorite = false, favoriteUpdatedAt = null, kind = t.kind, discNo = null, trackNo = null,
+            favorite = false, disliked = false, favoriteUpdatedAt = null, kind = t.kind, discNo = null, trackNo = null,
             playState = t.playState, resumePosition = 0.0, playStateUpdatedAt = null, addedAt = null,
         )
         val row = dao.getById("t1")
@@ -64,18 +64,18 @@ class TrackDaoTest {
         dao.upsertMirrorTrack(
             id = t.id, title = "Old Title", artist = t.artist, album = t.album, filePath = t.filePath,
             fileName = t.fileName, duration = t.duration, trackKey = t.trackKey!!, contentHash = t.contentHash!!,
-            favorite = false, favoriteUpdatedAt = null, kind = t.kind, discNo = null, trackNo = null,
+            favorite = false, disliked = false, favoriteUpdatedAt = null, kind = t.kind, discNo = null, trackNo = null,
             playState = t.playState, resumePosition = 0.0, playStateUpdatedAt = null, addedAt = null,
         )
         // Simulate a later local favorite before the next Mac refetch.
-        dao.setFavorite("t1", favorite = true, updatedAt = 1000L)
+        dao.setRating("t1", favorite = true, disliked = false, updatedAt = 1000L)
 
         // Re-fetch from the Mac with a retagged title, but stale (favorite=false) stats — a
         // blind DO UPDATE SET on favorite/play_state would clobber the local LWW value.
         dao.upsertMirrorTrack(
             id = t.id, title = "New Title", artist = t.artist, album = t.album, filePath = t.filePath,
             fileName = t.fileName, duration = t.duration, trackKey = t.trackKey!!, contentHash = t.contentHash!!,
-            favorite = false, favoriteUpdatedAt = null, kind = t.kind, discNo = null, trackNo = null,
+            favorite = false, disliked = false, favoriteUpdatedAt = null, kind = t.kind, discNo = null, trackNo = null,
             playState = t.playState, resumePosition = 0.0, playStateUpdatedAt = null, addedAt = null,
         )
 
@@ -103,14 +103,45 @@ class TrackDaoTest {
     @Test
     fun `applyFavoriteIfNewer only applies a strictly newer update`() = runTest {
         dao.insert(mirrorTrack())
-        dao.setFavorite("t1", favorite = true, updatedAt = 1000L)
+        dao.setRating("t1", favorite = true, disliked = false, updatedAt = 1000L)
 
         // Older update must be ignored.
-        dao.applyFavoriteIfNewer("k1", favorite = false, updatedAt = 500L)
+        dao.applyFavoriteIfNewer("k1", favorite = false, disliked = false, updatedAt = 500L)
         assertEquals(true, dao.getById("t1")?.favorite)
 
         // Newer update must win.
-        dao.applyFavoriteIfNewer("k1", favorite = false, updatedAt = 1500L)
+        dao.applyFavoriteIfNewer("k1", favorite = false, disliked = false, updatedAt = 1500L)
+        assertEquals(false, dao.getById("t1")?.favorite)
+    }
+
+    @Test
+    fun `setRating keeps thumbs up and down exclusive and getLocalFavorites reports both`() = runTest {
+        dao.insert(mirrorTrack())
+        dao.setRating("t1", favorite = false, disliked = true, updatedAt = 2000L)
+        var row = dao.getById("t1")
+        assertEquals(false, row?.favorite)
+        assertEquals(true, row?.disliked)
+        val synced = dao.getLocalFavorites().single { it.trackKey == "k1" }
+        assertEquals(false, synced.favorite)
+        assertEquals(true, synced.disliked)
+        assertEquals(2000L, synced.favoriteUpdatedAt)
+
+        dao.setRating("t1", favorite = true, disliked = false, updatedAt = 3000L)
+        row = dao.getById("t1")
+        assertEquals(true, row?.favorite)
+        assertEquals(false, row?.disliked)
+    }
+
+    @Test
+    fun `applyFavoriteIfNewer carries the thumbs-down flag with the same LWW guard`() = runTest {
+        dao.insert(mirrorTrack())
+        dao.setRating("t1", favorite = true, disliked = false, updatedAt = 1000L)
+
+        dao.applyFavoriteIfNewer("k1", favorite = false, disliked = true, updatedAt = 500L)
+        assertEquals(false, dao.getById("t1")?.disliked)
+
+        dao.applyFavoriteIfNewer("k1", favorite = false, disliked = true, updatedAt = 1500L)
+        assertEquals(true, dao.getById("t1")?.disliked)
         assertEquals(false, dao.getById("t1")?.favorite)
     }
 
@@ -177,7 +208,7 @@ class TrackDaoTest {
     @Test
     fun `updateMirrorTrackMeta leaves favorite and play_state untouched`() = runTest {
         dao.insert(mirrorTrack())
-        dao.setFavorite("t1", favorite = true, updatedAt = 1000L)
+        dao.setRating("t1", favorite = true, disliked = false, updatedAt = 1000L)
         dao.setPlayState("t1", "in_progress", 42.0, 2000L)
 
         dao.updateMirrorTrackMeta("k1", "New Title", "New Artist", "New Album", 99.0, "music", 1, 3, null)

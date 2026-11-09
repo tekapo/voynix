@@ -214,6 +214,7 @@ fun VoynixNavGraph(
                 onBack = back,
                 onOpenLyrics = { navController.navigate(Route.Lyrics) },
                 onToggleFavorite = { freshTrack?.let(vm::toggleFavorite) },
+                onToggleDislike = { freshTrack?.let(vm::toggleDislike) },
             )
         }
 

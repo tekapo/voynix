@@ -243,4 +243,11 @@ export const MIGRATIONS: Array<(db: Database) => Promise<void>> = [
         await addColumn(db, "tracks", "extra_tags_read", "INTEGER NOT NULL DEFAULT 0");
         await addColumn(db, "playlists", "rules", "TEXT");
     },
+
+    // 13: thumbs up/down. `favorite` is now the thumbs-up flag; `disliked` is
+    // thumbs-down. They are mutually exclusive and share favorite_updated_at as
+    // the rating's single LWW timestamp (see setTrackRating).
+    async (db) => {
+        await addColumn(db, "tracks", "disliked", "INTEGER NOT NULL DEFAULT 0");
+    },
 ];

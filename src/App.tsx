@@ -68,6 +68,7 @@ import {
   loadLastPlayback,
   migrateFromJson,
   recordPlayEvent,
+  EXCLUDE_DISLIKED_KEY,
   reapplyPlaylistKind,
   saveLastPlayback,
   setPlaylistTrackOrder,
@@ -139,6 +140,10 @@ function App() {
   // Setting: a Podcast playlist plays in order even while shuffle is on (the
   // shuffle toggle itself is left alone, so the next music playlist still
   // shuffles). Default on; persisted as "podcast_no_shuffle".
+  // Hides thumbs-down songs from Most Played / Recently Added / Recently Played
+  // (and from what those lists contribute to sync). Default on.
+  const [excludeDisliked, setExcludeDisliked, loadExcludeDisliked] = usePersistedSetting(
+    EXCLUDE_DISLIKED_KEY, true, raw => raw !== "0", v => v ? "1" : "0");
   const [podcastNoShuffle, setPodcastNoShuffle, loadPodcastNoShuffle] = usePersistedSetting(
     "podcast_no_shuffle", true, raw => raw !== "0", v => v ? "1" : "0");
   // Check GitHub for a newer release shortly after launch (useUpdater.ts).
@@ -406,12 +411,13 @@ function App() {
         if (v === "list") setLibraryLayout(l => ({ ...l, albums: 'list' }));
       }).catch(() => {}),
       loadPodcastNoShuffle(),
+      loadExcludeDisliked(),
       loadAutoUpdateCheck(),
       loadPodcastSpeed(),
       loadIsLyricsOpen(),
     ]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadShowPathColumn, loadTrackColumnWidths, loadUiLanguage, loadUiTheme, loadPodcastNoShuffle, loadAutoUpdateCheck, loadPodcastSpeed, loadIsLyricsOpen]);
+  }, [loadShowPathColumn, loadTrackColumnWidths, loadUiLanguage, loadUiTheme, loadPodcastNoShuffle, loadExcludeDisliked, loadAutoUpdateCheck, loadPodcastSpeed, loadIsLyricsOpen]);
 
   // Load data on startup
   useEffect(() => {
@@ -983,7 +989,7 @@ function App() {
 
   const {
     librarySyncSources,
-    handleToggleFavorite, handleSetKind, handleSetPlayState, handleToggleLibrarySync,
+    handleToggleFavorite, handleToggleDislike, handleSetKind, handleSetPlayState, handleToggleLibrarySync,
     handleToggleSyncToDevice, handleSetPlaylistKind, handleResetManualOrder,
   } = usePlaylistActions({
     playlists, refreshPlaylists, setError, patchCurrentTrackIfId, setCurrentTrack,
@@ -1099,14 +1105,14 @@ function App() {
     } else if (viewMode === 'favorites') {
       return sortNatural(allTracks.filter(t => t.favorite));
     } else if (viewMode === 'most_played') {
-      return mostPlayed(allTracks);
+      return mostPlayed(allTracks, excludeDisliked);
     } else if (viewMode === 'recently_added') {
-      return recentlyAdded(allTracks);
+      return recentlyAdded(allTracks, excludeDisliked);
     } else if (viewMode === 'recently_played') {
-      return recentlyPlayed(allTracks);
+      return recentlyPlayed(allTracks, excludeDisliked);
     }
     return [];
-  }, [viewMode, currentPlaylistId, viewFilter, playlists, allTracks, playlistMembership]);
+  }, [viewMode, currentPlaylistId, viewFilter, playlists, allTracks, playlistMembership, excludeDisliked]);
 
   const displayTracks = useMemo(
     () => sortTracks(filterTracks(viewTracks, search), sortState),
@@ -1124,12 +1130,13 @@ function App() {
   displayTracksRef.current = displayTracks;
   const currentPlaylistIdRef = useRef(currentPlaylistId);
   currentPlaylistIdRef.current = currentPlaylistId;
-  const trackHandlersRef = useRef({ armFromList, playFromList, handleContextMenu, handleToggleFavorite });
-  trackHandlersRef.current = { armFromList, playFromList, handleContextMenu, handleToggleFavorite };
+  const trackHandlersRef = useRef({ armFromList, playFromList, handleContextMenu, handleToggleFavorite, handleToggleDislike });
+  trackHandlersRef.current = { armFromList, playFromList, handleContextMenu, handleToggleFavorite, handleToggleDislike };
   const onRowClick = useCallback((t: Track) => trackHandlersRef.current.armFromList(displayTracksRef.current, t), []);
   const onRowActivate = useCallback((t: Track) => trackHandlersRef.current.playFromList(displayTracksRef.current, t), []);
   const onRowContextMenu = useCallback((e: React.MouseEvent, t: Track) => trackHandlersRef.current.handleContextMenu(e, t), []);
   const onRowToggleFavorite = useCallback((t: Track) => trackHandlersRef.current.handleToggleFavorite(t), []);
+  const onRowToggleDislike = useCallback((t: Track) => trackHandlersRef.current.handleToggleDislike(t), []);
 
   // Drag & drop reorder (see TrackList's reorderable/onReorder). Only makes
   // sense on a playlist detail view, and only while row index matches DB
@@ -1368,6 +1375,7 @@ function App() {
               onTrackActivate={onRowActivate}
               onTrackContextMenu={onRowContextMenu}
               onToggleFavorite={onRowToggleFavorite}
+              onToggleDislike={onRowToggleDislike}
               onPlay={(tracks) => playCollection(tracks)}
               onShuffle={(tracks) => playCollection(tracks, { shuffle: true })}
               onArtistMore={handleArtistContextMenu}
@@ -1399,6 +1407,7 @@ function App() {
                 onContextMenu={onRowContextMenu}
                 onSelectionContextMenu={openSelectionMenu}
                 onToggleFavorite={onRowToggleFavorite}
+                onToggleDislike={onRowToggleDislike}
                 reorderable={reorderable}
                 onReorder={handleReorderTracks}
               />
@@ -1440,7 +1449,9 @@ function App() {
       isLyricsOpen={isLyricsOpen}
       artworkUrl={currentArtwork}
       isFavorite={!!currentTrack?.favorite}
+      isDisliked={!!currentTrack?.disliked}
       onToggleFavorite={currentTrack ? () => handleToggleFavorite(currentTrack) : undefined}
+      onToggleDislike={currentTrack ? () => handleToggleDislike(currentTrack) : undefined}
       onQueueClick={queue.length > 0 ? () => setIsQueueOpen(true) : undefined}
       podcastSpeed={podcastSpeed}
       onCyclePodcastSpeed={handleCyclePodcastSpeed}
@@ -1569,6 +1580,8 @@ function App() {
           onSetFolderKind={handleSetFolderKind}
           showPathColumn={showPathColumn}
           onTogglePathColumn={handleTogglePathColumn}
+          excludeDisliked={excludeDisliked}
+          onToggleExcludeDisliked={setExcludeDisliked}
           podcastNoShuffle={podcastNoShuffle}
           onTogglePodcastNoShuffle={handleTogglePodcastNoShuffle}
           serverAutostart={serverAutostart}
@@ -1607,6 +1620,7 @@ function App() {
           onSetAlbumCover={handleSetAlbumCover}
           onResetAlbumCover={handleResetAlbumCover}
           onToggleFavorite={handleToggleFavorite}
+          onToggleDislike={handleToggleDislike}
           onSetKind={handleSetKind}
           onSetPlayState={handleSetPlayState}
           onGetInfo={setInfoTrack}

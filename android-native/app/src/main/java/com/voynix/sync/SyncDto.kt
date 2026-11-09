@@ -29,6 +29,7 @@ data class SnapshotTrackDto(
     @SerialName("content_hash") val contentHash: String,
     val size: Long = 0,
     val favorite: Int = 0,
+    val disliked: Int = 0,
     @SerialName("favorite_updated_at") val favoriteUpdatedAt: Long? = null,
     val kind: String = "music",
     @SerialName("disc_no") val discNo: Int? = null,
@@ -90,6 +91,7 @@ data class IncomingEventDto(
 data class FavoriteUpdateDto(
     @SerialName("track_key") val trackKey: String,
     val favorite: Int,
+    val disliked: Int = 0,
     @SerialName("updated_at") val updatedAt: Long,
 )
 
@@ -154,6 +156,7 @@ fun SnapshotTrackDto.toManifestTrack(): ManifestTrack = ManifestTrack(
     resumePosition = resumePosition,
     playStateUpdatedAt = playStateUpdatedAt,
     addedAt = addedAt,
+    disliked = disliked != 0,
 )
 
 fun SnapshotPlaylistDto.toManifestPlaylist(): ManifestPlaylist =

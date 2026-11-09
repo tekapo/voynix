@@ -26,6 +26,7 @@ const baseProps = {
     onTrackActivate: () => {},
     onTrackContextMenu: () => {},
     onToggleFavorite: () => {},
+    onToggleDislike: () => {},
     onPlay: () => {},
     onShuffle: () => {},
     onArtistMore: () => {},

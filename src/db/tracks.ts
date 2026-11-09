@@ -146,11 +146,18 @@ export async function recordPlayEvent(trackKey: string) {
     );
 }
 
-export async function setTrackFavorite(trackId: string, favorite: boolean) {
+export type TrackRating = 'up' | 'none' | 'down';
+
+/**
+ * Thumbs up / none / thumbs down. `favorite` = thumbs up, `disliked` = thumbs
+ * down (mutually exclusive); favorite_updated_at stamps the whole rating so
+ * sync resolves it with one last-write-wins comparison.
+ */
+export async function setTrackRating(trackId: string, rating: TrackRating) {
     const db = await getDb();
     await db.execute(
-        "UPDATE tracks SET favorite = $1, favorite_updated_at = $2 WHERE id = $3",
-        [favorite ? 1 : 0, Date.now(), trackId]
+        "UPDATE tracks SET favorite = $1, disliked = $2, favorite_updated_at = $3 WHERE id = $4",
+        [rating === 'up' ? 1 : 0, rating === 'down' ? 1 : 0, Date.now(), trackId]
     );
 }
 

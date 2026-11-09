@@ -20,6 +20,7 @@ const base = {
     onShowInFinder: () => {},
     onSetArtwork: () => {},
     onToggleFavorite: () => {},
+    onToggleDislike: () => {},
     onClose: () => {},
 };
 

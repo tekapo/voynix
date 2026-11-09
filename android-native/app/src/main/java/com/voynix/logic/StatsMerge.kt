@@ -20,7 +20,7 @@ private const val US = "␟" // unit separator, same delimiter track_key's hash 
 
 data class PlayEvent(val trackKey: String, val playedAt: Long, val deviceId: String)
 
-data class FavoriteRow(val trackKey: String, val favorite: Boolean, val favoriteUpdatedAt: Long?)
+data class FavoriteRow(val trackKey: String, val favorite: Boolean, val favoriteUpdatedAt: Long?, val disliked: Boolean = false)
 
 data class PlayStateRow(
     val trackKey: String,

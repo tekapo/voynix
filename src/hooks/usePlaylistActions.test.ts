@@ -7,7 +7,7 @@ const db = vi.hoisted(() => ({
   setLibrarySyncSources: vi.fn(),
   setPlaylistKind: vi.fn(),
   setPlaylistSyncToDevice: vi.fn(),
-  setTrackFavorite: vi.fn(),
+  setTrackRating: vi.fn(),
   setTrackKind: vi.fn(),
   setTrackPlayState: vi.fn(),
 }));
@@ -51,7 +51,7 @@ describe("handleToggleFavorite", () => {
   it("favorites an un-favorited track, patches the now-playing copy and refreshes", async () => {
     const { params, result } = await setup();
     await act(() => result.current.handleToggleFavorite(track({ favorite: 0 })));
-    expect(db.setTrackFavorite).toHaveBeenCalledWith("t1", true);
+    expect(db.setTrackRating).toHaveBeenCalledWith("t1", "up");
     expect(params.patchCurrentTrackIfId).toHaveBeenCalledWith("t1", expect.objectContaining({ favorite: 1 }));
     expect(params.refreshPlaylists).toHaveBeenCalled();
   });
@@ -59,16 +59,40 @@ describe("handleToggleFavorite", () => {
   it("un-favorites a favorited track", async () => {
     const { params, result } = await setup();
     await act(() => result.current.handleToggleFavorite(track({ favorite: 1 })));
-    expect(db.setTrackFavorite).toHaveBeenCalledWith("t1", false);
+    expect(db.setTrackRating).toHaveBeenCalledWith("t1", "none");
     expect(params.patchCurrentTrackIfId).toHaveBeenCalledWith("t1", expect.objectContaining({ favorite: 0 }));
   });
 
+  it("switches from thumbs down straight to thumbs up", async () => {
+    const { params, result } = await setup();
+    await act(() => result.current.handleToggleFavorite(track({ favorite: 0, disliked: 1 })));
+    expect(db.setTrackRating).toHaveBeenCalledWith("t1", "up");
+    expect(params.patchCurrentTrackIfId).toHaveBeenCalledWith("t1", expect.objectContaining({ favorite: 1, disliked: 0 }));
+  });
+
   it("reports a failure without refreshing", async () => {
-    db.setTrackFavorite.mockRejectedValue("db locked");
+    db.setTrackRating.mockRejectedValue("db locked");
     const { params, result } = await setup();
     await act(() => result.current.handleToggleFavorite(track()));
     expect(params.setError).toHaveBeenCalledWith(expect.stringContaining("db locked"));
     expect(params.refreshPlaylists).not.toHaveBeenCalled();
+  });
+});
+
+describe("handleToggleDislike", () => {
+  it("thumbs-downs a track, clearing thumbs up, and refreshes", async () => {
+    const { params, result } = await setup();
+    await act(() => result.current.handleToggleDislike(track({ favorite: 1, disliked: 0 })));
+    expect(db.setTrackRating).toHaveBeenCalledWith("t1", "down");
+    expect(params.patchCurrentTrackIfId).toHaveBeenCalledWith("t1", expect.objectContaining({ favorite: 0, disliked: 1 }));
+    expect(params.refreshPlaylists).toHaveBeenCalled();
+  });
+
+  it("removes an existing thumbs down", async () => {
+    const { params, result } = await setup();
+    await act(() => result.current.handleToggleDislike(track({ disliked: 1 })));
+    expect(db.setTrackRating).toHaveBeenCalledWith("t1", "none");
+    expect(params.patchCurrentTrackIfId).toHaveBeenCalledWith("t1", expect.objectContaining({ favorite: 0, disliked: 0 }));
   });
 });
 

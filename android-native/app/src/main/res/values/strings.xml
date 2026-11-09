@@ -39,15 +39,18 @@
     <string name="track_row_played_times">Played %1$d×</string>
     <string name="track_row_unplayed">Unplayed</string>
     <string name="track_row_now_playing">Now playing</string>
-    <string name="track_row_favorites">Favorites</string>
+    <string name="track_row_thumb_up">Thumbs up</string>
+    <string name="track_row_thumb_down">Thumbs down</string>
     <string name="podcast_status_unplayed">Unplayed</string>
     <string name="podcast_status_in_progress">In Progress</string>
     <string name="podcast_status_played">Played</string>
     <string name="podcast_dot_description">Podcast, %1$s</string>
 
     <!-- Track actions sheet -->
-    <string name="track_actions_remove_favorite">Remove from favorites</string>
-    <string name="track_actions_add_favorite">Add to favorites</string>
+    <string name="track_actions_thumb_up">Thumbs up</string>
+    <string name="track_actions_remove_thumb_up">Remove thumbs up</string>
+    <string name="track_actions_thumb_down">Thumbs down</string>
+    <string name="track_actions_remove_thumb_down">Remove thumbs down</string>
     <string name="track_actions_add_to_queue">Add to queue</string>
     <string name="track_actions_mark_unplayed">Mark as unplayed</string>
     <string name="track_actions_mark_played">Mark as played</string>
@@ -69,7 +72,8 @@
     <string name="now_playing_end_of_episode">End of episode</string>
     <string name="now_playing_end_of_track">End of track</string>
     <string name="now_playing_nothing_playing">Nothing is playing</string>
-    <string name="now_playing_favorites">Favorites</string>
+    <string name="now_playing_thumb_up">Thumbs up</string>
+    <string name="now_playing_thumb_down">Thumbs down</string>
     <string name="now_playing_back_10">Back 10 seconds</string>
     <string name="now_playing_forward_10">Forward 10 seconds</string>
     <string name="now_playing_shuffle_on_ordered">Shuffle on, playing in order</string>
@@ -177,6 +181,8 @@
     <string name="auto_songs">Songs</string>
     <string name="auto_artists">Artists</string>
     <string name="auto_albums">Albums</string>
+    <string name="settings_exclude_disliked">Hide thumbs-down songs from auto lists</string>
+    <string name="settings_exclude_disliked_detail">Most Played, Recently Added and Recently Played skip songs you gave a thumbs down</string>
     <string name="auto_favorites">Favorites</string>
     <string name="auto_most_played">Most Played</string>
     <string name="auto_recently_added">Recently Added</string>

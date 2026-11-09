@@ -21,6 +21,7 @@ export const BACKUP_SETTING_KEYS = [
     "show_path_column",
     "track_column_widths",
     "podcast_no_shuffle",
+    "exclude_disliked_from_lists",
     "podcast_speed",
     "lyrics_panel_open",
     "library_layout_artists",

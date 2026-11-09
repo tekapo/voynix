@@ -125,7 +125,11 @@
     "markAsUnplayed": "Mark as Unplayed",
     "removeFromPlaylist": "Remove from Playlist",
     "addToPlaylist": "Add to Playlist",
-    "noCustomPlaylists": "No custom playlists"
+    "noCustomPlaylists": "No custom playlists",
+    "thumbUp": "Thumbs up",
+    "removeThumbUp": "Remove thumbs up",
+    "thumbDown": "Thumbs down",
+    "removeThumbDown": "Remove thumbs down"
   },
   "albumCoverPicker": {
     "title": "Find Album Cover",
@@ -288,7 +292,9 @@
     "saving": "Saving…",
     "save": "Save",
     "readFileInfoFailed": "Failed to read file info: {{error}}",
-    "saveFailed": "Failed to save: {{error}}"
+    "saveFailed": "Failed to save: {{error}}",
+    "thumbUp": "Thumbs up",
+    "thumbDown": "Thumbs down"
   },
   "scanFolders": {
     "selectMusicFolder": "Select Music Folder",
@@ -498,7 +504,9 @@
     "updateUpToDate": "You're up to date.",
     "updateFailed": "Couldn't check for updates: {{message}}",
     "close": "Close",
-    "tabRemote": "Echo"
+    "tabRemote": "Echo",
+    "excludeDisliked": "Hide thumbs-down songs from auto lists",
+    "excludeDislikedHint": "Most Played, Recently Added and Recently Played skip songs you gave a thumbs down."
   },
   "libraryColumns": {
     "meta_one": "{{count}} song · {{minutes}} min",
@@ -572,5 +580,11 @@
     "copyPlaylistNames": "Copy playlist names",
     "availability": "Works only while Voynix is running and this Mac is awake.",
     "serverError": "Echo server error: {{error}}"
+  },
+  "rating": {
+    "thumbUp": "Thumbs up",
+    "removeThumbUp": "Remove thumbs up",
+    "thumbDown": "Thumbs down",
+    "removeThumbDown": "Remove thumbs down"
   }
 }

@@ -38,6 +38,7 @@ export function chunk<T>(items: T[], size: number): T[][] {
 
 interface FavoriteState {
     favorite: number;
+    disliked?: number;
     favorite_updated_at: number | null;
 }
 

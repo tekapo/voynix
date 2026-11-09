@@ -20,6 +20,8 @@ function makeProps(over: Partial<React.ComponentProps<typeof SettingsModal>> = {
         onSetFolderKind: () => {},
         showPathColumn: false,
         onTogglePathColumn: () => {},
+        excludeDisliked: true,
+        onToggleExcludeDisliked: () => {},
         podcastNoShuffle: true,
         onTogglePodcastNoShuffle: () => {},
         serverAutostart: true,

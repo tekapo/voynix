@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { effectiveAlbum } from "../albumName";
 import { getDb } from "./core";
-import { getDeviceId, getLibrarySyncSources, getTranscodeOptions } from "./settings";
+import { getDeviceId, getExcludeDisliked, getLibrarySyncSources, getTranscodeOptions } from "./settings";
 import { getAllAlbumCovers, getAllArtistCovers } from "./covers";
 import { createPlaylistKeyResolver } from "./playlistKeys";
 import { pool } from "../sync";
@@ -50,8 +50,9 @@ export async function buildSyncSnapshot(): Promise<SyncSnapshot> {
     const librarySources = await getLibrarySyncSources();
     if (librarySources.length > 0) {
         const tracks = await resolver.allTracks();
+        const excludeDisliked = await getExcludeDisliked();
         for (const source of librarySources) {
-            for (const t of libraryListTracks(source, tracks)) {
+            for (const t of libraryListTracks(source, tracks, excludeDisliked)) {
                 if (t.track_key) keySet.add(t.track_key);
             }
         }
@@ -59,7 +60,7 @@ export async function buildSyncSnapshot(): Promise<SyncSnapshot> {
 
     const trackRows: any[] = await db.select(
         `SELECT track_key, title, artist, album, duration, file_name, file_path,
-                content_hash, favorite, favorite_updated_at, kind, disc_no, track_no,
+                content_hash, favorite, disliked, favorite_updated_at, kind, disc_no, track_no,
                 play_state, resume_position, play_state_updated_at, added_at
          FROM tracks WHERE track_key IS NOT NULL`
     );
@@ -88,6 +89,7 @@ export async function buildSyncSnapshot(): Promise<SyncSnapshot> {
             content_hash: t.content_hash ?? "",
             size: 0,
             favorite: t.favorite ?? 0,
+            disliked: t.disliked ?? 0,
             favorite_updated_at: t.favorite_updated_at ?? null,
             kind: (t.kind ?? 'music') as TrackKind,
             disc_no: t.disc_no ?? null,
