@@ -22,8 +22,8 @@ use objc2::rc::Retained;
 use objc2::runtime::{AnyObject, ProtocolObject};
 use objc2::{define_class, msg_send, AnyThread, Message};
 use objc2_core_bluetooth::{
-    CBAdvertisementDataLocalNameKey, CBAdvertisementDataServiceUUIDsKey, CBAttributePermissions,
-    CBCharacteristic, CBCharacteristicProperties, CBL2CAPChannel, CBL2CAPPSM, CBManagerState,
+    CBATTError, CBATTRequest, CBAdvertisementDataLocalNameKey, CBAdvertisementDataServiceUUIDsKey,
+    CBAttributePermissions, CBCharacteristic, CBCharacteristicProperties, CBL2CAPChannel, CBL2CAPPSM, CBManagerState,
     CBMutableCharacteristic, CBMutableService, CBPeripheralManager, CBPeripheralManagerDelegate,
     CBService, CBUUID,
 };
@@ -59,6 +59,26 @@ static ACTIVE: Mutex<Option<Active>> = Mutex::new(None);
 static CTX: Mutex<Option<BtServeCtx>> = Mutex::new(None);
 static LIMIT: Mutex<Option<Arc<Semaphore>>> = Mutex::new(None);
 static RUNNING: AtomicBool = AtomicBool::new(false);
+/// What the info characteristic answers: PSM, then the fingerprint prefix.
+static INFO: Mutex<Vec<u8>> = Mutex::new(Vec::new());
+
+/// Appends to `~/Library/Logs/Voynix-bluetooth.log` (and stderr). A GUI app's
+/// stderr goes nowhere, and this feature can only be checked on a real device
+/// pair, so a small log file is the only way to see what the Mac side did.
+fn blog(msg: &str) {
+    eprintln!("bluetooth sync: {msg}");
+    let Some(home) = std::env::var_os("HOME") else { return };
+    let path = std::path::Path::new(&home).join("Library/Logs/Voynix-bluetooth.log");
+    // Keep it small: start over once it grows past 256 KB.
+    if std::fs::metadata(&path).map(|m| m.len() > 256 * 1024).unwrap_or(false) {
+        let _ = std::fs::remove_file(&path);
+    }
+    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&path) {
+        use std::io::Write;
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default();
+        let _ = writeln!(f, "{}.{:03} {msg}", now.as_secs(), now.subsec_millis());
+    }
+}
 
 define_class!(
     #[unsafe(super(NSObject))]
@@ -71,11 +91,12 @@ define_class!(
         #[unsafe(method(peripheralManagerDidUpdateState:))]
         fn did_update_state(&self, peripheral: &CBPeripheralManager) {
             let state = unsafe { peripheral.state() };
+            blog(&format!("peripheral manager state {}", state.0));
             if state == CBManagerState::PoweredOn {
                 // Plain (unencrypted) channel; TLS rides on top.
                 unsafe { peripheral.publishL2CAPChannelWithEncryption(false) };
             } else {
-                eprintln!("bluetooth sync: Bluetooth is not powered on / not allowed (state {:?})", state.0);
+                blog("Bluetooth is not powered on or not allowed for Voynix");
             }
         }
 
@@ -87,9 +108,10 @@ define_class!(
             error: Option<&NSError>,
         ) {
             if let Some(e) = error {
-                eprintln!("bluetooth sync: publishing the L2CAP channel failed: {e:?}");
+                blog(&format!("publishing the L2CAP channel failed: {e:?}"));
                 return;
             }
+            blog(&format!("published L2CAP channel, psm {psm}"));
             let Some(fingerprint) = CTX.lock().unwrap().as_ref().map(|c| c.fingerprint.clone()) else { return };
             unsafe { add_service(peripheral, psm, &fingerprint) };
         }
@@ -102,10 +124,30 @@ define_class!(
             error: Option<&NSError>,
         ) {
             if let Some(e) = error {
-                eprintln!("bluetooth sync: adding the GATT service failed: {e:?}");
+                blog(&format!("adding the GATT service failed: {e:?}"));
                 return;
             }
+            blog("GATT service added; advertising");
             unsafe { start_advertising(peripheral) };
+        }
+
+        // The info characteristic is dynamic (no cached value) on purpose: a
+        // static one is answered by the system without the app ever seeing the
+        // phone, and CoreBluetooth then has no central to attach an incoming
+        // L2CAP channel to ("No central present!") and never opens it.
+        #[unsafe(method(peripheralManager:didReceiveReadRequest:))]
+        fn did_receive_read_request(&self, peripheral: &CBPeripheralManager, request: &CBATTRequest) {
+            let info = INFO.lock().unwrap().clone();
+            let offset = unsafe { request.offset() } as usize;
+            blog(&format!("read request for the channel info (offset {offset})"));
+            unsafe {
+                if offset > info.len() {
+                    peripheral.respondToRequest_withResult(request, CBATTError::InvalidOffset);
+                } else {
+                    request.setValue(Some(&NSData::with_bytes(&info[offset..])));
+                    peripheral.respondToRequest_withResult(request, CBATTError::Success);
+                }
+            }
         }
 
         #[unsafe(method(peripheralManager:didOpenL2CAPChannel:error:))]
@@ -116,10 +158,11 @@ define_class!(
             error: Option<&NSError>,
         ) {
             if let Some(e) = error {
-                eprintln!("bluetooth sync: incoming L2CAP channel failed: {e:?}");
+                blog(&format!("incoming L2CAP channel failed: {e:?}"));
                 return;
             }
             let Some(channel) = channel else { return };
+            blog("incoming L2CAP channel opened");
             on_channel(channel.retain());
         }
     }
@@ -128,17 +171,16 @@ define_class!(
 unsafe fn add_service(peripheral: &CBPeripheralManager, psm: CBL2CAPPSM, fingerprint: &str) {
     let mut value = psm.to_be_bytes().to_vec();
     value.extend(fingerprint_prefix(fingerprint));
-    let data = NSData::with_bytes(&value);
+    *INFO.lock().unwrap() = value;
 
     let service_uuid = CBUUID::UUIDWithString(&NSString::from_str(SERVICE_UUID));
     let char_uuid = CBUUID::UUIDWithString(&NSString::from_str(INFO_CHAR_UUID));
-    // A non-nil value makes the characteristic static, answered by the system
-    // without a delegate round-trip.
+    // No cached value: reads come to `did_receive_read_request`.
     let characteristic = CBMutableCharacteristic::initWithType_properties_value_permissions(
         CBMutableCharacteristic::alloc(),
         &char_uuid,
         CBCharacteristicProperties::Read,
-        Some(&data),
+        None,
         CBAttributePermissions::Readable,
     );
     let service = CBMutableService::initWithType_primary(CBMutableService::alloc(), &service_uuid, true);
@@ -179,6 +221,7 @@ pub fn start(ctx: BtServeCtx) -> Result<(), String> {
         return Err("This build has no NSBluetoothAlwaysUsageDescription (Bluetooth sync only works in the built app, not `tauri dev`)".into());
     }
     stop();
+    blog("starting");
     *CTX.lock().unwrap() = Some(ctx);
     *LIMIT.lock().unwrap() = Some(Arc::new(Semaphore::new(MAX_CHANNELS)));
     RUNNING.store(true, Ordering::SeqCst);
@@ -213,11 +256,12 @@ unsafe impl Send for SendChannel {}
 /// A phone opened a channel: bridge it to a fresh `serve_connection`.
 fn on_channel(channel: Retained<CBL2CAPChannel>) {
     if !RUNNING.load(Ordering::SeqCst) {
+        blog("channel opened while stopped; ignoring");
         return;
     }
     let (Some(ctx), Some(limit)) = (CTX.lock().unwrap().clone(), LIMIT.lock().unwrap().clone()) else { return };
     let Ok(permit) = limit.try_acquire_owned() else {
-        eprintln!("bluetooth sync: too many open channels, refusing one");
+        blog("too many open channels, refusing one");
         return;
     };
 
@@ -272,10 +316,12 @@ fn pump(channel: SendChannel, in_tx: mpsc::UnboundedSender<Vec<u8>>, mut out_rx:
         output.open();
     }
 
+    blog("channel pump started");
     let mut buf = vec![0u8; CHUNK];
     let mut pending: Vec<u8> = Vec::new();
     let mut offset = 0usize;
     let mut server_done = false;
+    let (mut bytes_in, mut bytes_out) = (0usize, 0usize);
     'outer: loop {
         let slice = NSDate::dateWithTimeIntervalSinceNow(POLL_SLICE_SECS);
         // `false` = nothing to wait on (e.g. both streams already closed).
@@ -290,6 +336,7 @@ fn pump(channel: SendChannel, in_tx: mpsc::UnboundedSender<Vec<u8>>, mut out_rx:
             if n <= 0 {
                 break 'outer;
             }
+            bytes_in += n as usize;
             if in_tx.send(buf[..n as usize].to_vec()).is_err() {
                 break 'outer;
             }
@@ -319,6 +366,7 @@ fn pump(channel: SendChannel, in_tx: mpsc::UnboundedSender<Vec<u8>>, mut out_rx:
                 break 'outer;
             }
             offset += n as usize;
+            bytes_out += n as usize;
         }
 
         if server_done && offset >= pending.len() {
@@ -330,6 +378,7 @@ fn pump(channel: SendChannel, in_tx: mpsc::UnboundedSender<Vec<u8>>, mut out_rx:
         }
     }
 
+    blog(&format!("channel pump ended: {bytes_in} bytes from the phone, {bytes_out} bytes to it"));
     unsafe {
         input.close();
         output.close();
