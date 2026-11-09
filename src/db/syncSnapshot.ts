@@ -4,7 +4,7 @@ import { getDb } from "./core";
 import { getDeviceId, getExcludeDisliked, getLibrarySyncSources, getTranscodeOptions } from "./settings";
 import { getAllAlbumCovers, getAllArtistCovers } from "./covers";
 import { createPlaylistKeyResolver } from "./playlistKeys";
-import { pool } from "../sync";
+import { buildAlbumReps, ensureAlbumArts } from "../lib/ensureAlbumArts";
 import { libraryListTracks } from "../smartLists";
 import { PlayState, SyncPlayEvent, SyncSnapshot, TrackKind } from "../types";
 
@@ -107,32 +107,15 @@ export async function buildSyncSnapshot(): Promise<SyncSnapshot> {
     // and Android has no embedded art to fall back on once afconvert strips it
     // (or never had any, e.g. most Apple Music purchases). One call per distinct
     // (artist, album), using the first track's still-original path.
-    const albumReps = new Map<string, { artist: string; album: string; path: string; extra: string[]; lookupOnline: boolean }>();
-    for (const t of tracks) {
-        const key = `${t.artist}␟${t.album}`;
-        const rep = albumReps.get(key);
-        if (!rep) {
-            albumReps.set(key, {
-                artist: t.artist ?? "", album: t.album ?? "", path: t.file_path, extra: [],
-                // A folder-derived album name is not a real release title —
-                // searching iTunes for it would likely match an unrelated
-                // album rather than leave the cover blank (see albumArt.ts).
-                lookupOnline: !folderAlbumKeys.has(t.track_key),
-            });
-        } else if (rep.extra.length < 20) {
-            rep.extra.push(t.file_path);
-        }
-    }
-    await pool([...albumReps.values()], 4, async (rep) => {
-        try {
-            await invoke("ensure_album_art", {
-                artist: rep.artist, album: rep.album, path: rep.path, extraPaths: rep.extra,
-                lookupOnline: rep.lookupOnline,
-            });
-        } catch (e) {
-            console.warn(`ensure_album_art failed for ${rep.artist} / ${rep.album}:`, e);
-        }
-    });
+    const albumReps = buildAlbumReps(tracks, (t) => ({
+        key: `${t.artist}␟${t.album}`,
+        artist: t.artist ?? "", album: t.album ?? "",
+        // A folder-derived album name is not a real release title —
+        // searching iTunes for it would likely match an unrelated
+        // album rather than leave the cover blank (see albumArt.ts).
+        lookupOnline: !folderAlbumKeys.has(t.track_key),
+    }));
+    await ensureAlbumArts(albumReps, { concurrency: 4 });
 
     // Android can't decode ALAC (and a few other formats an Apple Music library
     // holds). Ask the Rust side to hand back a playable path per track — the
