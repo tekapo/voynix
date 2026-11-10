@@ -120,6 +120,70 @@ describe("view switching", () => {
     });
 });
 
+describe("collection hero", () => {
+    function heroHeading(name: string): HTMLElement {
+        return screen.getByRole("heading", { level: 2, name });
+    }
+
+    it("tops a playlist with its name, and the header title steps aside", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+
+        expect(document.querySelector(".collection-hero")).toBeInTheDocument();
+        expect(heroHeading("Rock Favorites")).toBeInTheDocument();
+        expect(document.querySelector("header.header .view-title")?.textContent).toBe("");
+    });
+
+    it("is absent on flat views like All Songs, whose header keeps the title", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+
+        fireEvent.click(screen.getByText("All Songs"));
+        await within(trackList()).findByText("Episode 1");
+
+        expect(document.querySelector(".collection-hero")).not.toBeInTheDocument();
+        const header = document.querySelector("header.header") as HTMLElement;
+        expect(within(header).getByText("All Songs")).toBeInTheDocument();
+    });
+
+    it("tops an artist's detail with the artist's name", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+
+        fireEvent.click(screen.getByText("Artists"));
+        fireEvent.click(await within(libraryGrid()).findByText("Artist B"));
+        await waitFor(() => expect(trackList()).toBeTruthy());
+
+        expect(heroHeading("Artist B")).toBeInTheDocument();
+        expect(document.querySelector(".collection-hero-artist")).toBeInTheDocument();
+        expect(document.querySelector("header.header .view-title")?.textContent).toBe("");
+    });
+
+    it("hides Shuffle on a podcast playlist, which always plays in order", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+
+        fireEvent.click(screen.getByText("My Podcast"));
+        await within(trackList()).findByText("Episode 1");
+
+        expect(screen.getByRole("button", { name: "Play My Podcast" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /^Shuffle My Podcast/ })).not.toBeInTheDocument();
+    });
+
+    it("starts playing the playlist when its Play button is pressed", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+
+        fireEvent.click(screen.getByRole("button", { name: "Play Rock Favorites" }));
+        await waitFor(() => expect(screen.getByRole("button", { name: "Pause" })).toBeInTheDocument());
+    });
+});
+
 describe("library list layout", () => {
     function libraryColumns(): HTMLElement {
         const el = document.querySelector(".library-columns");

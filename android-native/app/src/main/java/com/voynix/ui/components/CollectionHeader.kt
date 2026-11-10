@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -32,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import android.graphics.Bitmap
@@ -66,14 +66,20 @@ fun CollectionHeader(
     showShuffle: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxWidth().padding(16.dp)) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .padding(16.dp),
+    ) {
         Row(verticalAlignment = Alignment.Bottom) {
             CollectionCover(tracks = tracks, albumArt = albumArt)
             Spacer(Modifier.width(16.dp))
             Column {
                 Text(
                     title,
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -87,7 +93,7 @@ fun CollectionHeader(
         ) {
             Surface(
                 onClick = onPlay,
-                shape = RoundedCornerShape(percent = 50),
+                shape = MaterialTheme.shapes.medium,
                 color = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
             ) {
@@ -111,7 +117,7 @@ fun CollectionHeader(
                 Surface(
                     checked = shuffleOn,
                     onCheckedChange = { onToggleShuffle() },
-                    shape = RoundedCornerShape(percent = 50),
+                    shape = MaterialTheme.shapes.medium,
                     color = if (shuffleOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = if (shuffleOn) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                 ) {
@@ -127,8 +133,6 @@ fun CollectionHeader(
         }
     }
 }
-
-private val CoverShape = RoundedCornerShape(20.dp)
 
 /** Upper bound on tracks whose art is resolved while hunting for four distinct covers. */
 private const val COVER_CANDIDATES = 24
@@ -159,7 +163,7 @@ private fun CollectionCover(tracks: List<TrackEntity>, albumArt: AlbumArtResolve
         covers = picked
     }
 
-    val coverModifier = Modifier.size(88.dp).clip(CoverShape)
+    val coverModifier = Modifier.size(128.dp).clip(MaterialTheme.shapes.large)
     when {
         covers.isEmpty() -> Box(
             modifier = coverModifier.background(

@@ -267,3 +267,27 @@
     height: 16px;
   }
 }
+
+/* Collection hero (CollectionHero.tsx): stack the cover above the title. */
+@media (max-width: 768px) {
+  .collection-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1rem;
+  }
+
+  .collection-hero-body {
+    width: 100%;
+  }
+
+  .collection-hero-cover,
+  .collection-hero-art-round {
+    width: 120px;
+    height: 120px;
+  }
+
+  .collection-hero-title {
+    font-size: 2rem;
+  }
+}

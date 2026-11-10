@@ -9,6 +9,7 @@
 @import "./styles/header.css";
 @import "./styles/tracklist.css";
 @import "./styles/library.css";
+@import "./styles/collection-hero.css";
 @import "./styles/playerbar.css";
 @import "./styles/modals.css";
 @import "./styles/context-menu.css";

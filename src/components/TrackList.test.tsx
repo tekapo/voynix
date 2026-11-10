@@ -287,6 +287,32 @@ describe("TrackList virtualized rendering (tracks.length > VIRTUALIZE_THRESHOLD)
         expect(screen.queryByText("Track 0")).not.toBeInTheDocument();
     });
 
+    it("mounts the rows that are actually in view when other content (a hero) sits above the list", () => {
+        // The list starts HERO px below the top of the scroll area, so scrolling to
+        // HERO + 8000 puts the rows at y = 8000 (inside the list) in view — not the
+        // rows at y = 9500 that a list-less scrollTop would suggest.
+        const HERO = 1500;
+        const { container, rerender } = render(<TrackList {...base} tracks={manyTracks(500)} />);
+        const scrollEl = container.querySelector(".track-list-wrapper")!.parentElement! as HTMLElement;
+        const list = container.querySelector("ul.track-list") as HTMLElement;
+        const rect = (top: number) => ({ top, bottom: top, left: 0, right: 0, width: 0, height: 0, x: 0, y: top, toJSON: () => ({}) }) as DOMRect;
+        scrollEl.getBoundingClientRect = () => rect(0);
+        list.getBoundingClientRect = () => rect(HERO - (scrollEl.scrollTop || 0));
+        // A different list (e.g. switching views) makes the component re-measure where the list starts.
+        rerender(<TrackList {...base} tracks={manyTracks(500)} />);
+
+        Object.defineProperty(scrollEl, "scrollTop", { configurable: true, writable: true, value: HERO + 8000 });
+        fireEvent.scroll(scrollEl);
+
+        const ys = Array.from(container.querySelectorAll<HTMLElement>("li.track-item")).map(li => {
+            const m = /translateY\((-?[\d.]+)px\)/.exec(li.style.transform);
+            return m ? Number(m[1]) : NaN;
+        });
+        expect(ys.length).toBeGreaterThan(0);
+        // Some mounted row lies within the visible band [8000, 8000 + viewport).
+        expect(ys.some(y => y >= 8000 - ROW_HEIGHT && y < 8000 + VIEWPORT_HEIGHT)).toBe(true);
+    });
+
     it("drag-and-drop still resolves absolute indices (onReorder(from, to)) within the rendered window", () => {
         const tracks = manyTracks(500);
         const onReorder = vi.fn();
