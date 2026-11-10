@@ -21,7 +21,7 @@ const VIRTUALIZE_THRESHOLD = 300;
 const ESTIMATED_ROW_HEIGHT = 56;
 
 /** "12 songs · 48 min" / "1 song · 3 min". */
-function collectionMeta(tracks: Track[], t: TFunction): string {
+export function collectionMeta(tracks: Track[], t: TFunction): string {
     const songs = tracks.length;
     const totalSeconds = tracks.reduce((sum, t) => sum + (t.duration || 0), 0);
     const totalMinutes = Math.round(totalSeconds / 60);

@@ -297,14 +297,41 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
     // actually virtualizing; `enabled: false` below makes this a no-op
     // otherwise, so a standalone render (e.g. in tests, with no such
     // ancestor) never touches it.
+    // How far below the scroll element's top the list starts: the collection
+    // hero (and this list's own sticky header) sit above it, so the virtualizer
+    // must not mistake that distance for scrolled rows. Measured in recompute()
+    // below; 0 where nothing sits above (and in jsdom, where nothing has layout).
+    const [listOffset, setListOffset] = useState(0);
     const rowVirtualizer = useVirtualizer({
         count: tracks.length,
         getScrollElement: () => (wrapperRef.current?.parentElement as HTMLElement | null) ?? wrapperRef.current,
         estimateSize: () => ESTIMATED_ROW_HEIGHT,
         overscan: 15,
         gap: ROW_GAP,
+        scrollMargin: listOffset,
         enabled: virtualized,
     });
+
+    // Measure that offset when the list changes (a different view can bring or
+    // drop a hero above it) and when the scroll area is resized (a narrow window
+    // restacks the hero) — not on every scroll: the distance doesn't change while
+    // scrolling, and the formula below is only exact where rects follow the scroll.
+    useEffect(() => {
+        const scrollEl = wrapperRef.current?.parentElement as HTMLElement | null;
+        const listEl = listRef.current;
+        if (!virtualized || !scrollEl || !listEl) return;
+        const measure = () => {
+            const offset = Math.max(0, Math.round(
+                listEl.getBoundingClientRect().top - scrollEl.getBoundingClientRect().top + scrollEl.scrollTop,
+            ));
+            setListOffset(prev => (prev === offset ? prev : offset));
+        };
+        measure();
+        if (typeof ResizeObserver === 'undefined') return;
+        const resizeObserver = new ResizeObserver(measure);
+        resizeObserver.observe(scrollEl);
+        return () => resizeObserver.disconnect();
+    }, [virtualized, tracks]);
 
     // Index (in the currently-rendered `tracks`) of the track actually loaded
     // in the player. -1 when it isn't in this list at all (a different view,
@@ -564,7 +591,8 @@ const TrackListInner: React.FC<TrackListProps> = ({ tracks, currentTrack, loaded
                             top: 0,
                             left: 0,
                             right: 0,
-                            transform: `translateY(${item.start}px)`,
+                            // item.start counts the list's offset in the scroll area; the <ul> itself starts below it.
+                            transform: `translateY(${item.start - listOffset}px)`,
                         },
                     }))}
                 </ul>

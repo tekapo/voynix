@@ -39,6 +39,7 @@ import { TrackInfoModal } from "./components/TrackInfoModal";
 import { Header } from "./components/Header";
 import { Icon } from "./components/Icon";
 import { LibraryColumns } from "./components/LibraryColumns";
+import { CollectionHero, CollectionKind } from "./components/CollectionHero";
 import { LibraryView } from "./components/LibraryView";
 import { LyricsPanel } from "./components/LyricsPanel";
 import { CreatePlaylistModal, SettingsModal, SyncModal, type SettingsTab } from "./components/Modals";
@@ -78,7 +79,7 @@ import {
   updateSmartPlaylist,
 } from "./db";
 import { accumulateListened, effectiveSpeed, emptyListenProgress, nextPlayState, nextSpeed, parseSpeed, shouldCountPlay } from "./playback";
-import { buildOrder, cycleRepeat, effectiveShuffle } from "./queue";
+import { buildOrder, cycleRepeat, effectiveShuffle, isPodcastQueue } from "./queue";
 import { PlayerEngineEvents, toEngineTrack } from "./player/engine";
 import { filterStrings, filterTracks } from "./search";
 import { moveItem } from "./playlistOrder";
@@ -1142,6 +1143,14 @@ function App() {
   const onRowToggleFavorite = useCallback((t: Track) => trackHandlersRef.current.handleToggleFavorite(t), []);
   const onRowToggleDislike = useCallback((t: Track) => trackHandlersRef.current.handleToggleDislike(t), []);
 
+  // The collection hero's Play / Shuffle (what the rows below show, so an
+  // active search narrows them too). Stable for the same reason as above: the
+  // memoised hero must not re-render on every playback tick.
+  const playCollectionRef = useRef(playCollection);
+  playCollectionRef.current = playCollection;
+  const onHeroPlay = useCallback(() => playCollectionRef.current(displayTracksRef.current), []);
+  const onHeroShuffle = useCallback(() => playCollectionRef.current(displayTracksRef.current, { shuffle: true }), []);
+
   // Drag & drop reorder (see TrackList's reorderable/onReorder). Only makes
   // sense on a playlist detail view, and only while row index matches DB
   // position — a column sort or search filter changes what's rendered at each
@@ -1264,6 +1273,16 @@ function App() {
     setCurrentTrack(track); // armed only — pendingPlayRef is not set
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, currentPlaylistId, viewFilter, armRef.current.track?.id]);
+
+  // Which views open with a hero above their track list (a playlist, or one
+  // artist / album drilled into from the grid). Flat views don't.
+  const heroKind: CollectionKind | null =
+    viewMode === 'playlist' && currentPlaylistId ? 'playlist'
+      : viewMode === 'artists' && viewFilter && !isLibraryListView ? 'artist'
+        : viewMode === 'albums' && viewFilter && !isLibraryListView ? 'album'
+          : null;
+  // A Podcast playlist set to play in order has nothing to shuffle.
+  const heroShowShuffle = !(podcastNoShuffle && isPodcastQueue(viewTracks));
 
   const getHeaderTitle = () => {
     if (viewMode === 'playlist') return playlists.find(p => p.id === currentPlaylistId)?.name || t('common.playlist');
@@ -1388,6 +1407,17 @@ function App() {
             />
           )}
 
+          {heroKind && (
+            <CollectionHero
+              kind={heroKind}
+              title={getHeaderTitle()}
+              tracks={viewTracks}
+              onPlay={onHeroPlay}
+              onShuffle={onHeroShuffle}
+              showShuffle={heroShowShuffle}
+            />
+          )}
+
           {/* Track List View */}
           {((viewMode === 'playlist' && currentPlaylistId) ||
             viewMode === 'all_songs' ||
@@ -1493,7 +1523,7 @@ function App() {
       <main className="main-content">
         <Header
           onToggleSidebar={toggleSidebar}
-          title={getHeaderTitle()}
+          title={heroKind ? '' : getHeaderTitle()}
           search={search}
           onSearchChange={setSearch}
           layoutToggle={

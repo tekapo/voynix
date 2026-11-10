@@ -510,6 +510,10 @@
     "moreOptions": "その他のオプション",
     "moreOptionsFor": "{{name}}のその他のオプション"
   },
+  "collectionHero": {
+    "playNamed": "{{name}}を再生",
+    "shuffleNamed": "{{name}}をシャッフル再生"
+  },
   "playlistMenu": {
     "editSmartPlaylist": "スマートプレイリストを編集…",
     "syncToDevice": "デバイスと同期",

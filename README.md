@@ -15,6 +15,7 @@ Voynix is a local-first music player for Mac and Android.
 
 - **Playback**: Scans local music files (mp3, m4a, flac) and organizes them into a library (artists, albums, playlists), with gapless playback on both Mac and Android
 - **Playlists**: Regular and smart playlists (smart playlists are created on Mac and sync to Android as regular playlists)
+- **Collection header**: A playlist, artist or album opens with a header showing its cover, song count and total time, and Play and Shuffle buttons
 - **Ratings**: Give any track a thumbs up (it joins the Favorites list) or a thumbs down. Thumbs-down songs are hidden from Most Played, Recently Added and Recently Played (turn this off in Settings → Library on Mac, or in Settings on Android)
 - **Editing track info**: Edit titles and tags per track, album, or artist
 - **Podcasts**: Playback speed, ±10-second skip, and optional exclusion from shuffle

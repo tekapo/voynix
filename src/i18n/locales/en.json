@@ -519,6 +519,10 @@
     "moreOptions": "More options",
     "moreOptionsFor": "More options for {{name}}"
   },
+  "collectionHero": {
+    "playNamed": "Play {{name}}",
+    "shuffleNamed": "Shuffle {{name}}"
+  },
   "playlistMenu": {
     "editSmartPlaylist": "Edit Smart Playlist…",
     "syncToDevice": "Sync to Device",

@@ -134,6 +134,9 @@
   --line-input: rgba(255, 255, 255, 0.2);
   --accent-row: rgba(237, 165, 94, 0.12);
   --accent-text: var(--accent); /* accent used as text colour: needs 4.5:1 */
+  /* Primary button of the collection hero (CollectionHero.tsx). */
+  --hero-btn-bg: var(--accent);
+  --hero-btn-text: #1a0e04;
   /* Highlighted context-menu row. */
   --menu-selection-bg: var(--accent);
   --menu-selection-text: #000;
@@ -175,6 +178,8 @@
   --accent-gradient: linear-gradient(135deg, #d98530, #a8480a);
   --accent-row: rgba(200, 112, 31, 0.12);
   --accent-text: #9a520f;
+  --hero-btn-bg: var(--accent-text);
+  --hero-btn-text: #fff;
 
   --danger: #b3263e;
   --danger-strong: rgba(179, 38, 62, 0.92);

@@ -10,6 +10,11 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.40.0 — 2026-11-10
+
+- Mac: a playlist, artist or album now opens with a header above its tracks: cover (a mosaic of up to four albums, a single cover, or a round artist photo), title, song count and time, and Play / Shuffle buttons. It scrolls away with the list.
+- Android: the collection header gets a bigger cover, a bolder title, a flat background and 12 dp buttons to match.
+
 ## 0.39.7 — 2026-11-10
 
 - Android: the cover placeholder for a track with no artist tag now shows the title's initial, matching the Mac (it used the album name before).
