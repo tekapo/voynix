@@ -28,6 +28,10 @@ internal fun initialOf(name: String): String {
     return first.uppercaseChar().toString()
 }
 
+/** Name the placeholder is built from: the artist, else the title (same as the Mac's `track.artist || track.title`). */
+internal fun placeholderName(artist: String?, title: String): String =
+    artist?.takeIf { it.isNotBlank() } ?: title
+
 @Composable
 internal fun ArtworkInitial(name: String, boxSize: Dp, modifier: Modifier = Modifier) {
     val background = Color.hsl(placeholderHue(name).toFloat(), 0.38f, 0.28f)

@@ -63,6 +63,7 @@ fun MiniPlayer(
                     resolver = albumArt,
                     artist = track.artist,
                     album = track.album,
+                    title = track.title,
                     filePath = track.filePath,
                     size = 36.dp,
                     modifier = Modifier.padding(end = 10.dp),

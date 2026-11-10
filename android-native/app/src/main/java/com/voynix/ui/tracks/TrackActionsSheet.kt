@@ -54,6 +54,7 @@ fun TrackActionsSheet(
                 resolver = albumArt,
                 artist = track.artist,
                 album = track.album,
+                title = track.title,
                 filePath = track.filePath,
                 size = 44.dp,
                 shape = RoundedCornerShape(8.dp),

@@ -106,6 +106,7 @@ fun TrackRow(
                 resolver = albumArt,
                 artist = track.artist,
                 album = track.album,
+                title = track.title,
                 filePath = track.filePath,
                 size = 48.dp,
                 shape = RoundedCornerShape(8.dp),
