@@ -24,8 +24,8 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Track/album cover art, resolved asynchronously: the album's art, else the
- * artist's image, else the artist's initial on a colored tile (same as the
- * Mac's TrackCover) while loading or absent. Sizing comes from [modifier] — pass `.size(48.dp)`
+ * artist's image, else the initial of the artist (or the title when there is no
+ * artist tag) on a colored tile (same as the Mac's TrackCover) while loading or absent. Sizing comes from [modifier] — pass `.size(48.dp)`
  * for a fixed square (track rows) or `.fillMaxWidth().aspectRatio(1f)` for a
  * responsive one (Now Playing); [BoxWithConstraints] reads back the resolved
  * size so the placeholder icon scales with it either way.
@@ -35,6 +35,7 @@ fun AlbumArtImage(
     resolver: AlbumArtResolver,
     artist: String?,
     album: String?,
+    title: String,
     filePath: String,
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(4.dp),
@@ -62,8 +63,7 @@ fun AlbumArtImage(
                 modifier = Modifier.fillMaxSize(),
             )
         } else {
-            val name = artist?.takeIf { it.isNotBlank() } ?: album.orEmpty()
-            ArtworkInitial(name = name, boxSize = maxWidth)
+            ArtworkInitial(name = placeholderName(artist, title), boxSize = maxWidth)
         }
     }
 }
@@ -74,6 +74,7 @@ fun AlbumArtImage(
     resolver: AlbumArtResolver,
     artist: String?,
     album: String?,
+    title: String,
     filePath: String,
     size: Dp,
     modifier: Modifier = Modifier,
@@ -83,6 +84,7 @@ fun AlbumArtImage(
     resolver = resolver,
     artist = artist,
     album = album,
+    title = title,
     filePath = filePath,
     modifier = modifier.size(size),
     shape = shape,

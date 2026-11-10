@@ -32,4 +32,13 @@ class ArtworkPlaceholderTest {
         assertEquals("?", initialOf("   "))
         assertEquals("ザ", initialOf("ザ・ブルーハーツ"))
     }
+
+    @Test
+    fun placeholderNameIsArtistElseTitleLikeMac() {
+        assertEquals("Ann", placeholderName(artist = "Ann", title = "Song"))
+        // No artist tag: the title, not the album (Mac: `track.artist || track.title`).
+        assertEquals("Song", placeholderName(artist = null, title = "Song"))
+        assertEquals("Song", placeholderName(artist = "", title = "Song"))
+        assertEquals("Song", placeholderName(artist = "  ", title = "Song"))
+    }
 }

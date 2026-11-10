@@ -212,6 +212,7 @@ fun NowPlayingScreen(
                 resolver = albumArt,
                 artist = track.artist,
                 album = track.album,
+                title = track.title,
                 filePath = track.filePath,
                 modifier = Modifier
                     .fillMaxWidth()
