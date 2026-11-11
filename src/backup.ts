@@ -3,6 +3,7 @@
 // DB-touching half (buildBackup/importSettings/importPlaylists) lives in
 // db/backup.ts; this file exists so the format can be pinned by unit tests
 // without a real SQLite instance.
+import { unzipSync } from "fflate";
 import { SmartRules, TrackKind } from "./types";
 import { sanitizeSmartRules } from "./smartPlaylist";
 
@@ -114,7 +115,42 @@ export interface BackupFile {
     album_covers?: BackupAlbumCover[];
 }
 
+/** Per-entry and total caps on what a restore will inflate. Cover images are
+ *  re-encoded small, so real backups are far below both. */
+export const MAX_BACKUP_ENTRY_BYTES = 50 * 1024 * 1024;
+export const MAX_BACKUP_TOTAL_BYTES = 500 * 1024 * 1024;
+
+/**
+ * Unzip a backup archive, inflating only `backup.json` and `images/*` and
+ * refusing anything whose declared size is over the caps — fflate allocates
+ * the declared size up front and never inflates past it, so a ZIP bomb is
+ * rejected before it can exhaust memory or freeze the WebView.
+ */
+export function unzipBackup(data: Uint8Array): Record<string, Uint8Array> {
+    let total = 0;
+    let tooLarge = false;
+    let files: Record<string, Uint8Array>;
+    try {
+        files = unzipSync(data, {
+            filter: (f) => {
+                if (f.name !== "backup.json" && !f.name.startsWith("images/")) return false;
+                total += f.originalSize;
+                if (f.originalSize > MAX_BACKUP_ENTRY_BYTES || total > MAX_BACKUP_TOTAL_BYTES) {
+                    tooLarge = true;
+                    return false;
+                }
+                return true;
+            },
+        });
+    } catch {
+        throw new BackupParseError("backup.errors.invalidArchive", "Not a valid ZIP");
+    }
+    if (tooLarge) throw new BackupParseError("backup.errors.tooLarge", "Backup archive is too large");
+    return files;
+}
+
 export type BackupErrorKey =
+    | "backup.errors.tooLarge"
     | "backup.errors.invalidJson"
     | "backup.errors.invalidFormat"
     | "backup.errors.unsupportedVersion"

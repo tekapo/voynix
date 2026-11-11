@@ -563,7 +563,8 @@
       "invalidJson": "That file isn't valid JSON.",
       "invalidFormat": "That file isn't a Voynix backup.",
       "unsupportedVersion": "That backup was made by a newer version of Voynix and can't be imported here.",
-      "invalidArchive": "That file isn't a valid Voynix backup archive."
+      "invalidArchive": "That file isn't a valid Voynix backup archive.",
+      "tooLarge": "That backup archive is too large to import."
     }
   },
   "remote": {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
-import { BACKUP_FORMAT, BACKUP_VERSION, BackupParseError, bytesToDataUri, dataUriToBytes, parseBackup, remapSmartRules } from "./backup";
+import { BACKUP_FORMAT, BACKUP_VERSION, BackupParseError, MAX_BACKUP_ENTRY_BYTES, bytesToDataUri, dataUriToBytes, parseBackup, remapSmartRules, unzipBackup } from "./backup";
 import { DEFAULT_SMART_RULES } from "./smartPlaylist";
 
 function validBackupJson(overrides: Record<string, unknown> = {}): string {
@@ -173,5 +173,34 @@ describe("cover images in backups", () => {
 
     it("returns null for a non-data-URI", () => {
         expect(dataUriToBytes("https://example.com/x.jpg")).toBeNull();
+    });
+});
+
+describe("unzipBackup", () => {
+    it("returns backup.json and images, ignoring other entries", () => {
+        const zip = zipSync({
+            "backup.json": strToU8("{}"),
+            "images/albums/0001.png": new Uint8Array([1, 2, 3]),
+            "other.bin": new Uint8Array([9]),
+        });
+        const files = unzipBackup(zip);
+        expect(Object.keys(files).sort()).toEqual(["backup.json", "images/albums/0001.png"]);
+    });
+
+    it("rejects an entry whose size is over the per-entry cap", () => {
+        // Highly compressible, so the archive itself is tiny.
+        const zip = zipSync({ "backup.json": new Uint8Array(MAX_BACKUP_ENTRY_BYTES + 1) });
+        expect(zip.length).toBeLessThan(1024 * 1024);
+        try {
+            unzipBackup(zip);
+            expect.unreachable();
+        } catch (e) {
+            expect(e).toBeInstanceOf(BackupParseError);
+            expect((e as BackupParseError).i18nKey).toBe("backup.errors.tooLarge");
+        }
+    });
+
+    it("rejects data that isn't a ZIP", () => {
+        expect(() => unzipBackup(new Uint8Array([1, 2, 3]))).toThrow(BackupParseError);
     });
 });

@@ -14,6 +14,9 @@ import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import { createEventBus } from "../lib/eventBus";
 import { EngineTrack, LoadOptions, PlayerEngine, PlayerEngineEvents } from "./engine";
 
+// Fire-and-forget IPC calls: a failure must not throw into the UI, but leave a trace.
+const warn = (cmd: string) => (e: unknown) => console.warn(`${cmd} failed`, e);
+
 interface PositionPayload { trackId: string; position: number; duration: number }
 interface AdvancedPayload { trackId: string }
 interface ErrorPayload { message: string }
@@ -87,7 +90,7 @@ export class NativeEngine implements PlayerEngine {
 
   unload(): void {
     this.currentTrackId = null;
-    invoke("player_stop").catch(() => {});
+    invoke("player_stop").catch(warn("player_stop"));
   }
 
   // The Rust side never emits `player-play` / `player-pause` (they're only listened for
@@ -102,17 +105,17 @@ export class NativeEngine implements PlayerEngine {
 
   pause(): void {
     this.paused = true;
-    invoke("player_pause").catch(() => {});
+    invoke("player_pause").catch(warn("player_pause"));
     this.bus.emit("onPause");
   }
 
   seek(seconds: number): void {
     this.lastPosition = seconds;
-    invoke("player_seek", { position: seconds }).catch(() => {});
+    invoke("player_seek", { position: seconds }).catch(warn("player_seek"));
   }
 
   setVolume(volume: number): void {
-    invoke("player_set_volume", { volume }).catch(() => {});
+    invoke("player_set_volume", { volume }).catch(warn("player_set_volume"));
   }
 
   setRate(_rate: number): void {
@@ -122,7 +125,7 @@ export class NativeEngine implements PlayerEngine {
 
   setNext(track: EngineTrack | null): void {
     invoke("player_set_next", track ? { trackId: track.id, path: track.filePath } : { trackId: null, path: null })
-      .catch(() => {});
+      .catch(warn("player_set_next"));
   }
 
   getCurrentTime(): number {
