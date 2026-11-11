@@ -441,8 +441,10 @@ mod tests {
     /// there's no bundled fixture audio file in this repo, so build one.
     fn write_minimal_wav(path: &Path, num_samples: u32) {
         let mut data = Vec::new();
-        let byte_rate: u32 = 44100 * 1 * 16 / 8;
-        let block_align: u16 = 1 * 16 / 8;
+        const CHANNELS: u32 = 1;
+        const BITS_PER_SAMPLE: u32 = 16;
+        let byte_rate: u32 = 44100 * CHANNELS * BITS_PER_SAMPLE / 8;
+        let block_align: u16 = (CHANNELS * BITS_PER_SAMPLE / 8) as u16;
         let data_len = num_samples * block_align as u32;
 
         data.extend_from_slice(b"RIFF");
@@ -458,7 +460,7 @@ mod tests {
         data.extend_from_slice(&16u16.to_le_bytes());
         data.extend_from_slice(b"data");
         data.extend_from_slice(&data_len.to_le_bytes());
-        data.extend(std::iter::repeat(0u8).take(data_len as usize));
+        data.extend(std::iter::repeat_n(0u8, data_len as usize));
 
         std::fs::write(path, data).unwrap();
     }
