@@ -3,7 +3,7 @@
 // DOM-only: what a user can click and what PlayerBar/QueuePanel then show.
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { resetAppTestMocks } from "./test/renderApp";
+import { invoke, listen, resetAppTestMocks } from "./test/renderApp";
 import { seedLibrary } from "./test/seedLibrary";
 import { FakeEngine, installFakeEngine } from "./test/fakeEngine";
 import { _resetInitForTests, getTrackPlayState, initDb, loadLastPlayback, saveLastPlayback } from "./db";
@@ -727,5 +727,32 @@ describe("playback cursor persistence", () => {
 
         engine.fireTick(12, 180); // 6s after the last save: saved
         await waitFor(async () => expect((await loadLastPlayback())?.position).toBe(12));
+    });
+});
+
+describe("Dock menu rating", () => {
+    function dockHandler(): (e: { payload: string }) => void {
+        const call = listen.mock.calls.filter(c => c[0] === "dock-action").pop();
+        expect(call).toBeTruthy();
+        return call![1] as (e: { payload: string }) => void;
+    }
+    const lastRating = () =>
+        invoke.mock.calls.filter(c => c[0] === "set_dock_rating").pop()?.[1];
+
+    it("tells the Dock about the playing track and toggles thumbs from its menu", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+        await waitFor(() => expect(lastRating()).toEqual({ hasTrack: false, liked: false, disliked: false }));
+
+        await playRow("Aurora");
+        // Aurora is the seeded favorite.
+        await waitFor(() => expect(lastRating()).toEqual({ hasTrack: true, liked: true, disliked: false }));
+
+        dockHandler()({ payload: "like" }); // un-like
+        await waitFor(() => expect(lastRating()).toEqual({ hasTrack: true, liked: false, disliked: false }));
+
+        dockHandler()({ payload: "dislike" });
+        await waitFor(() => expect(lastRating()).toEqual({ hasTrack: true, liked: false, disliked: true }));
     });
 });

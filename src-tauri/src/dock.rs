@@ -1,9 +1,9 @@
-//! macOS Dock right-click menu (Play/Pause, Next, Previous).
+//! macOS Dock right-click menu (Play/Pause, Next, Previous, Thumbs Up/Down).
 //!
 //! Neither Tauri nor tao exposes `applicationDockMenu:`, so we add it (and the
 //! menu-item action) to tao's app delegate class at runtime. Item clicks are
 //! forwarded to the frontend as a `dock-action` event whose payload is
-//! "toggle" | "next" | "previous".
+//! "toggle" | "next" | "previous" | "like" | "dislike".
 //!
 //! Item titles are translated in the frontend (src/i18n) and pushed down via
 //! `set_dock_labels` (see App.tsx's language-change effect) rather than
@@ -16,7 +16,7 @@ use objc2::ffi;
 use objc2::rc::Retained;
 use objc2::runtime::{AnyClass, AnyObject, Imp, Sel};
 use objc2::{sel, MainThreadMarker, MainThreadOnly};
-use objc2_app_kit::{NSMenu, NSMenuItem};
+use objc2_app_kit::{NSControlStateValueOff, NSControlStateValueOn, NSMenu, NSMenuItem};
 use objc2_foundation::NSString;
 use tauri::{AppHandle, Emitter};
 
@@ -24,21 +24,40 @@ static APP: OnceLock<AppHandle> = OnceLock::new();
 
 /// Action names, in Dock-menu order — stable regardless of language, since
 /// they're also the `dock-action` event payload the frontend matches on.
-const ACTIONS: [&str; 3] = ["toggle", "next", "previous"];
+const ACTIONS: [&str; 5] = ["toggle", "next", "previous", "like", "dislike"];
+
+/// Items from this index on are the rating items, shown after a separator.
+const FIRST_RATING_ITEM: usize = 3;
 
 /// Current menu-item titles, indexed the same as `ACTIONS`. English until the
 /// frontend's initial language-resolution effect calls `set_dock_labels`.
-static LABELS: Mutex<[String; 3]> = Mutex::new([
+static LABELS: Mutex<[String; 5]> = Mutex::new([
+    String::new(),
+    String::new(),
     String::new(),
     String::new(),
     String::new(),
 ]);
 
-fn default_labels() -> [String; 3] {
-    ["Play/Pause".to_string(), "Next".to_string(), "Previous".to_string()]
+/// State of the playing track's rating, shown as checkmarks / enabled state.
+#[derive(Clone, Copy, Default, Debug, PartialEq, Eq)]
+struct DockRating {
+    has_track: bool,
+    liked: bool,
+    disliked: bool,
 }
 
-fn current_labels() -> [String; 3] {
+static RATING: Mutex<DockRating> = Mutex::new(DockRating {
+    has_track: false,
+    liked: false,
+    disliked: false,
+});
+
+fn default_labels() -> [String; 5] {
+    ["Play/Pause", "Next", "Previous", "Thumbs Up", "Thumbs Down"].map(String::from)
+}
+
+fn current_labels() -> [String; 5] {
     let guard = LABELS.lock().unwrap();
     if guard[0].is_empty() {
         default_labels()
@@ -48,17 +67,30 @@ fn current_labels() -> [String; 3] {
 }
 
 /// Tauri command: replaces the Dock menu's item titles. `labels` must be
-/// `[toggle, next, previous]`, matching `ACTIONS`'s order.
+/// `[toggle, next, previous, like, dislike]`, matching `ACTIONS`'s order.
 #[tauri::command]
-pub fn set_dock_labels(labels: [String; 3]) {
+pub fn set_dock_labels(labels: [String; 5]) {
     *LABELS.lock().unwrap() = labels;
+}
+
+/// Tauri command: tells the Dock menu about the playing track's rating so the
+/// next right-click shows checkmarks (and disables the items with no track).
+#[tauri::command]
+pub fn set_dock_rating(has_track: bool, liked: bool, disliked: bool) {
+    *RATING.lock().unwrap() = DockRating { has_track, liked, disliked };
 }
 
 extern "C" fn dock_menu(_this: &AnyObject, _sel: Sel, _sender: &AnyObject) -> *mut NSMenu {
     let mtm = MainThreadMarker::new().expect("applicationDockMenu: runs on the main thread");
     let menu = NSMenu::new(mtm);
+    // Items are enabled/disabled explicitly below, not by responder-chain lookup.
+    menu.setAutoenablesItems(false);
     let labels = current_labels();
+    let rating = *RATING.lock().unwrap();
     for (tag, title) in labels.iter().enumerate() {
+        if tag == FIRST_RATING_ITEM {
+            menu.addItem(&NSMenuItem::separatorItem(mtm));
+        }
         let item = unsafe {
             NSMenuItem::initWithTitle_action_keyEquivalent(
                 NSMenuItem::alloc(mtm),
@@ -68,6 +100,11 @@ extern "C" fn dock_menu(_this: &AnyObject, _sel: Sel, _sender: &AnyObject) -> *m
             )
         };
         item.setTag(tag as isize);
+        if tag >= FIRST_RATING_ITEM {
+            item.setEnabled(rating.has_track);
+            let on = (tag == 3 && rating.liked) || (tag == 4 && rating.disliked);
+            item.setState(if on { NSControlStateValueOn } else { NSControlStateValueOff });
+        }
         // Leave the target nil: the action travels the responder chain to
         // NSApp's delegate, which is where `voynixDockAction:` is installed.
         menu.addItem(&item);
@@ -138,14 +175,23 @@ mod tests {
     fn set_dock_labels_updates_what_the_menu_reads_and_falls_back_to_english_untouched() {
         assert_eq!(current_labels(), default_labels());
 
-        set_dock_labels(["再生/一時停止".to_string(), "次へ".to_string(), "前へ".to_string()]);
-        assert_eq!(
-            current_labels(),
-            ["再生/一時停止".to_string(), "次へ".to_string(), "前へ".to_string()]
-        );
+        let ja = ["再生/一時停止", "次へ", "前へ", "高評価", "低評価"].map(String::from);
+        set_dock_labels(ja.clone());
+        assert_eq!(current_labels(), ja);
 
         // Restore English so this doesn't leak into another test in the same run.
         set_dock_labels(default_labels());
         assert_eq!(current_labels(), default_labels());
+    }
+
+    #[test]
+    fn set_dock_rating_updates_what_the_menu_reads() {
+        set_dock_rating(true, false, true);
+        assert_eq!(
+            *RATING.lock().unwrap(),
+            DockRating { has_track: true, liked: false, disliked: true }
+        );
+        set_dock_rating(false, false, false);
+        assert_eq!(*RATING.lock().unwrap(), DockRating::default());
     }
 }

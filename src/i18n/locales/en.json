@@ -367,7 +367,9 @@
   "dock": {
     "playPause": "Play/Pause",
     "next": "Next",
-    "previous": "Previous"
+    "previous": "Previous",
+    "like": "Thumbs Up",
+    "dislike": "Thumbs Down"
   },
   "modals": {
     "createPlaylist": "Create Playlist",

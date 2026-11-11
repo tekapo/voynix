@@ -828,11 +828,15 @@ function App() {
 
   // macOS Dock right-click menu (see src-tauri/src/dock.rs). The ref keeps the
   // single long-lived listener pointed at the latest closures.
-  const dockActionsRef = useRef({ toggle: () => {}, next: () => {}, previous: () => {} });
+  const dockActionsRef = useRef<Record<"toggle" | "next" | "previous" | "like" | "dislike", () => void>>({
+    toggle: () => {}, next: () => {}, previous: () => {}, like: () => {}, dislike: () => {},
+  });
   dockActionsRef.current = {
     toggle: togglePlay,
     next: () => playAdjacent(1),
     previous: () => playAdjacent(-1),
+    like: () => {},
+    dislike: () => {},
   };
   // Voynix menu > About opens Settings on the About tab.
   useTauriEvent<null>("menu-about", () => {
@@ -844,7 +848,7 @@ function App() {
     if (item === "welcome") setIsWelcomeOpen(true);
     else openUrl(i18n.t(item === "manual" ? 'settings.websiteUrl' : 'appMenu.issuesUrl')).catch(e => console.warn("openUrl failed", e));
   });
-  useTauriEvent<"toggle" | "next" | "previous">("dock-action", (action) => {
+  useTauriEvent<"toggle" | "next" | "previous" | "like" | "dislike">("dock-action", (action) => {
     dockActionsRef.current[action]?.();
   });
 
@@ -1004,6 +1008,17 @@ function App() {
     playlists, refreshPlaylists, setError, patchCurrentTrackIfId, setCurrentTrack,
     bumpSnapshot, closeTrackMenu, closePlaylistMenu, closeLibraryMenu,
   });
+
+  // Dock menu thumbs up/down act on the playing track (see dock.rs).
+  dockActionsRef.current.like = () => { if (currentTrack) handleToggleFavorite(currentTrack); };
+  dockActionsRef.current.dislike = () => { if (currentTrack) handleToggleDislike(currentTrack); };
+  const dockHasTrack = !!currentTrack;
+  const dockLiked = !!currentTrack?.favorite;
+  const dockDisliked = !!currentTrack?.disliked;
+  useEffect(() => {
+    invoke("set_dock_rating", { hasTrack: dockHasTrack, liked: dockLiked, disliked: dockDisliked })
+      .catch(() => { /* non-macOS / dev-server: no Dock to update */ });
+  }, [dockHasTrack, dockLiked, dockDisliked]);
 
   const handleTogglePathColumn = (next: boolean) => {
     setShowPathColumn(next);

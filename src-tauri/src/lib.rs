@@ -347,6 +347,7 @@ pub fn run() {
             tags::read_track_numbers,
             tags::read_extra_tags,
             dock::set_dock_labels,
+            dock::set_dock_rating,
             menu::set_app_menu,
             now_playing::set_now_playing,
             now_playing::set_now_playing_artwork
