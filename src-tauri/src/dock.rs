@@ -26,9 +26,6 @@ static APP: OnceLock<AppHandle> = OnceLock::new();
 /// they're also the `dock-action` event payload the frontend matches on.
 const ACTIONS: [&str; 5] = ["toggle", "next", "previous", "like", "dislike"];
 
-/// Items from this index on are the rating items, shown after a separator.
-const FIRST_RATING_ITEM: usize = 3;
-
 /// Current menu-item titles, indexed the same as `ACTIONS`. English until the
 /// frontend's initial language-resolution effect calls `set_dock_labels`.
 static LABELS: Mutex<[String; 5]> = Mutex::new([
@@ -40,18 +37,29 @@ static LABELS: Mutex<[String; 5]> = Mutex::new([
 ]);
 
 /// State of the playing track's rating, shown as checkmarks / enabled state.
-#[derive(Clone, Copy, Default, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct DockRating {
     has_track: bool,
     liked: bool,
     disliked: bool,
 }
 
-static RATING: Mutex<DockRating> = Mutex::new(DockRating {
-    has_track: false,
-    liked: false,
-    disliked: false,
-});
+impl DockRating {
+    const NONE: DockRating = DockRating { has_track: false, liked: false, disliked: false };
+}
+
+static RATING: Mutex<DockRating> = Mutex::new(DockRating::NONE);
+
+/// `(enabled, checked)` for a rating item, or `None` for the transport items
+/// (which are always enabled and never checked).
+fn rating_item_state(action: &str, rating: DockRating) -> Option<(bool, bool)> {
+    let checked = match action {
+        "like" => rating.liked,
+        "dislike" => rating.disliked,
+        _ => return None,
+    };
+    Some((rating.has_track, checked))
+}
 
 fn default_labels() -> [String; 5] {
     ["Play/Pause", "Next", "Previous", "Thumbs Up", "Thumbs Down"].map(String::from)
@@ -88,7 +96,8 @@ extern "C" fn dock_menu(_this: &AnyObject, _sel: Sel, _sender: &AnyObject) -> *m
     let labels = current_labels();
     let rating = *RATING.lock().unwrap();
     for (tag, title) in labels.iter().enumerate() {
-        if tag == FIRST_RATING_ITEM {
+        // The rating items start after a separator.
+        if ACTIONS[tag] == "like" {
             menu.addItem(&NSMenuItem::separatorItem(mtm));
         }
         let item = unsafe {
@@ -100,10 +109,9 @@ extern "C" fn dock_menu(_this: &AnyObject, _sel: Sel, _sender: &AnyObject) -> *m
             )
         };
         item.setTag(tag as isize);
-        if tag >= FIRST_RATING_ITEM {
-            item.setEnabled(rating.has_track);
-            let on = (tag == 3 && rating.liked) || (tag == 4 && rating.disliked);
-            item.setState(if on { NSControlStateValueOn } else { NSControlStateValueOff });
+        if let Some((enabled, checked)) = rating_item_state(ACTIONS[tag], rating) {
+            item.setEnabled(enabled);
+            item.setState(if checked { NSControlStateValueOn } else { NSControlStateValueOff });
         }
         // Leave the target nil: the action travels the responder chain to
         // NSApp's delegate, which is where `voynixDockAction:` is installed.
@@ -192,6 +200,24 @@ mod tests {
             DockRating { has_track: true, liked: false, disliked: true }
         );
         set_dock_rating(false, false, false);
-        assert_eq!(*RATING.lock().unwrap(), DockRating::default());
+        assert_eq!(*RATING.lock().unwrap(), DockRating::NONE);
+    }
+
+    #[test]
+    fn rating_item_state_enables_with_a_track_and_checks_only_the_active_rating() {
+        let liked = DockRating { has_track: true, liked: true, disliked: false };
+        assert_eq!(rating_item_state("like", liked), Some((true, true)));
+        assert_eq!(rating_item_state("dislike", liked), Some((true, false)));
+
+        let disliked = DockRating { has_track: true, liked: false, disliked: true };
+        assert_eq!(rating_item_state("like", disliked), Some((true, false)));
+        assert_eq!(rating_item_state("dislike", disliked), Some((true, true)));
+
+        // No track: both disabled and unchecked.
+        assert_eq!(rating_item_state("like", DockRating::NONE), Some((false, false)));
+        assert_eq!(rating_item_state("dislike", DockRating::NONE), Some((false, false)));
+
+        // Transport items aren't rating items.
+        assert_eq!(rating_item_state("toggle", liked), None);
     }
 }
