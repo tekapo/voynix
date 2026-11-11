@@ -38,10 +38,11 @@ import { TrackContextMenu } from "./components/ContextMenu";
 import { TrackInfoModal } from "./components/TrackInfoModal";
 import { Header } from "./components/Header";
 import { Icon } from "./components/Icon";
-import { LibraryColumns } from "./components/LibraryColumns";
+import { LibraryColumns, collectionMeta } from "./components/LibraryColumns";
 import { CollectionHero, CollectionKind } from "./components/CollectionHero";
 import { LibraryView } from "./components/LibraryView";
 import { LyricsPanel } from "./components/LyricsPanel";
+import { AddTracksModal } from "./components/AddTracksModal";
 import { CreatePlaylistModal, SettingsModal, SyncModal, type SettingsTab } from "./components/Modals";
 import { SmartPlaylistModal } from "./components/SmartPlaylistModal";
 import { PlayerBar } from "./components/PlayerBar";
@@ -90,6 +91,8 @@ import type { LastPlayback } from "./db";
 import { LibraryLayout, Playlist, SmartRules, Track, TrackIdentity, ViewMode } from "./types";
 
 const MAX_AUTO_SKIPS = 5;
+/** Flat library lists (no hero) whose header shows a song count and total time. */
+const FLAT_COUNT_VIEWS: ReadonlySet<ViewMode> = new Set<ViewMode>(['all_songs', 'favorites', 'most_played', 'recently_added', 'recently_played']);
 
 function App() {
   const { t } = useTranslation();
@@ -269,6 +272,7 @@ function App() {
   // Smart Playlist editor: null when closed. Same shape for create (name
   // starts blank, rules start at DEFAULT_SMART_RULES) and edit (both
   // prefilled from the playlist being edited) — see SmartPlaylistModal.
+  const [addTracksOpen, setAddTracksOpen] = useState(false);
   const [smartEditor, setSmartEditor] = useState<{ playlistId: string | null; name: string; rules: SmartRules } | null>(null);
   // Track-list column prefs (persisted in the settings table). Path off by default.
   const [showPathColumn, setShowPathColumn, loadShowPathColumn] = usePersistedSetting(
@@ -1284,6 +1288,13 @@ function App() {
   // A Podcast playlist set to play in order has nothing to shuffle.
   const heroShowShuffle = !(podcastNoShuffle && isPodcastQueue(viewTracks));
 
+  // Flat library lists have no hero, so the header carries their song count and
+  // total time. Counts the whole list, not the search-filtered rows.
+  const headerSubtitle = useMemo(
+    () => FLAT_COUNT_VIEWS.has(viewMode) ? collectionMeta(viewTracks, t) : undefined,
+    [viewMode, viewTracks, t],
+  );
+
   const getHeaderTitle = () => {
     if (viewMode === 'playlist') return playlists.find(p => p.id === currentPlaylistId)?.name || t('common.playlist');
     if (viewMode === 'all_songs') return t('sidebar.allSongs');
@@ -1415,6 +1426,7 @@ function App() {
               onPlay={onHeroPlay}
               onShuffle={onHeroShuffle}
               showShuffle={heroShowShuffle}
+              onAddTracks={heroKind === 'playlist' && currentPlaylist?.type !== 'smart' ? () => setAddTracksOpen(true) : undefined}
             />
           )}
 
@@ -1524,6 +1536,7 @@ function App() {
         <Header
           onToggleSidebar={toggleSidebar}
           title={heroKind ? '' : getHeaderTitle()}
+          subtitle={headerSubtitle}
           search={search}
           onSearchChange={setSearch}
           layoutToggle={
@@ -1564,6 +1577,16 @@ function App() {
           onSubmit={handleCreateSubmit}
           playlistName={newPlaylistName}
           setPlaylistName={setNewPlaylistName}
+        />
+
+        <AddTracksModal
+          isOpen={addTracksOpen}
+          tracks={allTracks}
+          onClose={() => setAddTracksOpen(false)}
+          onAdd={async (picked) => {
+            setAddTracksOpen(false);
+            if (currentPlaylistId) await addTracksToPlaylistMulti(currentPlaylistId, picked);
+          }}
         />
 
         <SmartPlaylistModal

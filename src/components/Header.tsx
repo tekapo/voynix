@@ -6,13 +6,15 @@ import { LibraryLayout } from '../types';
 interface HeaderProps {
     onToggleSidebar: () => void;
     title: string;
+    /** Small line after the title, e.g. the song count and total time of a flat list. */
+    subtitle?: string;
     search: string;
     onSearchChange: (value: string) => void;
     /** Artists/Albums grid<->list switch. Present only on those two views. */
     layoutToggle?: { value: LibraryLayout; onChange: (v: LibraryLayout) => void };
 }
 
-export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, title, search, onSearchChange, layoutToggle }) => {
+export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, title, subtitle, search, onSearchChange, layoutToggle }) => {
     const { t } = useTranslation();
     // On phone widths the search field crowds out the title, so it collapses to
     // a magnifier that expands the field on tap. Desktop CSS keeps it always-open
@@ -41,6 +43,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, title, search, 
                 <div className="view-title">
                     {title}
                 </div>
+                {subtitle && <div className="view-subtitle">{subtitle}</div>}
             </div>
             <div className="header-actions">
                 {layoutToggle && (

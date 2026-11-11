@@ -498,7 +498,9 @@
     "excludeDislikedHint": "「よく再生する曲」「最近追加した曲」「最近再生した曲」から、低評価（👎）の曲を除きます。"
   },
   "libraryColumns": {
-    "meta_other": "{{count}}曲 · {{minutes}}分",
+    "meta_other": "{{count, number}}曲 · {{minutes}}分",
+    "metaHours_other": "{{count, number}}曲 · {{hours}}時間{{minutes}}分",
+    "metaHoursOnly_other": "{{count, number}}曲 · {{hours}}時間",
     "albumsCount_other": "{{count}}枚のアルバム",
     "noArtistsFound": "アーティストが見つかりません。",
     "noAlbumsFound": "アルバムが見つかりません。",
@@ -512,7 +514,16 @@
   },
   "collectionHero": {
     "playNamed": "{{name}}を再生",
-    "shuffleNamed": "{{name}}をシャッフル再生"
+    "shuffleNamed": "{{name}}をシャッフル再生",
+    "addSongs": "曲を追加する"
+  },
+  "addTracks": {
+    "title": "曲を追加",
+    "searchPlaceholder": "曲を検索",
+    "noMatches": "曲が見つかりません。",
+    "moreHint": "{{total}}曲のうち{{shown}}曲を表示しています。検索で絞り込んでください。",
+    "add": "追加",
+    "addCount_other": "{{count}}曲を追加"
   },
   "playlistMenu": {
     "editSmartPlaylist": "スマートプレイリストを編集…",

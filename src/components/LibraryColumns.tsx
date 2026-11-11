@@ -25,7 +25,12 @@ export function collectionMeta(tracks: Track[], t: TFunction): string {
     const songs = tracks.length;
     const totalSeconds = tracks.reduce((sum, t) => sum + (t.duration || 0), 0);
     const totalMinutes = Math.round(totalSeconds / 60);
-    return t('libraryColumns.meta', { count: songs, minutes: totalMinutes });
+    if (totalMinutes < 60) return t('libraryColumns.meta', { count: songs, minutes: totalMinutes });
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return minutes === 0
+        ? t('libraryColumns.metaHoursOnly', { count: songs, hours })
+        : t('libraryColumns.metaHours', { count: songs, hours, minutes });
 }
 
 /** Groups already-sorted tracks (sortNatural order: artist -> album -> disc ->

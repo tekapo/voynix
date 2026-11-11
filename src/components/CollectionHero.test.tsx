@@ -109,4 +109,25 @@ describe("CollectionHero", () => {
         expect(container.querySelector(".collection-hero-art-round")).toBeInTheDocument();
         expect(container.querySelector(".collection-hero-cover")).not.toBeInTheDocument();
     });
+
+    it("swaps Play / Shuffle for Add Songs on an empty playlist that can take songs", () => {
+        const onAddTracks = vi.fn();
+        render(<CollectionHero {...baseProps} kind="playlist" tracks={[]} onAddTracks={onAddTracks} />);
+        expect(screen.queryByRole("button", { name: /Play Road Trip/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /Shuffle Road Trip/ })).not.toBeInTheDocument();
+        fireEvent.click(screen.getByRole("button", { name: "Add Songs" }));
+        expect(onAddTracks).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps Play / Shuffle (disabled) on an empty list when no add handler is given", () => {
+        render(<CollectionHero {...baseProps} kind="playlist" tracks={[]} />);
+        expect(screen.queryByRole("button", { name: "Add Songs" })).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /Play Road Trip/ })).toBeDisabled();
+    });
+
+    it("hides Add Songs once the playlist has songs", () => {
+        render(<CollectionHero {...baseProps} kind="playlist" tracks={albums(2)} onAddTracks={() => {}} />);
+        expect(screen.queryByRole("button", { name: "Add Songs" })).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /Play Road Trip/ })).toBeEnabled();
+    });
 });

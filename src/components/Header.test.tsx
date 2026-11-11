@@ -57,3 +57,15 @@ describe("Header layout toggle", () => {
         expect(onChange).toHaveBeenCalledWith("list");
     });
 });
+
+describe("Header subtitle", () => {
+    it("shows the subtitle after the title", () => {
+        render(<Header {...base} subtitle="5 songs · 12 min" />);
+        expect(screen.getByText("5 songs · 12 min")).toBeInTheDocument();
+    });
+
+    it("renders no subtitle element when none is given", () => {
+        const { container } = render(<Header {...base} />);
+        expect(container.querySelector(".view-subtitle")).toBeNull();
+    });
+});
