@@ -12,7 +12,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { beforeEach, describe, expect, it } from "vitest";
 import { resetAppTestMocks } from "./test/renderApp";
 import { seedLibrary } from "./test/seedLibrary";
-import { _resetInitForTests, createSmartPlaylist, initDb } from "./db";
+import { _resetInitForTests, createPlaylist, createSmartPlaylist, initDb } from "./db";
 import { DEFAULT_SMART_RULES } from "./smartPlaylist";
 
 import App from "./App";
@@ -181,6 +181,68 @@ describe("collection hero", () => {
 
         fireEvent.click(screen.getByRole("button", { name: "Play Rock Favorites" }));
         await waitFor(() => expect(screen.getByRole("button", { name: "Pause" })).toBeInTheDocument());
+    });
+
+    it("fills an empty playlist through Add Songs, then swaps back to Play / Shuffle", async () => {
+        await seedLibrary();
+        await createPlaylist("Empty Mix", "folder");
+        render(<App />);
+        await screen.findByText("Aurora");
+
+        fireEvent.click(screen.getByText("Empty Mix"));
+        fireEvent.click(await screen.findByRole("button", { name: "Add Songs" }));
+        const dialog = await screen.findByRole("dialog", { name: "Add Songs" });
+        fireEvent.change(within(dialog).getByRole("searchbox"), { target: { value: "cascade" } });
+        fireEvent.click(within(dialog).getByRole("checkbox", { name: /Cascade/ }));
+        fireEvent.click(within(dialog).getByRole("button", { name: "Add 1 song" }));
+
+        await within(trackList()).findByText("Cascade");
+        expect(screen.queryByRole("dialog", { name: "Add Songs" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Add Songs" })).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Play Empty Mix" })).toBeEnabled();
+    });
+
+    it("offers no Add Songs on an empty smart playlist, whose songs come from its rules", async () => {
+        await seedLibrary();
+        await createSmartPlaylist("Nothing Yet", {
+            ...DEFAULT_SMART_RULES,
+            conditions: [{ field: "title", op: "contains", value: "no such song" }],
+        });
+        render(<App />);
+        await screen.findByText("Aurora");
+
+        fireEvent.click(screen.getByText("Nothing Yet"));
+        await screen.findByRole("heading", { level: 2, name: "Nothing Yet" });
+        expect(screen.queryByRole("button", { name: "Add Songs" })).not.toBeInTheDocument();
+    });
+});
+
+describe("flat list header count", () => {
+    const headerSubtitle = () => document.querySelector("header.header .view-subtitle")?.textContent ?? null;
+
+    it("shows the song count and total time next to the All Songs title, whatever the search says", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+
+        fireEvent.click(screen.getByText("All Songs"));
+        await within(trackList()).findByText("Episode 1");
+        const before = headerSubtitle();
+        // 3 music tracks x 3 min + 2 podcast episodes x 30 min = 69 min.
+        expect(before).toBe("5 songs · 1 hr 9 min");
+
+        fireEvent.change(screen.getByRole("searchbox", { name: "Search" }), { target: { value: "cascade" } });
+        await waitFor(() => expect(within(trackList()).queryByText("Aurora")).not.toBeInTheDocument());
+        expect(headerSubtitle()).toBe(before);
+    });
+
+    it("is absent where a hero already carries the count", async () => {
+        await seedLibrary();
+        render(<App />);
+        await screen.findByText("Aurora");
+
+        expect(document.querySelector(".collection-hero")).toBeInTheDocument();
+        expect(headerSubtitle()).toBeNull();
     });
 });
 

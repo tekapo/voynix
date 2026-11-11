@@ -505,8 +505,12 @@
     "excludeDislikedHint": "Most Played, Recently Added and Recently Played skip songs you gave a thumbs down."
   },
   "libraryColumns": {
-    "meta_one": "{{count}} song · {{minutes}} min",
-    "meta_other": "{{count}} songs · {{minutes}} min",
+    "meta_one": "{{count, number}} song · {{minutes}} min",
+    "meta_other": "{{count, number}} songs · {{minutes}} min",
+    "metaHours_one": "{{count, number}} song · {{hours}} hr {{minutes}} min",
+    "metaHours_other": "{{count, number}} songs · {{hours}} hr {{minutes}} min",
+    "metaHoursOnly_one": "{{count, number}} song · {{hours}} hr",
+    "metaHoursOnly_other": "{{count, number}} songs · {{hours}} hr",
     "albumsCount_one": "{{count}} album",
     "albumsCount_other": "{{count}} albums",
     "noArtistsFound": "No artists found.",
@@ -521,7 +525,17 @@
   },
   "collectionHero": {
     "playNamed": "Play {{name}}",
-    "shuffleNamed": "Shuffle {{name}}"
+    "shuffleNamed": "Shuffle {{name}}",
+    "addSongs": "Add Songs"
+  },
+  "addTracks": {
+    "title": "Add Songs",
+    "searchPlaceholder": "Search songs",
+    "noMatches": "No songs found.",
+    "moreHint": "Showing {{shown}} of {{total}} songs. Search to narrow them down.",
+    "add": "Add",
+    "addCount_one": "Add {{count}} song",
+    "addCount_other": "Add {{count}} songs"
   },
   "playlistMenu": {
     "editSmartPlaylist": "Edit Smart Playlist…",

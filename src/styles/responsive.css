@@ -29,6 +29,11 @@
     padding-top: env(safe-area-inset-top);
   }
 
+  /* The title keeps the width; the song count and time only fit on wide windows. */
+  .view-subtitle {
+    display: none;
+  }
+
   /* Collapsed: magnifier only, title keeps the width. */
   .header-search-toggle {
     display: flex;

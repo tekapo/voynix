@@ -69,6 +69,16 @@
   color: var(--text-1);
 }
 
+.view-subtitle {
+  margin-left: 1rem;
+  font-size: var(--fs-md);
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .view-title {
   font-size: 1.25rem;
   font-weight: 600;

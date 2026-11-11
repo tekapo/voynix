@@ -19,6 +19,8 @@ interface CollectionHeroProps {
     onShuffle: () => void;
     /** False hides the shuffle button (a podcast playlist that always plays in order). */
     showShuffle?: boolean;
+    /** Given for a playlist whose songs are picked by hand: while it is empty, "Add Songs" takes the place of Play / Shuffle. */
+    onAddTracks?: () => void;
 }
 
 /** Upper bound on tracks looked at while hunting for distinct covers. */
@@ -44,7 +46,7 @@ function pickCoverTracks(tracks: Track[], max: number): Track[] {
  * big title, counts and the Play / Shuffle buttons. It scrolls away with the
  * list (it sits inside .track-list-container, before the TrackList).
  */
-const CollectionHeroInner: React.FC<CollectionHeroProps> = ({ kind, title, tracks, onPlay, onShuffle, showShuffle = true }) => {
+const CollectionHeroInner: React.FC<CollectionHeroProps> = ({ kind, title, tracks, onPlay, onShuffle, showShuffle = true, onAddTracks }) => {
     const { t } = useTranslation();
     const empty = tracks.length === 0;
     const tiles = useMemo(() => pickCoverTracks(tracks, kind === 'album' ? 1 : 4), [tracks, kind]);
@@ -77,18 +79,25 @@ const CollectionHeroInner: React.FC<CollectionHeroProps> = ({ kind, title, track
                 <h2 className="collection-hero-title" title={title}>{title}</h2>
                 <div className="collection-hero-meta">{meta}</div>
                 <div className="collection-hero-actions">
-                    {/* The accessible names carry the title so the player bar's own
-                        "Play" stays the only button named exactly that. */}
-                    <button type="button" className="collection-hero-play" disabled={empty} onClick={onPlay} aria-label={t('collectionHero.playNamed', { name: title })}>
-                        <Icon name="play" size={16} />
-                        {t('libraryColumns.play')}
-                    </button>
-                    {showShuffle && (
-                        <button type="button" className="collection-hero-shuffle" disabled={empty} onClick={onShuffle} aria-label={t('collectionHero.shuffleNamed', { name: title })}>
-                            <Icon name="shuffle" size={17} />
-                            {t('libraryColumns.shuffle')}
+                    {empty && onAddTracks ? (
+                        <button type="button" className="collection-hero-play" onClick={onAddTracks}>
+                            <Icon name="plus" size={16} />
+                            {t('collectionHero.addSongs')}
                         </button>
-                    )}
+                    ) : (<>
+                        {/* The accessible names carry the title so the player bar's own
+                            "Play" stays the only button named exactly that. */}
+                        <button type="button" className="collection-hero-play" disabled={empty} onClick={onPlay} aria-label={t('collectionHero.playNamed', { name: title })}>
+                            <Icon name="play" size={16} />
+                            {t('libraryColumns.play')}
+                        </button>
+                        {showShuffle && (
+                            <button type="button" className="collection-hero-shuffle" disabled={empty} onClick={onShuffle} aria-label={t('collectionHero.shuffleNamed', { name: title })}>
+                                <Icon name="shuffle" size={17} />
+                                {t('libraryColumns.shuffle')}
+                            </button>
+                        )}
+                    </>)}
                 </div>
             </div>
         </div>

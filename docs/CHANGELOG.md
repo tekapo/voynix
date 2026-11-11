@@ -10,6 +10,11 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.41.0 — 2026-11-11
+
+- Mac: an empty playlist now shows an "Add Songs" button in its header; it opens a searchable list where you tick the songs to add (not offered for smart playlists).
+- Mac: All Songs, Favorites, Most Played, Recently Added and Recently Played show their song count and total time next to the title; times of an hour or more read "1 hr 32 min" everywhere.
+
 ## 0.40.0 — 2026-11-10
 
 - Mac: a playlist, artist or album now opens with a header above its tracks: cover (a mosaic of up to four albums, a single cover, or a round artist photo), title, song count and time, and Play / Shuffle buttons. It scrolls away with the list.
