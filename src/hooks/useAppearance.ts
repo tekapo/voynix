@@ -24,7 +24,7 @@ export function useAppearance() {
     document.documentElement.lang = resolved;
     if (i18n.language !== resolved) i18n.changeLanguage(resolved);
     invoke("set_dock_labels", {
-      labels: [i18n.t('dock.playPause'), i18n.t('dock.next'), i18n.t('dock.previous')],
+      labels: [i18n.t('dock.playPause'), i18n.t('dock.next'), i18n.t('dock.previous'), i18n.t('dock.like'), i18n.t('dock.dislike')],
     }).catch(() => { /* non-macOS / dev-server: no Dock to update */ });
     const name = "Voynix";
     const t = i18n.t.bind(i18n);

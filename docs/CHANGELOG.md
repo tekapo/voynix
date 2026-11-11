@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.42.0 — 2026-11-11
+
+- Mac: the Dock right-click menu now has Thumbs Up and Thumbs Down for the playing track, with a checkmark for the current rating (disabled when nothing is loaded).
+
 ## 0.41.2 — 2026-11-11
 
 - Mac: restoring a backup now refuses an archive with an oversized entry (over 50 MB, or 500 MB in total) instead of freezing the app, and only reads `backup.json` and the cover images from it.

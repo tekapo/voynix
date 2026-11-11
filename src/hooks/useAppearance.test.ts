@@ -56,6 +56,7 @@ describe("language", () => {
     const dock = lastCall("set_dock_labels");
     expect(dock.labels).toEqual([
       i18n.t("dock.playPause"), i18n.t("dock.next"), i18n.t("dock.previous"),
+      i18n.t("dock.like"), i18n.t("dock.dislike"),
     ]);
     const menu = lastCall("set_app_menu");
     expect(menu.labels.quit).toBe(i18n.t("appMenu.quit", { name: "Voynix" }));

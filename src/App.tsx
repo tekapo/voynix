@@ -94,6 +94,9 @@ const MAX_AUTO_SKIPS = 5;
 /** Flat library lists (no hero) whose header shows a song count and total time. */
 const FLAT_COUNT_VIEWS: ReadonlySet<ViewMode> = new Set<ViewMode>(['all_songs', 'favorites', 'most_played', 'recently_added', 'recently_played']);
 
+/** Payload of the `dock-action` event (see src-tauri/src/dock.rs). */
+type DockAction = "toggle" | "next" | "previous" | "like" | "dislike";
+
 function App() {
   const { t } = useTranslation();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -826,14 +829,6 @@ function App() {
     setIsPlaying(!isPlaying);
   };
 
-  // macOS Dock right-click menu (see src-tauri/src/dock.rs). The ref keeps the
-  // single long-lived listener pointed at the latest closures.
-  const dockActionsRef = useRef({ toggle: () => {}, next: () => {}, previous: () => {} });
-  dockActionsRef.current = {
-    toggle: togglePlay,
-    next: () => playAdjacent(1),
-    previous: () => playAdjacent(-1),
-  };
   // Voynix menu > About opens Settings on the About tab.
   useTauriEvent<null>("menu-about", () => {
     setSettingsInitialTab("about");
@@ -843,9 +838,6 @@ function App() {
   useTauriEvent<"manual" | "welcome" | "report">("menu-help", (item) => {
     if (item === "welcome") setIsWelcomeOpen(true);
     else openUrl(i18n.t(item === "manual" ? 'settings.websiteUrl' : 'appMenu.issuesUrl')).catch(e => console.warn("openUrl failed", e));
-  });
-  useTauriEvent<"toggle" | "next" | "previous">("dock-action", (action) => {
-    dockActionsRef.current[action]?.();
   });
 
   usePlayerBarHeight(currentTrack);
@@ -1004,6 +996,30 @@ function App() {
     playlists, refreshPlaylists, setError, patchCurrentTrackIfId, setCurrentTrack,
     bumpSnapshot, closeTrackMenu, closePlaylistMenu, closeLibraryMenu,
   });
+
+  // macOS Dock right-click menu (see src-tauri/src/dock.rs). The ref keeps the
+  // single long-lived listener pointed at the latest closures; thumbs up/down
+  // act on the playing track.
+  const dockActionsRef = useRef<Record<DockAction, () => void>>({
+    toggle: () => {}, next: () => {}, previous: () => {}, like: () => {}, dislike: () => {},
+  });
+  dockActionsRef.current = {
+    toggle: togglePlay,
+    next: () => playAdjacent(1),
+    previous: () => playAdjacent(-1),
+    like: () => { if (currentTrack) handleToggleFavorite(currentTrack); },
+    dislike: () => { if (currentTrack) handleToggleDislike(currentTrack); },
+  };
+  useTauriEvent<DockAction>("dock-action", (action) => {
+    dockActionsRef.current[action]?.();
+  });
+  const dockHasTrack = !!currentTrack;
+  const dockLiked = !!currentTrack?.favorite;
+  const dockDisliked = !!currentTrack?.disliked;
+  useEffect(() => {
+    invoke("set_dock_rating", { hasTrack: dockHasTrack, liked: dockLiked, disliked: dockDisliked })
+      .catch(() => { /* non-macOS / dev-server: no Dock to update */ });
+  }, [dockHasTrack, dockLiked, dockDisliked]);
 
   const handleTogglePathColumn = (next: boolean) => {
     setShowPathColumn(next);
