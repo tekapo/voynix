@@ -1,9 +1,9 @@
 import { getVersion } from "@tauri-apps/api/app";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { readFile, writeFile } from "@tauri-apps/plugin-fs";
-import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from "fflate";
+import { strFromU8, strToU8, zipSync, type Zippable } from "fflate";
 import i18n from "../i18n";
-import { BackupParseError, parseBackup } from "../backup";
+import { BackupParseError, parseBackup, unzipBackup } from "../backup";
 import {
   buildBackup,
   buildCoverImages,
@@ -95,12 +95,7 @@ export function useBackup({
       let text: string;
       let images = new Map<string, Uint8Array>();
       if (selected.toLowerCase().endsWith(".zip")) {
-        let files: Record<string, Uint8Array>;
-        try {
-          files = unzipSync(await readFile(selected));
-        } catch {
-          throw new BackupParseError("backup.errors.invalidArchive", "Not a valid ZIP");
-        }
+        const files = unzipBackup(await readFile(selected));
         if (!files["backup.json"]) throw new BackupParseError("backup.errors.invalidArchive", "backup.json missing");
         text = strFromU8(files["backup.json"]);
         images = new Map(Object.entries(files));

@@ -550,7 +550,8 @@
       "invalidJson": "このファイルは有効なJSONではありません。",
       "invalidFormat": "このファイルはVoynixのバックアップではありません。",
       "unsupportedVersion": "このバックアップは新しいバージョンのVoynixで作成されたため、インポートできません。",
-      "invalidArchive": "このファイルは有効なVoynixバックアップアーカイブではありません。"
+      "invalidArchive": "このファイルは有効なVoynixバックアップアーカイブではありません。",
+      "tooLarge": "このバックアップアーカイブは大きすぎるためインポートできません。"
     }
   },
   "remote": {

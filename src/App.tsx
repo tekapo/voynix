@@ -451,7 +451,7 @@ function App() {
         if (updatedPlaylists.length === 0 && (await getScanFolders()).length === 0
             && (await getSetting("welcome_seen")) !== "1") {
           setIsWelcomeOpen(true);
-          setSetting("welcome_seen", "1").catch(() => {});
+          setSetting("welcome_seen", "1").catch(e => console.warn("welcome_seen save failed", e));
         }
 
         // Restore the last-played view + track (position is re-armed by the
@@ -842,7 +842,7 @@ function App() {
   // Help menu: manual / welcome guide / issue reporter.
   useTauriEvent<"manual" | "welcome" | "report">("menu-help", (item) => {
     if (item === "welcome") setIsWelcomeOpen(true);
-    else openUrl(i18n.t(item === "manual" ? 'settings.websiteUrl' : 'appMenu.issuesUrl')).catch(() => {});
+    else openUrl(i18n.t(item === "manual" ? 'settings.websiteUrl' : 'appMenu.issuesUrl')).catch(e => console.warn("openUrl failed", e));
   });
   useTauriEvent<"toggle" | "next" | "previous">("dock-action", (action) => {
     dockActionsRef.current[action]?.();

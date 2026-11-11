@@ -10,6 +10,11 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.41.2 — 2026-11-11
+
+- Mac: restoring a backup now refuses an archive with an oversized entry (over 50 MB, or 500 MB in total) instead of freezing the app, and only reads `backup.json` and the cover images from it.
+- Mac: failures of the player's stop / pause / seek / volume / next-track commands are now logged to the console instead of being silently dropped.
+
 ## 0.41.1 — 2026-11-11
 
 - Mac: harden the online cover and lyrics lookups: responses are size-capped, redirects only go to the lookup services and their image CDNs, and iTunes covers must decode as images before they are cached or synced.
