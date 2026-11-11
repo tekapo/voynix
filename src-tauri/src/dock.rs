@@ -10,7 +10,6 @@
 //! hardcoded here — `dock_menu` reads whatever LABELS currently holds each
 //! time the menu is (re)built, so a language change takes effect on the next
 //! right-click with no restart needed.
-use std::ffi::CStr;
 use std::sync::{Mutex, OnceLock};
 
 use objc2::ffi;
@@ -85,6 +84,49 @@ extern "C" fn dock_action(_this: &AnyObject, _sel: Sel, sender: &NSMenuItem) {
     }
 }
 
+/// Call after the app is built (tao registers its delegate class then) and
+/// before `run`.
+pub fn install(app: &AppHandle) {
+    let _ = APP.set(app.clone());
+    let Some(cls) = AnyClass::get(c"TaoAppDelegateParent")
+    else {
+        eprintln!("dock menu: TaoAppDelegateParent not found");
+        return;
+    };
+    let cls = cls as *const AnyClass as *mut AnyClass;
+    unsafe {
+        type MenuFn = extern "C" fn(&AnyObject, Sel, &AnyObject) -> *mut NSMenu;
+        type ActionFn = extern "C" fn(&AnyObject, Sel, &NSMenuItem);
+        let menu_imp: MenuFn = dock_menu;
+        let action_imp: ActionFn = dock_action;
+        // Type encodings: "@@:@" = returns object, (self, _cmd, id); "v@:@" = void.
+        // `class_addMethod` returns NO (false) if the class already has a
+        // method for that selector, or the selector name is malformed — not
+        // expected here, but worth surfacing rather than silently leaving the
+        // Dock menu absent with no clue why.
+        if !ffi::class_addMethod(
+            cls,
+            sel!(applicationDockMenu:),
+            std::mem::transmute::<MenuFn, Imp>(menu_imp),
+            c"@@:@".as_ptr(),
+        )
+        .as_bool()
+        {
+            eprintln!("dock menu: class_addMethod(applicationDockMenu:) failed");
+        }
+        if !ffi::class_addMethod(
+            cls,
+            sel!(voynixDockAction:),
+            std::mem::transmute::<ActionFn, Imp>(action_imp),
+            c"v@:@".as_ptr(),
+        )
+        .as_bool()
+        {
+            eprintln!("dock menu: class_addMethod(voynixDockAction:) failed");
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -105,46 +147,5 @@ mod tests {
         // Restore English so this doesn't leak into another test in the same run.
         set_dock_labels(default_labels());
         assert_eq!(current_labels(), default_labels());
-    }
-}
-
-/// Call after the app is built (tao registers its delegate class then) and
-/// before `run`.
-pub fn install(app: &AppHandle) {
-    let _ = APP.set(app.clone());
-    let Some(cls) = AnyClass::get(CStr::from_bytes_with_nul(b"TaoAppDelegateParent\0").unwrap())
-    else {
-        eprintln!("dock menu: TaoAppDelegateParent not found");
-        return;
-    };
-    let cls = cls as *const AnyClass as *mut AnyClass;
-    unsafe {
-        let menu_imp: extern "C" fn(&AnyObject, Sel, &AnyObject) -> *mut NSMenu = dock_menu;
-        let action_imp: extern "C" fn(&AnyObject, Sel, &NSMenuItem) = dock_action;
-        // Type encodings: "@@:@" = returns object, (self, _cmd, id); "v@:@" = void.
-        // `class_addMethod` returns NO (false) if the class already has a
-        // method for that selector, or the selector name is malformed — not
-        // expected here, but worth surfacing rather than silently leaving the
-        // Dock menu absent with no clue why.
-        if !ffi::class_addMethod(
-            cls,
-            sel!(applicationDockMenu:),
-            std::mem::transmute::<_, Imp>(menu_imp),
-            c"@@:@".as_ptr(),
-        )
-        .as_bool()
-        {
-            eprintln!("dock menu: class_addMethod(applicationDockMenu:) failed");
-        }
-        if !ffi::class_addMethod(
-            cls,
-            sel!(voynixDockAction:),
-            std::mem::transmute::<_, Imp>(action_imp),
-            c"v@:@".as_ptr(),
-        )
-        .as_bool()
-        {
-            eprintln!("dock menu: class_addMethod(voynixDockAction:) failed");
-        }
     }
 }

@@ -14,6 +14,12 @@ use tauri::{Emitter, Manager};
 
 const MISS_TTL: Duration = Duration::from_secs(60 * 60 * 24 * 14); // 2 weeks
 const HTTP_TIMEOUT: Duration = Duration::from_secs(15);
+/// Upper bounds on what we read from the online sources, so a misbehaving (or
+/// tampered-with) response can't make us buffer an unbounded body.
+const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
+const MAX_JSON_BYTES: usize = 2 * 1024 * 1024;
+const MAX_LYRICS_CHARS: usize = 100_000;
+const MAX_REDIRECTS: usize = 5;
 
 // ---- pure helpers (unit-tested) ------------------------------------------------
 
@@ -45,7 +51,7 @@ fn upscale_itunes_art_url(url: &str, size: u32) -> String {
 /// Prefer plain lyrics, fall back to synced (LRC) — the modal renders line by
 /// line either way, and LRC timestamps are harmless as leading text.
 fn pick_lyrics(v: &serde_json::Value) -> Option<String> {
-    let non_empty = |s: &str| !s.trim().is_empty();
+    let non_empty = |s: &str| !s.trim().is_empty() && s.chars().count() <= MAX_LYRICS_CHARS;
     v["plainLyrics"]
         .as_str()
         .filter(|s| non_empty(s))
@@ -68,9 +74,55 @@ static HTTP_CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
     reqwest::Client::builder()
         .user_agent(concat!("Voynix/", env!("CARGO_PKG_VERSION"), " (music player)"))
         .timeout(HTTP_TIMEOUT)
+        .redirect(reqwest::redirect::Policy::custom(|attempt| {
+            if attempt.previous().len() >= MAX_REDIRECTS || !is_allowed_api_host(attempt.url()) {
+                attempt.stop()
+            } else {
+                attempt.follow()
+            }
+        }))
         .build()
         .expect("static reqwest::Client config is valid")
 });
+
+/// Hosts the online lookups may talk to, including after a redirect: the APIs
+/// themselves plus the artwork CDNs. Anything else (or plain http) is refused.
+fn is_allowed_api_host(url: &reqwest::Url) -> bool {
+    url.scheme() == "https"
+        && url
+            .host_str()
+            .map(|h| {
+                matches!(h, "itunes.apple.com" | "api.deezer.com" | "lrclib.net")
+                    || h.ends_with(".dzcdn.net")
+                    || h.ends_with(".mzstatic.com")
+            })
+            .unwrap_or(false)
+}
+
+fn exceeds_cap(len: u64, max: usize) -> bool {
+    len > max as u64
+}
+
+/// Read a response body, refusing anything over `max` bytes (by the declared
+/// length up front, and again while streaming in case it was absent or wrong).
+async fn read_capped(mut resp: reqwest::Response, max: usize) -> Result<Vec<u8>, String> {
+    if resp.content_length().is_some_and(|n| exceeds_cap(n, max)) {
+        return Err(format!("response larger than {max} bytes"));
+    }
+    let mut buf = Vec::new();
+    while let Some(chunk) = resp.chunk().await.map_err(|e| e.to_string())? {
+        if exceeds_cap((buf.len() + chunk.len()) as u64, max) {
+            return Err(format!("response larger than {max} bytes"));
+        }
+        buf.extend_from_slice(&chunk);
+    }
+    Ok(buf)
+}
+
+async fn read_json(resp: reqwest::Response) -> Result<serde_json::Value, String> {
+    let bytes = read_capped(resp, MAX_JSON_BYTES).await?;
+    serde_json::from_slice(&bytes).map_err(|e| e.to_string())
+}
 
 fn http_client() -> Result<reqwest::Client, String> {
     Ok(HTTP_CLIENT.clone())
@@ -114,20 +166,25 @@ async fn itunes_lookup_art(artist: &str, album: &str) -> Result<Option<Vec<u8>>,
     if !resp.status().is_success() {
         return Err(format!("iTunes search HTTP {}", resp.status()));
     }
-    let body: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+    let body = read_json(resp).await?;
     let Some(art100) = body["results"][0]["artworkUrl100"].as_str() else {
         return Ok(None);
     };
     let big = upscale_itunes_art_url(art100, 600);
+    if !is_allowed_image_url(&big) {
+        return Ok(None);
+    }
     let img = client.get(&big).send().await.map_err(|e| e.to_string())?;
     if !img.status().is_success() {
         return Ok(None);
     }
-    let bytes = img.bytes().await.map_err(|e| e.to_string())?;
+    let bytes = read_capped(img, MAX_IMAGE_BYTES).await?;
     if bytes.is_empty() {
         return Ok(None);
     }
-    Ok(Some(bytes.to_vec()))
+    // Only a decodable image gets cached (and synced to the phone); it is
+    // re-encoded as a plain JPEG, like embedded covers are.
+    Ok(downscale_jpeg(&bytes, 600).ok())
 }
 
 /// Album art for a track with no embedded cover. Returns a `data:` URI, or
@@ -288,7 +345,7 @@ async fn deezer_search_artist(artist: &str) -> Result<Vec<ArtistImageCandidate>,
     if !resp.status().is_success() {
         return Err(format!("Deezer search HTTP {}", resp.status()));
     }
-    let body: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+    let body = read_json(resp).await?;
     let empty = Vec::new();
     let hits = body["data"].as_array().unwrap_or(&empty);
     Ok(hits
@@ -331,7 +388,7 @@ pub async fn fetch_image_as_data_uri(url: String) -> Result<String, String> {
     if !resp.status().is_success() {
         return Err(format!("image fetch HTTP {}", resp.status()));
     }
-    let bytes = resp.bytes().await.map_err(|e| e.to_string())?;
+    let bytes = read_capped(resp, MAX_IMAGE_BYTES).await?;
     let resized = downscale_jpeg(&bytes, 1000)?;
     Ok(bytes_to_data_uri("image/jpeg", &resized))
 }
@@ -415,7 +472,7 @@ async fn search_json(url: &str, query: &[(&str, &str)]) -> Result<serde_json::Va
     if !resp.status().is_success() {
         return Err(format!("{url} HTTP {}", resp.status()));
     }
-    resp.json().await.map_err(|e| e.to_string())
+    read_json(resp).await
 }
 
 /// Search iTunes and Deezer for album covers matching `query`, for the "Find
@@ -746,7 +803,7 @@ async fn lrclib_lookup(
         .map_err(|e| e.to_string())?;
 
     if resp.status().is_success() {
-        let obj: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+        let obj = read_json(resp).await?;
         if let Some(text) = pick_lyrics(&obj) {
             return Ok(Some(text));
         }
@@ -764,7 +821,7 @@ async fn lrclib_lookup(
     if !resp.status().is_success() {
         return Ok(None);
     }
-    let arr: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+    let arr = read_json(resp).await?;
     Ok(arr.as_array().and_then(|xs| xs.iter().find_map(pick_lyrics)))
 }
 
@@ -845,6 +902,28 @@ mod tests {
         assert!(!is_allowed_image_url("https://evil.com/dzcdn.net"));
         assert!(!is_allowed_image_url("https://dzcdn.net.evil.com/a.jpg"));
         assert!(!is_allowed_image_url("not a url"));
+    }
+
+    #[test]
+    fn api_host_allowlist_covers_apis_and_cdns_over_https_only() {
+        let ok = |u: &str| is_allowed_api_host(&reqwest::Url::parse(u).unwrap());
+        assert!(ok("https://itunes.apple.com/search"));
+        assert!(ok("https://api.deezer.com/search/artist"));
+        assert!(ok("https://lrclib.net/api/get"));
+        assert!(ok("https://is1-ssl.mzstatic.com/a.jpg"));
+        assert!(ok("https://cdn-images.dzcdn.net/a.jpg"));
+        assert!(!ok("http://itunes.apple.com/search"));
+        assert!(!ok("https://evil.example/itunes.apple.com"));
+        assert!(!ok("https://itunes.apple.com.evil.example/search"));
+        assert!(!ok("https://mzstatic.com.evil.example/a.jpg"));
+        assert!(!ok("https://127.0.0.1/a.jpg"));
+    }
+
+    #[test]
+    fn size_cap_is_inclusive_of_the_limit() {
+        assert!(!exceeds_cap(MAX_JSON_BYTES as u64, MAX_JSON_BYTES));
+        assert!(exceeds_cap(MAX_JSON_BYTES as u64 + 1, MAX_JSON_BYTES));
+        assert!(!exceeds_cap(0, MAX_IMAGE_BYTES));
     }
 
     #[test]
@@ -996,5 +1075,19 @@ mod tests {
 
         let empty = serde_json::json!({ "plainLyrics": "  ", "syncedLyrics": null });
         assert_eq!(pick_lyrics(&empty), None);
+    }
+
+    #[test]
+    fn pick_lyrics_skips_oversized_text() {
+        let huge = "a".repeat(MAX_LYRICS_CHARS + 1);
+        let falls_back = serde_json::json!({ "plainLyrics": huge, "syncedLyrics": "[00:01] la" });
+        assert_eq!(pick_lyrics(&falls_back).as_deref(), Some("[00:01] la"));
+
+        let both = serde_json::json!({ "plainLyrics": huge, "syncedLyrics": huge });
+        assert_eq!(pick_lyrics(&both), None);
+
+        let at_limit = "a".repeat(MAX_LYRICS_CHARS);
+        let ok = serde_json::json!({ "plainLyrics": at_limit });
+        assert_eq!(pick_lyrics(&ok).map(|t| t.len()), Some(MAX_LYRICS_CHARS));
     }
 }
