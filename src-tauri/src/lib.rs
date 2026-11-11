@@ -237,6 +237,11 @@ fn relaunch_app(app: tauri::AppHandle) -> Result<bool, String> {
 #[tauri::command]
 #[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
 fn show_in_finder(path: String) -> Result<(), String> {
+    // Track paths are absolute; refuse anything else so a stray `-` prefix can
+    // never be read by `open` as an option.
+    if !Path::new(&path).is_absolute() {
+        return Err("path must be absolute".to_string());
+    }
     #[cfg(target_os = "macos")]
     {
         let output = std::process::Command::new("open")
@@ -391,6 +396,13 @@ mod tests {
         assert_eq!(app_bundle_path(Path::new("/Applications/Voynix.app/Contents/Resources/x")), None);
         assert_eq!(app_bundle_path(Path::new("/opt/tools/Contents/MacOS/voynix")), None);
         assert_eq!(app_bundle_path(Path::new("voynix")), None);
+    }
+
+    #[test]
+    fn test_show_in_finder_rejects_relative_and_option_like_paths() {
+        assert!(show_in_finder("song.mp3".to_string()).is_err());
+        assert!(show_in_finder("-a/Calculator".to_string()).is_err());
+        assert!(show_in_finder("../x.mp3".to_string()).is_err());
     }
 
     #[test]
