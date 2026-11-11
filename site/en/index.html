@@ -54,7 +54,7 @@
 </ul>
 <p><strong>Requirements:</strong> macOS (the DMG is Apple Silicon only) and Android 8.0 (API 26) or later. Android Auto is optional. Sync needs both devices on the same Wi-Fi network.</p>
 
-<figure><img src="../img/en-library-dark.png" alt="The library on Mac: all songs with artist, album and duration" loading="lazy"><figcaption>The library on Mac: all songs with artist, album and duration</figcaption></figure>
+<figure><img src="../img/en-library-dark.png" alt="The library on Mac: all songs with artist, album and duration, and the song count and total time next to the title" loading="lazy"><figcaption>The library on Mac: all songs with artist, album and duration, and the song count and total time next to the title</figcaption></figure>
 
 <h2 id="install">Installation</h2>
 <h3>Mac</h3>
@@ -63,16 +63,20 @@
 <div class="note"><strong>Important:</strong> the app is not signed or notarized by Apple. macOS blocks it on first launch. Press "Done" (not "Move to Trash"), then open System Settings → Privacy &amp; Security and click <strong>"Open Anyway"</strong> next to the Voynix message. You can also run <code>xattr -cr /Applications/Voynix.app</code> in Terminal and open the app again. This is needed only once.</div>
 <h3>Android</h3>
 <p><strong>Testers wanted:</strong> Voynix is in a closed test on Google Play. If you have an Android phone and a Mac and can stay enrolled for 14 days, <a href="https://forms.gle/xiyXpZgHMHdR313h8">sign up here</a>.</p>
-<div class="note"><strong>Before installing:</strong> if Android's <strong>Advanced Protection</strong> is on, installing the APK (including through Obtainium) is blocked with "restricted by Advanced Protection". Turn it off in Settings → Security &amp; privacy first. You also need to allow "Install unknown apps" for the app you install from. <strong>Updates are blocked too:</strong> with Advanced Protection on, Android refuses to let Obtainium install apps, so turn it off for each update (you can turn it back on afterwards). <strong>None of this applies if you install from Google Play as a closed-test tester:</strong> Advanced Protection can stay on, and Play updates the app for you.</div>
+<h4>Install from Google Play (closed-test testers)</h4>
+<p>Once you are in the closed test, you can install Voynix from Google Play. <strong>Advanced Protection can stay on, and Play updates the app for you.</strong> Testers receive a Google Play opt-in link. On first launch, Android 13 and later ask for the notification permission.</p>
+<h4>Install the APK (if you are not in the closed test)</h4>
+<div class="note"><strong>Before installing:</strong> if Android's <strong>Advanced Protection</strong> is on, installing the APK (including through Obtainium) is blocked with "restricted by Advanced Protection". Turn it off in Settings → Security &amp; privacy first. You also need to allow "Install unknown apps" for the app you install from. <strong>Updates are blocked too:</strong> with Advanced Protection on, Android refuses to let Obtainium install apps, so turn it off for each update (you can turn it back on afterwards).</div>
 <p>Download <code>voynix-&lt;version&gt;.apk</code> from <a href="https://github.com/tekapo/voynix/releases">Releases</a> and open it on the device. The first time, Android asks you to allow installing apps from your browser or file manager ("Install unknown apps").</p>
 <p>To get updates automatically, use <a href="https://obtainium.imranr.dev/">Obtainium</a>: choose "Add App", enter <code>https://github.com/tekapo/voynix</code>, and install. Obtainium picks the <code>.apk</code> from each Release and notifies you of new versions.</p>
-<p>The APK from Releases is installed outside Google Play; closed-test testers get the app from Google Play instead. On first launch, Android 13 and later ask for the notification permission.</p>
+<p>The APK from Releases is installed outside Google Play. On first launch, Android 13 and later ask for the notification permission.</p>
 
 <h2 id="start">Getting started</h2>
 <h3>Adding music (Mac)</h3>
 <p>In the sidebar, choose <strong>＋ New → Add Music Folder…</strong> and pick a folder; scanning starts right away. In <strong>Settings → Music Folders</strong> you can rescan (Rescan All) and import an iTunes library (Import iTunes Library…).</p>
 <h3>Library, playlists and podcasts</h3>
-<p>Browse by artist, album or playlist. Each one opens with a header showing its cover, song count and total time, and Play and Shuffle buttons. Create playlists from the sidebar; smart playlists are created and edited on the Mac only and reach Android as regular playlists. On the Mac, open a regular playlist, right-click a track and choose <strong>Remove from Playlist</strong> to take it out of that playlist (multi-select works too; it stays in your library).</p>
+<p>Browse by artist, album or playlist. Each one opens with a header showing its cover, song count and total time, and Play and Shuffle buttons. Create playlists from the sidebar. An empty regular playlist shows an <strong>Add Songs</strong> button in its header: search the library, tick the songs you want and add them (smart playlists collect their songs by their rules, so they don't have it). Smart playlists are created and edited on the Mac only and reach Android as regular playlists. On the Mac, open a regular playlist, right-click a track and choose <strong>Remove from Playlist</strong> to take it out of that playlist (multi-select works too; it stays in your library).</p>
+<figure><img src="../img/en-hero-dark.png" alt="A playlist on Mac, opening with its cover, song count, total time and Play and Shuffle buttons" loading="lazy"><figcaption>A playlist on Mac, opening with its cover, song count, total time and Play and Shuffle buttons</figcaption></figure>
 <h3>Podcasts</h3>
 <p>To treat tracks as podcasts, right-click a playlist or music folder in the sidebar and choose <strong>Kind → Podcast</strong> (other choices: Music, Other). Podcasts offer speed control (0.8–2.0x) and ±10-second skip. With the "Don't shuffle Podcast playlists" setting on the Mac (and "Don't shuffle podcasts" on Android), podcast playlists play in order instead of being shuffled.</p>
 <figure><img src="../img/en-albums-dark.png" alt="Browsing albums on Mac" loading="lazy"><figcaption>Browsing albums on Mac</figcaption></figure>
@@ -85,7 +89,7 @@
 <h2 id="sync">Wi-Fi sync between Mac and Android</h2>
 <div class="note">Both devices must be on the same Wi-Fi network.</div>
 <h3>What gets synced</h3>
-<p>Only what you mark for sync is sent. In the Mac sidebar, <strong>right-click a playlist (or a Library item: All Songs, Favorites, Most Played, Recently Added or Recently Played) and choose "Sync to Device"</strong>; a sync mark appears next to it. Playlists are created on Android as they are on the Mac, and the tracks they contain are copied. If nothing is marked, Android receives no songs. Play history and ratings (thumbs up/down) sync both ways.</p>
+<p>Only what you mark for sync is sent. In the Mac sidebar, <strong>right-click a playlist (or a Library item: All Songs, Favorites, Most Played, Recently Added or Recently Played) and choose "Sync to Device"</strong>; a sync mark appears next to it. Playlists are created on Android as they are on the Mac, and the tracks they contain are copied. If nothing is marked, Android receives no songs. Play history and ratings (thumbs up/down) sync both ways. On Android, the <strong>Sync song files</strong> switch on the sync screen (on by default) controls the song files: turn it off to sync only playlists, play history, ratings and podcast positions, with no song file downloaded or deleted.</p>
 <h3>Pairing</h3>
 <ol>
   <li>On the Mac, click the sync button at the bottom left of the sidebar. The sync server starts automatically when Voynix launches (you can turn this off in <strong>Settings → Sync → "Start sync server automatically"</strong>; then start it from this window). A QR code, the server URL, the pairing code and a security code are shown.</li>
@@ -104,8 +108,8 @@
 <h2 id="android">Using the Android app</h2>
 <p>The Android app is a client that mirrors the Mac library. The home screen lists <strong>Library</strong> (Songs, Artists, Albums, Favorites, Most Played, Recently Added, Recently Played) and your synced <strong>Playlists</strong>; the top bar has search, a sync button and Settings.</p>
 <ul>
-  <li><strong>Settings → Wi-Fi Sync</strong>: pair or unpair, see the connection status, run <strong>Sync now</strong>, and set <strong>Auto-sync</strong> (about every 6 hours on the Mac's Wi-Fi) and <strong>Only while charging</strong>.</li>
-  <li><strong>Settings → Language</strong>: System, English or 日本語. Also here: "Hide thumbs-down songs from auto lists", "Don't shuffle podcasts", "Clear album art cache" (re-fetched on the next sync), the device ID and the version.</li>
+  <li><strong>Settings → Wi-Fi Sync</strong>: pair or unpair, see the connection status, run <strong>Sync now</strong>, and set <strong>Auto-sync</strong> (about every 6 hours on the Mac's Wi-Fi), <strong>Only while charging</strong> and <strong>Sync song files</strong>.</li>
+  <li><strong>Settings → Language</strong>: System, English or 日本語. Also here: "Hide thumbs-down songs from auto lists", "Don't shuffle podcasts", "Clear album art cache" (re-fetched on the next sync), "Show welcome guide", the device ID and the version.</li>
   <li><strong>User manual</strong> and <strong>Open source licenses</strong> are at the bottom of Settings.</li>
 </ul>
 
@@ -130,7 +134,7 @@
   <tr><td>Escape</td><td>Clear focus; close a dialog</td></tr>
   <tr><td>⌘S</td><td>Save, in dialogs that edit track, album or smart-playlist details</td></tr>
 </table>
-<p>The Dock right-click menu is also supported.</p>
+<p>The Dock right-click menu is also supported. The Mac media keys (play/pause, next, previous) work too, and the playing track and its cover appear in the macOS Now Playing display in Control Center.</p>
 
 <h2 id="backup">Backup and restore</h2>
 <p>On the Mac, <strong>Settings → Library → Export Backup…</strong> saves your playlists (regular and smart), registered music folders, settings, artist images and album covers to a single ZIP file, and <strong>Import Backup…</strong> merges one into the library. Importing never overwrites an existing playlist or folder; it only adds what is missing. Your music files are not included; keep them in your own backups.</p>
@@ -147,7 +151,7 @@
 <h3>My Mac's IP address changed and Android says it can't reach the Mac.</h3>
 <p>Automatic recovery can fail on some networks. Open the Wi-Fi sync window on the Mac and pair again by scanning the QR code.</p>
 <h3>How do I update the app?</h3>
-<p>Mac: the app checks for updates at launch (Settings → General turns this off, and the same screen has a manual check) and asks before it downloads, installs and restarts. You can also download the new <code>.dmg</code> and replace the app in Applications, or run <code>brew update &amp;&amp; brew upgrade --cask voynix</code> if you installed with Homebrew. Android: Obtainium updates it for you (turn off Advanced Protection first; see Installation); otherwise install the new <code>.apk</code> over the old one. Your data is kept. If you installed from Google Play as a closed-test tester, Play updates the app.</p>
+<p>Mac: the app checks for updates at launch and every 6 hours while it is open (Settings → General turns this off, and the same screen has a manual check). A check made in the background shows a notice at the bottom left of the sidebar instead of a dialog, and the app asks before it downloads, installs and restarts. You can also download the new <code>.dmg</code> and replace the app in Applications, or run <code>brew update &amp;&amp; brew upgrade --cask voynix</code> if you installed with Homebrew. Android: Obtainium updates it for you (turn off Advanced Protection first; see Installation); otherwise install the new <code>.apk</code> over the old one. Your data is kept. If you installed from Google Play as a closed-test tester, Play updates the app.</p>
 <h3>How do I uninstall the app?</h3>
 <p>Mac: drag Voynix from Applications to the Trash (or run <code>brew uninstall --cask voynix</code> if you installed with Homebrew; add <code>--zap</code> to remove the data as well). The data folder stays behind; delete <code>~/Library/Application Support/com.tekapo.voynix</code> if you no longer need it. Your music files are never removed. Android: uninstall as usual; the data on the device is deleted with it.</p>
 <h3>Where is my data stored?</h3>
@@ -173,6 +177,7 @@
   <li><a href="privacy.html">Privacy policy</a></li>
   <li><a href="https://github.com/tekapo/voynix/blob/main/docs/CHANGELOG.md">Changelog</a></li>
   <li><a href="https://github.com/tekapo/voynix/blob/main/docs/THIRD_PARTY_NOTICES.md">Third-party notices</a></li>
+  <li><a href="https://github.com/tekapo/voynix/blob/main/docs/echo-lan.md">Echo playback over your LAN</a> (optional, advanced)</li>
   <li>Developer docs: <a href="https://github.com/tekapo/voynix/blob/main/docs/DEVELOPMENT.md">DEVELOPMENT.md</a> (Mac), <a href="https://github.com/tekapo/voynix/blob/main/android-native/README.md">android-native/README.md</a> (Android)</li>
 </ul>
 </main>
