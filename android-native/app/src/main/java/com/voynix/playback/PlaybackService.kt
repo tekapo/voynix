@@ -57,6 +57,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -125,7 +127,10 @@ class PlaybackService : MediaLibraryService() {
             markCarPaused()
         }
         lastCarConnectionType = type
+        carProjecting.value = type == CarConnection.CONNECTION_TYPE_PROJECTION
     }
+    // True while Android Auto is projecting; drives the "Artist · Source" line.
+    private val carProjecting = MutableStateFlow(false)
     private var carConnection: CarConnection? = null
 
     inner class LocalBinder : android.os.Binder() {
@@ -176,7 +181,8 @@ class PlaybackService : MediaLibraryService() {
             PendingIntent.FLAG_IMMUTABLE,
         )
 
-        mediaSession = MediaLibrarySession.Builder(this, QueuePlayer(exoPlayer, playerController, serviceScope), LibrarySessionCallback())
+        val queuePlayer = QueuePlayer(exoPlayer, playerController, serviceScope)
+        mediaSession = MediaLibrarySession.Builder(this, queuePlayer, LibrarySessionCallback())
             .setSessionActivity(sessionActivity)
             .build()
         // Registers the session with this service's own MediaNotificationManager
@@ -222,11 +228,13 @@ class PlaybackService : MediaLibraryService() {
         // bridges it to the legacy queueTitle, which Android Auto shows on the
         // playback screen.
         serviceScope.launch {
-            playerController.uiState
-                .map { it.sourceId }
-                .distinctUntilChanged()
-                .collect { id ->
-                    exoPlayer.playlistMetadata = MediaMetadata.Builder().setTitle(sourceLabelFor(id)).build()
+            combine(playerController.uiState.map { it.sourceId }.distinctUntilChanged(), carProjecting) { id, car -> id to car }
+                .collect { (id, car) ->
+                    val label = sourceLabelFor(id)
+                    exoPlayer.playlistMetadata = MediaMetadata.Builder().setTitle(label).build()
+                    // Auto's playback screen ignores the queue title, so while
+                    // projecting the source goes on the artist line instead.
+                    queuePlayer.sourceSubtitle = if (car) label else null
                 }
         }
 
