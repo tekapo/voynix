@@ -217,4 +217,29 @@ class QueuePlayerTest {
         verify(player).removeListener(removed.capture())
         assertEquals(registeredOnBase, removed.firstValue)
     }
+
+    @Test
+    fun `sourceSubtitle folds the source into the artist and tells listeners`() {
+        whenever(player.mediaMetadata).thenReturn(androidx.media3.common.MediaMetadata.Builder().setArtist("Band").build())
+        val listener: Player.Listener = mock()
+        queuePlayer.addListener(listener)
+
+        queuePlayer.sourceSubtitle = "For Drive"
+
+        assertEquals("Band · For Drive", queuePlayer.mediaMetadata.artist.toString())
+        val captor = argumentCaptor<androidx.media3.common.MediaMetadata>()
+        verify(listener).onMediaMetadataChanged(captor.capture())
+        assertEquals("Band · For Drive", captor.firstValue.artist.toString())
+
+        queuePlayer.sourceSubtitle = null
+        assertEquals("Band", queuePlayer.mediaMetadata.artist.toString())
+    }
+
+    @Test
+    fun `artistWithSource handles missing and duplicate parts`() {
+        assertEquals("A", artistWithSource("A", null))
+        assertEquals("A", artistWithSource("A", "A"))
+        assertEquals("Src", artistWithSource(null, "Src"))
+        assertEquals("A · Src", artistWithSource("A", "Src").toString())
+    }
 }

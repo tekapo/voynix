@@ -200,6 +200,19 @@ fun sourceLabel(sourceId: String?, names: SourceNames, playlistName: (String) ->
     }
 }
 
+/**
+ * Android Auto's playback screen ignores the queue title, so while projecting we
+ * fold the source into the artist line: "Artist · Source". Null/blank [source]
+ * or a source equal to the artist (playing an artist's folder) leaves the artist
+ * as is; a blank artist shows just the source.
+ */
+fun artistWithSource(artist: CharSequence?, source: String?): CharSequence? {
+    if (source.isNullOrBlank()) return artist
+    if (artist.isNullOrBlank()) return source
+    if (artist.toString() == source) return artist
+    return "$artist · $source"
+}
+
 /** A playable leaf's mediaId, tagged with the folder it was browsed from. */
 fun leafMediaId(parentId: String, trackId: String): String = "$parentId|$trackId"
 

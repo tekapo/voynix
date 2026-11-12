@@ -60,6 +60,28 @@ class QueuePlayer(
         }
     }
 
+    /**
+     * The queue's source label, folded into the artist line of [getMediaMetadata]
+     * while set (Android Auto's playback screen doesn't show the queue title).
+     */
+    var sourceSubtitle: String? = null
+        set(value) {
+            if (field == value) return
+            field = value
+            val metadata = mediaMetadata
+            val events = Player.Events(FlagSet.Builder().add(Player.EVENT_MEDIA_METADATA_CHANGED).build())
+            for (listener in listeners) {
+                listener.onMediaMetadataChanged(metadata)
+                listener.onEvents(this, events)
+            }
+        }
+
+    override fun getMediaMetadata(): MediaMetadata {
+        val base = super.getMediaMetadata()
+        val subtitle = sourceSubtitle ?: return base
+        return base.buildUpon().setArtist(artistWithSource(base.artist, subtitle)).build()
+    }
+
     // ExoPlayer announces its own two-item timeline to every listener, while the
     // session then pairs it with the position/index this class reports from the
     // whole queue — an index past ExoPlayer's two windows trips a check in
@@ -69,7 +91,7 @@ class QueuePlayer(
 
     override fun addListener(listener: Player.Listener) {
         listeners.add(listener)
-        val wrapper = wrappers.getOrPut(listener) { TimelineRewritingListener(listener) { currentTimeline } }
+        val wrapper = wrappers.getOrPut(listener) { TimelineRewritingListener(listener, { currentTimeline }, { mediaMetadata }) }
         super.addListener(wrapper)
     }
 
@@ -255,13 +277,15 @@ private class QueueKey(val queue: Any, val order: Any, val pos: Int) {
 internal class TimelineRewritingListener(
     private val delegate: Player.Listener,
     private val timeline: () -> Timeline,
+    /** The metadata to report instead of ExoPlayer's own (null = pass it through). */
+    private val metadata: (() -> MediaMetadata)? = null,
 ) : Player.Listener {
     override fun onTimelineChanged(timeline: Timeline, reason: Int) = delegate.onTimelineChanged(this.timeline(), reason)
 
     override fun onEvents(player: Player, events: Player.Events) = delegate.onEvents(player, events)
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) = delegate.onMediaItemTransition(mediaItem, reason)
     override fun onTracksChanged(tracks: Tracks) = delegate.onTracksChanged(tracks)
-    override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) = delegate.onMediaMetadataChanged(mediaMetadata)
+    override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) = delegate.onMediaMetadataChanged(metadata?.invoke() ?: mediaMetadata)
     override fun onPlaylistMetadataChanged(mediaMetadata: MediaMetadata) = delegate.onPlaylistMetadataChanged(mediaMetadata)
     override fun onIsLoadingChanged(isLoading: Boolean) = delegate.onIsLoadingChanged(isLoading)
     override fun onLoadingChanged(isLoading: Boolean) = delegate.onLoadingChanged(isLoading)
