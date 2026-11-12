@@ -10,6 +10,10 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.42.1 — 2026-11-12
+
+- Mac: the Dock menu's Thumbs Up / Thumbs Down items now show 👍 / 👎 in front of the label.
+
 ## 0.42.0 — 2026-11-11
 
 - Mac: the Dock right-click menu now has Thumbs Up and Thumbs Down for the playing track, with a checkmark for the current rating (disabled when nothing is loaded).

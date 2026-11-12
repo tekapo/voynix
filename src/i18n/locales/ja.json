@@ -364,8 +364,8 @@
     "playPause": "再生/一時停止",
     "next": "次へ",
     "previous": "前へ",
-    "like": "高評価",
-    "dislike": "低評価"
+    "like": "👍 高評価",
+    "dislike": "👎 低評価"
   },
   "modals": {
     "createPlaylist": "プレイリストを作成",

@@ -62,7 +62,7 @@ fn rating_item_state(action: &str, rating: DockRating) -> Option<(bool, bool)> {
 }
 
 fn default_labels() -> [String; 5] {
-    ["Play/Pause", "Next", "Previous", "Thumbs Up", "Thumbs Down"].map(String::from)
+    ["Play/Pause", "Next", "Previous", "👍 Thumbs Up", "👎 Thumbs Down"].map(String::from)
 }
 
 fn current_labels() -> [String; 5] {
@@ -183,7 +183,7 @@ mod tests {
     fn set_dock_labels_updates_what_the_menu_reads_and_falls_back_to_english_untouched() {
         assert_eq!(current_labels(), default_labels());
 
-        let ja = ["再生/一時停止", "次へ", "前へ", "高評価", "低評価"].map(String::from);
+        let ja = ["再生/一時停止", "次へ", "前へ", "👍 高評価", "👎 低評価"].map(String::from);
         set_dock_labels(ja.clone());
         assert_eq!(current_labels(), ja);
 
