@@ -10,6 +10,11 @@ android-native/app/build.gradle.kts in one go.
 **Rule**: when you bump the version, add one entry at the top of this file
 (`## <version> — <YYYY-MM-DD>` followed by 1–3 bullets), written in English, and commit it together with the bump.
 
+## 0.43.0 — 2026-11-14
+
+- Mac: the track's "Get Info…" dialog now has an editable Genre field (with suggestions from your library) that writes the file's tag and the library.
+- Mac: the album's "Get Info…" dialog can set one genre on every track in the album; tracks keep their own genre unless you change the field.
+
 ## 0.42.2 — 2026-11-12
 
 - Android Auto: the playback screen ignored the queue title, so while the phone is projecting, the artist line now reads "Artist · Source" (the playlist, artist, album or library list the queue came from).

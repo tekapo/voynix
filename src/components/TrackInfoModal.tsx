@@ -37,6 +37,7 @@ export interface TrackTagFields {
     title: string;
     artist: string;
     album: string;
+    genre: string;
     disc_no: number | null;
     track_no: number | null;
 }
@@ -46,6 +47,8 @@ interface TrackInfoModalProps {
     onClose: () => void;
     onSave: (track: Track, fields: TrackTagFields) => Promise<void>;
     onShowInFinder: (track: Track) => void;
+    /** Genres already in the library, offered as input suggestions. */
+    genreSuggestions?: string[];
 }
 
 const formatChannels = (n: number | null, t: TFunction): string => {
@@ -89,7 +92,7 @@ type Tab = 'details' | 'file';
  * body (the active tab), and a fixed footer — so Save/Cancel never scroll out
  * of view the way they did in the single-column v1 of this dialog.
  */
-export const TrackInfoModal: React.FC<TrackInfoModalProps> = ({ track, onClose, onSave, onShowInFinder }) => {
+export const TrackInfoModal: React.FC<TrackInfoModalProps> = ({ track, onClose, onSave, onShowInFinder, genreSuggestions = [] }) => {
     const { t } = useTranslation();
     const [info, setInfo] = useState<TrackFileInfo | null>(null);
     const [loading, setLoading] = useState(false);
@@ -102,6 +105,7 @@ export const TrackInfoModal: React.FC<TrackInfoModalProps> = ({ track, onClose, 
     const [title, setTitle] = useState('');
     const [artist, setArtist] = useState('');
     const [album, setAlbum] = useState('');
+    const [genre, setGenre] = useState('');
     const [discNo, setDiscNo] = useState<number | null>(null);
     const [trackNo, setTrackNo] = useState<number | null>(null);
 
@@ -121,6 +125,7 @@ export const TrackInfoModal: React.FC<TrackInfoModalProps> = ({ track, onClose, 
                 setTitle(result.title ?? track.title);
                 setArtist(result.artist ?? track.artist ?? '');
                 setAlbum(result.album ?? track.album ?? '');
+                setGenre(result.genre ?? track.genre ?? '');
                 setDiscNo(result.disc_no ?? track.disc_no ?? null);
                 setTrackNo(result.track_no ?? track.track_no ?? null);
             })
@@ -140,9 +145,10 @@ export const TrackInfoModal: React.FC<TrackInfoModalProps> = ({ track, onClose, 
         title !== (info.title ?? track?.title ?? '') ||
         artist !== (info.artist ?? track?.artist ?? '') ||
         album !== (info.album ?? track?.album ?? '') ||
+        genre !== (info.genre ?? track?.genre ?? '') ||
         discNo !== (info.disc_no ?? track?.disc_no ?? null) ||
         trackNo !== (info.track_no ?? track?.track_no ?? null)
-    ), [info, track, title, artist, album, discNo, trackNo]);
+    ), [info, track, title, artist, album, genre, discNo, trackNo]);
 
     const canEdit = info != null && !info.cloud_only;
 
@@ -151,7 +157,7 @@ export const TrackInfoModal: React.FC<TrackInfoModalProps> = ({ track, onClose, 
         setSaving(true);
         setError(null);
         try {
-            await onSave(track, { title: title.trim(), artist: artist.trim(), album: album.trim(), disc_no: discNo, track_no: trackNo });
+            await onSave(track, { title: title.trim(), artist: artist.trim(), album: album.trim(), genre: genre.trim(), disc_no: discNo, track_no: trackNo });
             onClose();
         } catch (err) {
             console.error('Failed to save track tags:', err);
@@ -239,6 +245,13 @@ export const TrackInfoModal: React.FC<TrackInfoModalProps> = ({ track, onClose, 
                                 <input id="track-info-album" type="text" className="modal-input"
                                     value={album} disabled={!canEdit} onChange={(e) => setAlbum(e.target.value)} />
 
+                                <label htmlFor="track-info-genre">{t('trackInfo.genre')}</label>
+                                <input id="track-info-genre" type="text" className="modal-input" list="track-info-genre-list"
+                                    value={genre} disabled={!canEdit} onChange={(e) => setGenre(e.target.value)} />
+                                <datalist id="track-info-genre-list">
+                                    {genreSuggestions.map(g => <option key={g} value={g} />)}
+                                </datalist>
+
                                 <label htmlFor="track-info-disc">{t('trackInfo.discTrack')}</label>
                                 <div className="track-info-numbers">
                                     <NumberField value={discNo} onChange={setDiscNo} disabled={!canEdit} aria-label={t('trackInfo.discNumber')} />
@@ -291,7 +304,6 @@ export const TrackInfoModal: React.FC<TrackInfoModalProps> = ({ track, onClose, 
                             <section className="track-info-section">
                                 <h4>{t('trackInfo.tags')}</h4>
                                 <dl className="track-info-grid">
-                                    <dt>{t('trackInfo.genre')}</dt><dd>{info.genre ?? t('trackInfo.unknown')}</dd>
                                     <dt>{t('trackInfo.year')}</dt><dd>{info.year ?? t('trackInfo.unknown')}</dd>
                                 </dl>
                             </section>

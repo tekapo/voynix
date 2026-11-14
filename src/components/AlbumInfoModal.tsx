@@ -15,6 +15,8 @@ import i18n from '../i18n';
 export interface AlbumTagFields {
     artist: string;
     album: string;
+    /** Omitted when the user didn't touch the genre field (each track keeps its own). */
+    genre?: string;
 }
 
 interface AlbumInfoModalProps {
@@ -24,10 +26,17 @@ interface AlbumInfoModalProps {
     onClose: () => void;
     /** Rewrites artist/album on every track's file + DB row. `onProgress` is
      *  called after each file so the Save button can show "Saving… n/total". */
+    genreSuggestions?: string[];
     onSave: (tracks: Track[], fields: AlbumTagFields, onProgress: (done: number, total: number) => void) => Promise<void>;
 }
 
 type Tab = 'details' | 'tracks';
+
+/** The genre every track shares, or '' when they differ (or have none). */
+const commonGenre = (tracks: Track[]): string => {
+    const first = tracks[0]?.genre ?? '';
+    return tracks.every(t => (t.genre ?? '') === first) ? first : '';
+};
 
 /**
  * Album-level "Get Info…" — same fixed-header/scrolling-body/fixed-footer
@@ -36,10 +45,11 @@ type Tab = 'details' | 'tracks';
  * per-track and stay out of scope here — use the track's own Get Info for
  * those). See App.tsx's handleSaveAlbumTags for the per-file write loop.
  */
-export const AlbumInfoModal: React.FC<AlbumInfoModalProps> = ({ tracks, onClose, onSave }) => {
+export const AlbumInfoModal: React.FC<AlbumInfoModalProps> = ({ tracks, onClose, onSave, genreSuggestions = [] }) => {
     const { t } = useTranslation();
     const [artist, setArtist] = useState('');
     const [album, setAlbum] = useState('');
+    const [genre, setGenre] = useState('');
     const [tab, setTab] = useState<Tab>('details');
     const [saving, setSaving] = useState(false);
     const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
@@ -54,6 +64,7 @@ export const AlbumInfoModal: React.FC<AlbumInfoModalProps> = ({ tracks, onClose,
         if (tracks.length === 0) return;
         setArtist(tracks[0].artist ?? '');
         setAlbum(tracks[0].album ?? '');
+        setGenre(commonGenre(tracks));
         setTab('details');
         setError(null);
         setConfirmDiscard(false);
@@ -67,7 +78,8 @@ export const AlbumInfoModal: React.FC<AlbumInfoModalProps> = ({ tracks, onClose,
 
     const dirty = tracks.length > 0 && (
         artist !== (tracks[0].artist ?? '') ||
-        album !== (tracks[0].album ?? '')
+        album !== (tracks[0].album ?? '') ||
+        genre !== commonGenre(tracks)
     );
 
     const stats = useMemo(() => {
@@ -85,7 +97,11 @@ export const AlbumInfoModal: React.FC<AlbumInfoModalProps> = ({ tracks, onClose,
         setError(null);
         setProgress({ done: 0, total: tracks.length });
         try {
-            await onSave(tracks, { artist: artist.trim(), album: album.trim() }, (done, total) => setProgress({ done, total }));
+            await onSave(tracks, {
+                artist: artist.trim(),
+                album: album.trim(),
+                ...(genre !== commonGenre(tracks) ? { genre: genre.trim() } : {}),
+            }, (done, total) => setProgress({ done, total }));
             onClose();
         } catch (err) {
             console.error('Failed to save album tags:', err);
@@ -152,6 +168,14 @@ export const AlbumInfoModal: React.FC<AlbumInfoModalProps> = ({ tracks, onClose,
                                 <label htmlFor="album-info-album">{t('albumInfo.album')}</label>
                                 <input id="album-info-album" type="text" className="modal-input"
                                     value={album} onChange={(e) => setAlbum(e.target.value)} />
+
+                                <label htmlFor="album-info-genre">{t('albumInfo.genre')}</label>
+                                <input id="album-info-genre" type="text" className="modal-input" list="album-info-genre-list"
+                                    value={genre} onChange={(e) => setGenre(e.target.value)}
+                                    placeholder={commonGenre(tracks) === '' && tracks.some(t => t.genre) ? t('albumInfo.genreMixed') : undefined} />
+                                <datalist id="album-info-genre-list">
+                                    {genreSuggestions.map(g => <option key={g} value={g} />)}
+                                </datalist>
                             </div>
                             {/* Enter-to-submit needs a submit button in the form. */}
                             <button type="submit" style={{ display: 'none' }} aria-hidden="true" />

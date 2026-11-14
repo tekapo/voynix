@@ -229,6 +229,8 @@
     "tracks": "曲",
     "artist": "アーティスト",
     "album": "アルバム",
+    "genre": "ジャンル",
+    "genreMixed": "（複数）",
     "tracksCount_other": "{{count}}曲",
     "favoritesCount_other": "高評価{{count}}件",
     "added": "追加日: {{date}}",

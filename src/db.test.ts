@@ -34,6 +34,7 @@ import {
     backfillExtraTags,
     backfillTrackIdentities,
     backfillTrackNumbers,
+    updateTrackTags,
     buildSyncSnapshot,
     clearPlaylistTracks,
     removeTracksFromPlaylist,
@@ -1161,5 +1162,27 @@ describe("read-only getters", () => {
             { file_path: "/m/a.mp3", size: 10, mtime: 1, content_hash: "h1", track_key: "k1" },
         ]);
         expect(String(fakeDb.select.mock.calls[0][0])).toContain("FROM content_hash_cache");
+    });
+});
+
+describe("updateTrackTags genre", () => {
+    const base = { title: "T", artist: "A", album: "B", disc_no: null, track_no: null };
+
+    it("leaves genre out of the UPDATE when the edit has none", async () => {
+        await updateTrackTags("t1", "k", base, "k", "h");
+        const call = fakeDb.execute.mock.calls.find(c => String(c[0]).startsWith("UPDATE tracks SET title"))!;
+        expect(String(call[0])).not.toContain("genre");
+        expect(call[1]).toEqual(["T", "A", "B", null, null, "k", "h", "t1"]);
+    });
+
+    it("sets genre (trimmed) or NULL when it is empty", async () => {
+        await updateTrackTags("t1", "k", { ...base, genre: " Jazz " }, "k", "h");
+        await updateTrackTags("t2", "k", { ...base, genre: "" }, "k", "h");
+        const calls = fakeDb.execute.mock.calls.filter(c => String(c[0]).startsWith("UPDATE tracks SET title"));
+        const [a, b] = calls.slice(-2);
+        expect(String(a[0])).toContain("genre = $8");
+        expect(String(a[0])).toContain("WHERE id = $9");
+        expect(a[1]).toEqual(["T", "A", "B", null, null, "k", "h", "Jazz", "t1"]);
+        expect(b[1]).toEqual(["T", "A", "B", null, null, "k", "h", null, "t2"]);
     });
 });
