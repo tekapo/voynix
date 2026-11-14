@@ -59,7 +59,7 @@ describe("AlbumInfoModal", () => {
 
         await waitFor(() => expect(onSave).toHaveBeenCalledWith(
             tracks,
-            { artist: "The Artist", album: "New Album" },
+            { artist: "The Artist", album: "New Album" }, // genre untouched -> omitted
             expect.any(Function)
         ));
         await waitFor(() => expect(onClose).toHaveBeenCalled());
@@ -115,5 +115,28 @@ describe("AlbumInfoModal", () => {
         await screen.findByDisplayValue("The Artist");
         fireEvent.keyDown(window, { key: "Escape" });
         expect(onClose).toHaveBeenCalled();
+    });
+
+    it("shows a shared genre, and sends genre only when it was changed", async () => {
+        const rock = tracks.map(t => ({ ...t, genre: "Rock" }));
+        const onSave = vi.fn().mockResolvedValue(undefined);
+        render(<AlbumInfoModal tracks={rock} onClose={() => {}} onSave={onSave} />);
+        const genreInput = await screen.findByDisplayValue("Rock");
+        expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+        fireEvent.change(genreInput, { target: { value: "Jazz" } });
+        fireEvent.click(screen.getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(onSave).toHaveBeenCalledWith(
+            rock,
+            { artist: "The Artist", album: "The Album", genre: "Jazz" },
+            expect.any(Function)
+        ));
+    });
+
+    it("leaves the genre field blank with a placeholder when tracks differ", async () => {
+        const mixed = [{ ...tracks[0], genre: "Rock" }, { ...tracks[1], genre: "Jazz" }];
+        render(<AlbumInfoModal tracks={mixed} onClose={() => {}} onSave={async () => {}} />);
+        await screen.findByDisplayValue("The Artist");
+        expect(screen.getByPlaceholderText("(Multiple)")).toHaveValue("");
+        expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
     });
 });

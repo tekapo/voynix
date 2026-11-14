@@ -230,6 +230,8 @@
     "tracks": "Tracks",
     "artist": "Artist",
     "album": "Album",
+    "genre": "Genre",
+    "genreMixed": "(Multiple)",
     "tracksCount_one": "{{count}} track",
     "tracksCount_other": "{{count}} tracks",
     "favoritesCount_one": "{{count}} thumbs up",

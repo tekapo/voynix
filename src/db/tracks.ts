@@ -261,6 +261,8 @@ export interface TrackTagEdit {
     album: string;
     disc_no: number | null;
     track_no: number | null;
+    /** undefined = leave the row's genre alone; "" clears it. */
+    genre?: string | null;
 }
 
 /**
@@ -279,19 +281,22 @@ export async function updateTrackTags(
     newContentHash: string
 ) {
     const db = await getDb();
-    await db.execute(
-        "UPDATE tracks SET title = $1, artist = $2, album = $3, disc_no = $4, track_no = $5, track_key = $6, content_hash = $7 WHERE id = $8",
-        [
-            edit.title,
-            edit.artist || null,
-            edit.album || null,
-            edit.disc_no,
-            edit.track_no,
-            newTrackKey,
-            newContentHash,
-            trackId,
-        ]
-    );
+    const sets = ["title = $1", "artist = $2", "album = $3", "disc_no = $4", "track_no = $5", "track_key = $6", "content_hash = $7"];
+    const params: unknown[] = [
+        edit.title,
+        edit.artist || null,
+        edit.album || null,
+        edit.disc_no,
+        edit.track_no,
+        newTrackKey,
+        newContentHash,
+    ];
+    if (edit.genre !== undefined) {
+        params.push(edit.genre?.trim() || null);
+        sets.push(`genre = $${params.length}`);
+    }
+    params.push(trackId);
+    await db.execute(`UPDATE tracks SET ${sets.join(", ")} WHERE id = $${params.length}`, params);
 
     if (oldTrackKey && oldTrackKey !== newTrackKey) {
         const dupes: { n: number }[] = await db.select(

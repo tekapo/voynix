@@ -99,6 +99,7 @@ export function useArtworkActions({ setError, refreshPlaylists, patchCurrentTrac
       title: fields.title,
       artist: fields.artist || undefined,
       album: fields.album || undefined,
+      genre: fields.genre || null,
       disc_no: fields.disc_no,
       track_no: fields.track_no,
       track_key: identity.track_key,
@@ -137,6 +138,7 @@ export function useArtworkActions({ setError, refreshPlaylists, patchCurrentTrac
           album: fields.album,
           disc_no: t.disc_no ?? null,
           track_no: t.track_no ?? null,
+          genre: fields.genre,
         };
         const identity = await invoke<{ track_key: string; content_hash: string }>("write_track_tags", {
           path: t.file_path,

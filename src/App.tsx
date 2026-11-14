@@ -370,6 +370,10 @@ function App() {
   // and deriving from playlists made it — and its artist/album — silently
   // vanish from the whole library UI even though the row still existed.
   const allTracks = dbTracks;
+  const genreSuggestions = useMemo(
+    () => [...new Set(allTracks.map(t => t.genre?.trim()).filter((g): g is string => !!g))].sort((a, b) => a.localeCompare(b)),
+    [allTracks]
+  );
 
   // Keep the now-playing track's rating (thumbs up/down) in step with the library
   // after any refresh — a thumb toggled from the track-list context menu, or a
@@ -1705,6 +1709,7 @@ function App() {
           onClose={() => setInfoTrack(null)}
           onSave={handleSaveTrackTags}
           onShowInFinder={handleShowInFinder}
+          genreSuggestions={genreSuggestions}
         />
 
         <SelectionContextMenu
@@ -1768,6 +1773,7 @@ function App() {
           tracks={albumInfoTrack ? albumTracksFor(albumInfoTrack) : []}
           onClose={() => setAlbumInfoTrack(null)}
           onSave={handleSaveAlbumTags}
+          genreSuggestions={genreSuggestions}
         />
 
         <ArtistContextMenu

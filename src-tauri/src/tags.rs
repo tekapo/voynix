@@ -224,6 +224,9 @@ pub struct TagEdit {
     album: String,
     disc_no: Option<u32>,
     track_no: Option<u32>,
+    /// `None` leaves the file's genre alone, `Some("")` clears it.
+    #[serde(default)]
+    genre: Option<String>,
 }
 
 /// Write edited tags back to the file and return its refreshed identity
@@ -278,6 +281,13 @@ pub fn write_track_tags(path: String, edit: TagEdit) -> Result<TrackIdentity, St
     match edit.track_no {
         Some(n) => tag.set_track(n),
         None => tag.remove_track(),
+    }
+    if let Some(g) = &edit.genre {
+        if g.trim().is_empty() {
+            tag.remove_genre();
+        } else {
+            tag.set_genre(g.trim().to_string());
+        }
     }
 
     use lofty::config::WriteOptions;
@@ -491,6 +501,7 @@ mod tests {
             album: "B".to_string(),
             disc_no: Some(1),
             track_no: Some(1),
+            genre: None,
         };
         write_track_tags(path.to_string_lossy().to_string(), edit).unwrap();
         path
@@ -602,6 +613,7 @@ mod tests {
             album: "New Album".to_string(),
             disc_no: Some(1),
             track_no: Some(7),
+            genre: Some("Jazz".to_string()),
         };
         let after = write_track_tags(path_str.clone(), edit).unwrap();
 
@@ -619,6 +631,7 @@ mod tests {
         assert_eq!(info.album.as_deref(), Some("New Album"));
         assert_eq!(info.disc_no, Some(1));
         assert_eq!(info.track_no, Some(7));
+        assert_eq!(info.genre.as_deref(), Some("Jazz"));
     }
 
     #[test]
@@ -636,6 +649,7 @@ mod tests {
                 album: String::new(),
                 disc_no: None,
                 track_no: None,
+                genre: None,
             },
         )
         .unwrap();
@@ -644,5 +658,30 @@ mod tests {
         assert_eq!(info.album, None);
         assert_eq!(info.disc_no, None);
         assert_eq!(info.track_no, None);
+    }
+
+    #[test]
+    fn write_track_tags_genre_none_keeps_and_empty_clears() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("song.wav");
+        write_minimal_wav(&path, 44100);
+        let path_str = path.to_string_lossy().to_string();
+        let edit = |genre: Option<&str>| TagEdit {
+            title: "T".to_string(),
+            artist: "A".to_string(),
+            album: "B".to_string(),
+            disc_no: None,
+            track_no: None,
+            genre: genre.map(|g| g.to_string()),
+        };
+
+        write_track_tags(path_str.clone(), edit(Some("Rock"))).unwrap();
+        assert_eq!(get_track_file_info(path_str.clone()).unwrap().genre.as_deref(), Some("Rock"));
+
+        write_track_tags(path_str.clone(), edit(None)).unwrap();
+        assert_eq!(get_track_file_info(path_str.clone()).unwrap().genre.as_deref(), Some("Rock"));
+
+        write_track_tags(path_str.clone(), edit(Some(""))).unwrap();
+        assert_eq!(get_track_file_info(path_str).unwrap().genre, None);
     }
 }

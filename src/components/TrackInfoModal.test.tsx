@@ -91,10 +91,23 @@ describe("TrackInfoModal", () => {
             title: "New Title",
             artist: "Old Artist",
             album: "Old Album",
+            genre: "Rock",
             disc_no: 1,
             track_no: 3,
         }));
         await waitFor(() => expect(onClose).toHaveBeenCalled());
+    });
+
+    it("shows the genre in an editable field and saves a changed genre", async () => {
+        const onSave = vi.fn().mockResolvedValue(undefined);
+        render(
+            <TrackInfoModal track={track} onClose={() => {}} onSave={onSave} onShowInFinder={() => {}} genreSuggestions={["Jazz", "Rock"]} />
+        );
+        const genreInput = await screen.findByDisplayValue("Rock");
+        expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+        fireEvent.change(genreInput, { target: { value: " Jazz " } });
+        fireEvent.click(screen.getByRole("button", { name: "Save" }));
+        await waitFor(() => expect(onSave).toHaveBeenCalledWith(track, expect.objectContaining({ genre: "Jazz" })));
     });
 
     it("submits on Enter in a text field", async () => {
